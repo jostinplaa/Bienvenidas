@@ -1,0 +1,10 @@
+dev/jules/proauction/storage/AuctionStorage.class
+dev/jules/proauction/listener/GuiListener.class
+dev/jules/proauction/AuctionManager.class
+dev/jules/proauction/App.class
+dev/jules/proauction/gui/AuctionGUI.class
+dev/jules/proauction/command/AuctionHouseCommand.class
+dev/jules/proauction/command/AuctionCommand.class
+dev/jules/proauction/ProAuction.class
+dev/jules/proauction/ProAuction$1.class
+dev/jules/proauction/model/Auction.class

@@ -1,0 +1,4 @@
+# ProAuction Configuration
+
+# Prefix for all plugin messages. Use '&' for color codes.
+message-prefix: "&6[ProAuction]&r " # Default prefix with orange color and a reset, plus a space

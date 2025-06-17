@@ -1,0 +1,30 @@
+name: ProAuction
+version: ${project.version}
+main: dev.jules.proauction.ProAuction
+api-version: 1.18
+authors: [Jules]
+description: A professional auction plugin.
+depend: [Vault]
+commands:
+  auction:
+    description: Manages auctions.
+    usage: /auction <sell|bid|list> ...
+    aliases: [auc]
+  ah:
+    description: Opens the Auction House GUI.
+    usage: /ah
+    aliases: [auctions, auctionhouse]
+    permission: proauction.gui
+permissions:
+  proauction.sell:
+    description: Allows selling items via auction.
+    default: true
+  proauction.bid:
+    description: Allows bidding on auctions.
+    default: true
+  proauction.list:
+    description: Allows listing active auctions.
+    default: true
+  proauction.gui:
+    description: Allows opening the Auction House GUI.
+    default: true

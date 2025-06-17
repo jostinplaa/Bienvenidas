@@ -1,0 +1,9 @@
+/app/ProAuction/src/main/java/dev/jules/proauction/ProAuction.java
+/app/ProAuction/src/main/java/dev/jules/proauction/gui/AuctionGUI.java
+/app/ProAuction/src/main/java/dev/jules/proauction/App.java
+/app/ProAuction/src/main/java/dev/jules/proauction/command/AuctionHouseCommand.java
+/app/ProAuction/src/main/java/dev/jules/proauction/listener/GuiListener.java
+/app/ProAuction/src/main/java/dev/jules/proauction/storage/AuctionStorage.java
+/app/ProAuction/src/main/java/dev/jules/proauction/AuctionManager.java
+/app/ProAuction/src/main/java/dev/jules/proauction/model/Auction.java
+/app/ProAuction/src/main/java/dev/jules/proauction/command/AuctionCommand.java
