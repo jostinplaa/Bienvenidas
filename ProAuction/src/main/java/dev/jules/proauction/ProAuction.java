@@ -30,6 +30,9 @@ public class ProAuction extends JavaPlugin {
     private AuctionStorage auctionStorage;
     private AuctionGUI auctionGUI;
     private String messagePrefix; // Added field
+    private double salesTaxPercentage;
+    private double listingFeePercentage;
+    private String serverAccountName;
 
     @Override
     public void onEnable() {
@@ -218,5 +221,19 @@ public class ProAuction extends JavaPlugin {
         reloadConfig(); // Bukkit's method to reload config.yml from disk
         this.messagePrefix = ChatColor.translateAlternateColorCodes('&', getConfig().getString("message-prefix", "&6[ProAuction]&r "));
         logInfo("Configuration reloaded."); // Uses the new prefix
+
+        // Load tax and fee settings
+        this.salesTaxPercentage = getConfig().getDouble("sales-tax-percentage", 0.0);
+        this.listingFeePercentage = getConfig().getDouble("listing-fee-percentage", 0.0);
+        this.serverAccountName = getConfig().getString("server-account-name", "");
+
+        logInfo("Sales Tax Percentage: " + this.salesTaxPercentage + "%");
+        logInfo("Listing Fee Percentage: " + this.listingFeePercentage + "%");
+        logInfo("Server Account Name: '" + this.serverAccountName + "'");
     }
+
+    // Public getters for new configuration values
+    public double getSalesTaxPercentage() { return this.salesTaxPercentage; }
+    public double getListingFeePercentage() { return this.listingFeePercentage; }
+    public String getServerAccountName() { return this.serverAccountName; }
 }

@@ -1,6 +1,7 @@
 package dev.jules.proauction.command;
 
 import dev.jules.proauction.ProAuction;
+import dev.jules.proauction.util.TaxFeeCalculator;
 import dev.jules.proauction.model.Auction;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -124,6 +125,50 @@ public class AuctionCommand implements CommandExecutor {
             return;
         }
 
+        // Listing Fee Logic
+        double listingFeePercentage = plugin.getListingFeePercentage();
+        String serverAccountName = plugin.getServerAccountName();
+
+        if (listingFeePercentage > 0) {
+            double commissionAmount = TaxFeeCalculator.calculateListingFee(startingPrice, listingFeePercentage).feeAmount;
+
+            // The TaxFeeCalculator now handles the logic of ensuring the fee is at least 0.01 if it was positive but smaller, and rounding.
+            // The specific logging for adjustment to 0.01, if done by the calculator, would be inside it.
+            // We just use the calculated commissionAmount.
+            if (commissionAmount > 0) { // Only proceed if the fee is actually greater than 0 after calculation.
+                if (!ProAuction.hasEnough(player, commissionAmount)) {
+                    plugin.sendMessage(player, ChatColor.RED + "You do not have enough money to pay the listing fee of " + ProAuction.format(commissionAmount) + ".");
+                    return;
+                }
+                if (!ProAuction.withdrawMoney(player, commissionAmount)) {
+                    plugin.sendMessage(player, ChatColor.RED + "Failed to charge listing fee of " + ProAuction.format(commissionAmount) + ". Auction not created.");
+                    return;
+                }
+                plugin.sendMessage(player, ChatColor.YELLOW + "Charged a listing fee of " + ProAuction.format(commissionAmount) + ".");
+
+                if (serverAccountName != null && !serverAccountName.isEmpty()) {
+                    // Using getOfflinePlayer(String) is deprecated but often used for server accounts by name.
+                    // A check like serverAccount.hasPlayedBefore() or econ.hasAccount(serverAccountName) is crucial.
+                    OfflinePlayer serverAccount = plugin.getServer().getOfflinePlayer(serverAccountName);
+
+                    // Check if the economy plugin knows this account OR if the player has played before.
+                    // The latter is a fallback as some economy plugins create accounts on first transaction.
+                    boolean accountExistsOrCanBeCreated = ProAuction.getEconomy().hasAccount(serverAccountName) || serverAccount.hasPlayedBefore();
+
+                    if (accountExistsOrCanBeCreated) {
+                        if (ProAuction.depositMoney(serverAccount, commissionAmount)) { // serverAccount might work even if hasPlayedBefore is false if econ supports it
+                            plugin.logInfo("Deposited listing fee of " + ProAuction.format(commissionAmount) + " to server account " + serverAccountName + " from player " + player.getName());
+                        } else {
+                            plugin.logWarning("Failed to deposit listing fee of " + ProAuction.format(commissionAmount) + " to server account " + serverAccountName + " from player " + player.getName() + ". The fee was still charged to the player.");
+                        }
+                    } else {
+                        plugin.logWarning("Server account '" + serverAccountName + "' for listing fees not found or has not played before (and no existing economy account). Fee collected from " + player.getName() + " but not deposited to server account.");
+                    }
+                }
+            }
+        }
+
+
         UUID auctionId = UUID.randomUUID();
         long endTimeMillis = System.currentTimeMillis() + (durationMinutes * 60 * 1000L);
 
@@ -149,6 +194,19 @@ public class AuctionCommand implements CommandExecutor {
         if (!sender.hasPermission("proauction.list")) {
             plugin.sendMessage(sender, ChatColor.RED + "You don't have permission to list auctions.");
             return;
+        }
+
+        double salesTaxPercentage = plugin.getSalesTaxPercentage();
+        if (salesTaxPercentage > 0) {
+            plugin.sendMessage(sender, ChatColor.DARK_AQUA + "Info: Sellers are charged a " + salesTaxPercentage + "% tax on the final sale price.");
+        }
+        double listingFeePercentage = plugin.getListingFeePercentage();
+        if (listingFeePercentage > 0) {
+            plugin.sendMessage(sender, ChatColor.DARK_AQUA + "Info: A " + listingFeePercentage + "% fee (of starting price) applies when listing an item.");
+        }
+        // Add a blank line for spacing if messages were sent
+        if (salesTaxPercentage > 0 || listingFeePercentage > 0) {
+             plugin.sendMessage(sender, ""); // Sends a line with only the prefix, or blank if prefix is empty
         }
 
         Map<UUID, Auction> auctions = plugin.getActiveAuctions();
@@ -272,7 +330,8 @@ public class AuctionCommand implements CommandExecutor {
     private void sendHelp(CommandSender sender) {
         // These are sent without prefix and then prefix is applied by sendMessage
         plugin.sendMessage(sender, ChatColor.GOLD + "--- ProAuction Help ---");
-        plugin.sendMessage(sender, ChatColor.YELLOW + "/auction sell <price> [increment] [duration_minutes] " + ChatColor.GRAY + "- Sell the item in your hand.");
+        plugin.sendMessage(sender, ChatColor.YELLOW + "/auction sell <price> [increment] [duration_minutes] [buy_now_price] " + ChatColor.GRAY + "- Sell the item in your hand.");
+        plugin.sendMessage(sender, ChatColor.DARK_AQUA + "  ↳ Note: Sales may be subject to tax. Listing fees may apply.");
         plugin.sendMessage(sender, ChatColor.YELLOW + "/auction list " + ChatColor.GRAY + "- List active auctions.");
         plugin.sendMessage(sender, ChatColor.YELLOW + "/auction bid <id> <amount> " + ChatColor.GRAY + "- Bid on an auction.");
     }

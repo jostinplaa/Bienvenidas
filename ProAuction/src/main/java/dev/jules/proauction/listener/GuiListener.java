@@ -1,6 +1,8 @@
 package dev.jules.proauction.listener;
 
 import dev.jules.proauction.ProAuction;
+import dev.jules.proauction.util.TaxFeeCalculator;
+import dev.jules.proauction.util.TaxFeeCalculator.TaxCalculationResult;
 import dev.jules.proauction.gui.AuctionGUI;
 import dev.jules.proauction.model.Auction;
 import org.bukkit.ChatColor;
@@ -137,11 +139,42 @@ public class GuiListener implements Listener {
             return;
         }
 
+        // Sales Tax Logic for Buy Now
+        double salesTaxPercentage = plugin.getSalesTaxPercentage();
+        String serverAccountName = plugin.getServerAccountName(); // Retain for deposit logic
+        double buyNowPrice = auction.getBuyNowPrice(); // Original amount paid by buyer
+
+        TaxCalculationResult taxResult = TaxFeeCalculator.calculateSalesTax(buyNowPrice, salesTaxPercentage);
+        double taxAmount = taxResult.taxAmount;
+        double amountForSeller = taxResult.netAmountForSeller;
+
+        if (taxAmount > 0) { // Only log and attempt deposit if tax was actually calculated and applied
+            plugin.logInfo("Sales tax for Buy Now auction " + auction.getAuctionId().toString().substring(0,8) + ": " + ProAuction.format(taxAmount) + " (" + salesTaxPercentage + "% of " + ProAuction.format(buyNowPrice) + "). Seller receives " + ProAuction.format(amountForSeller));
+            if (serverAccountName != null && !serverAccountName.isEmpty()) {
+                OfflinePlayer serverAccount = plugin.getServer().getOfflinePlayer(serverAccountName);
+                boolean accountExistsOrCanBeCreated = ProAuction.getEconomy().hasAccount(serverAccountName) || serverAccount.hasPlayedBefore();
+
+                if (accountExistsOrCanBeCreated) {
+                    if (ProAuction.depositMoney(serverAccount, taxAmount)) {
+                        plugin.logInfo("Deposited sales tax (Buy Now) of " + ProAuction.format(taxAmount) + " to " + serverAccountName + " for auction " + auction.getAuctionId().toString().substring(0,8));
+                    } else {
+                        plugin.logWarning("Failed to deposit sales tax (Buy Now) of " + ProAuction.format(taxAmount) + " to " + serverAccountName + " for auction " + auction.getAuctionId().toString().substring(0,8) + ". Tax was still deducted from seller.");
+                    }
+                } else {
+                    plugin.logWarning("Server account '" + serverAccountName + "' for sales tax (Buy Now) not found/accessible. Tax of " + ProAuction.format(taxAmount) + " deducted from seller but not deposited. Auction: " + auction.getAuctionId().toString().substring(0,8));
+                }
+            }
+        }
+        // If taxAmount is 0, amountForSeller is buyNowPrice, and no specific tax logging or deposit is needed here.
+
         // Attempt deposit to seller
         OfflinePlayer seller = plugin.getServer().getOfflinePlayer(auction.getSellerUuid());
-        if (!ProAuction.depositMoney(seller, auction.getBuyNowPrice())) {
-            plugin.logSevere("CRITICAL: Failed to deposit BuyNow funds to seller " + seller.getName() + " for auction " + auction.getAuctionId() + ". Refunding buyer " + player.getName());
-            ProAuction.depositMoney(player, auction.getBuyNowPrice()); // Attempt to refund buyer
+        if (!ProAuction.depositMoney(seller, amountForSeller)) {
+            plugin.logSevere("CRITICAL: Failed to deposit BuyNow funds (" + ProAuction.format(amountForSeller) + " after tax) to seller " + seller.getName() + " for auction " + auction.getAuctionId().toString().substring(0,8) + ". Original price: " + ProAuction.format(buyNowPrice) + ". Refunding buyer full price.");
+            // Refund the full buyNowPrice to the buyer as the transaction with seller failed.
+            if (!ProAuction.depositMoney(player, buyNowPrice)) {
+                 plugin.logSevere("CRITICAL: FAILED TO REFUND BUYER " + player.getName() + " for BuyNow auction " + auction.getAuctionId().toString().substring(0,8) + " after seller deposit failed. MANUAL INTERVENTION NEEDED.");
+            }
             plugin.sendMessage(player, ChatColor.RED + "Payment to seller failed. Your money has been refunded. Please report this to an admin.");
             return;
         }
@@ -151,9 +184,8 @@ public class GuiListener implements Listener {
             plugin.sendMessage(player, ChatColor.RED + "Your inventory is full! The item has been dropped at your feet.");
             player.getWorld().dropItemNaturally(player.getLocation(), auction.getItem().clone());
             // Critical: money already exchanged. Item drop is last resort.
-            // Could also try to put it in a temporary "delivery box" or similar for later.
         } else {
-            plugin.sendMessage(player, ChatColor.GREEN + "You purchased " + getItemName(auction.getItem()) + " for " + ProAuction.format(auction.getBuyNowPrice()) + "!");
+            plugin.sendMessage(player, ChatColor.GREEN + "You purchased " + getItemName(auction.getItem()) + " for " + ProAuction.format(buyNowPrice) + "!");
         }
 
         auction.setActive(false);
@@ -161,12 +193,18 @@ public class GuiListener implements Listener {
         plugin.removeAuction(auction.getAuctionId()); // Remove from active list & storage file after processing
 
         if (seller.isOnline() && seller.getPlayer() != null) {
-            plugin.sendMessage(seller.getPlayer(), ChatColor.GREEN + "Your auction for " + getItemName(auction.getItem()) + " was bought by " + player.getName() + " for " + ProAuction.format(auction.getBuyNowPrice()) + "!");
+            String sellerMessage = ChatColor.GREEN + "Your auction for " + getItemName(auction.getItem()) + " was bought by " + player.getName() + " for " + ProAuction.format(buyNowPrice) + " (Buy Now)!";
+            if (taxAmount > 0) {
+                sellerMessage += " After a " + salesTaxPercentage + "% sales tax (" + ProAuction.format(taxAmount) + "), you received " + ProAuction.format(amountForSeller) + ".";
+            } else {
+                sellerMessage += " You received " + ProAuction.format(amountForSeller) + ".";
+            }
+            plugin.sendMessage(seller.getPlayer(), sellerMessage);
         } else {
             // Optionally, log that the seller was offline and couldn't be notified immediately
-            plugin.logInfo("Seller " + seller.getName() + " was offline and could not be notified of Buy Now for auction " + auction.getAuctionId());
+            plugin.logInfo("Seller " + seller.getName() + " was offline and could not be notified of Buy Now for auction " + auction.getAuctionId().toString().substring(0,8) + ". Sale processed, seller received " + ProAuction.format(amountForSeller));
         }
-        plugin.broadcastMessage(ChatColor.YELLOW + player.getName() + " bought " + getItemName(auction.getItem()) + " from " + auction.getSellerName() + " for " + ProAuction.format(auction.getBuyNowPrice()) + " using Buy Now!");
+        plugin.broadcastMessage(ChatColor.YELLOW + player.getName() + " bought " + getItemName(auction.getItem()) + " from " + auction.getSellerName() + " for " + ProAuction.format(buyNowPrice) + " using Buy Now!");
 
         player.closeInventory();
         // Consider refreshing the main AH view for other players or the current player if they reopen

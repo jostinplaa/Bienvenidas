@@ -2,3 +2,18 @@
 
 # Prefix for all plugin messages. Use '&' for color codes.
 message-prefix: "&6[ProAuction]&r " # Default prefix with orange color and a reset, plus a space
+
+# Tax and Fee Configuration
+# Percentage of the final sale price that will be taken as tax.
+# Example: 5 means 5% tax. Set to 0 to disable.
+sales-tax-percentage: 5
+
+# Percentage of the starting price that will be charged as a listing fee.
+# Example: 1 means 1% listing fee. Set to 0 to disable.
+listing-fee-percentage: 1
+
+# (Optional) Server account name where taxes and fees will be deposited.
+# If left empty or not defined, taxes/fees are simply deducted from the seller/lister.
+# For this to work, an actual player account with this name should exist if your economy plugin
+# doesn't support virtual server accounts.
+server-account-name: ""

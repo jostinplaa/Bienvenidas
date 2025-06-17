@@ -65,7 +65,7 @@ public class AuctionGUI implements InventoryHolder {
             int auctionIndex = startIndex + i;
             if (auctionIndex < totalAuctions) {
                 Auction auction = activeAuctions.get(auctionIndex);
-                gui.setItem(i, createDisplayItem(auction));
+                gui.setItem(i, this.createDisplayItem(auction)); // Explicit this. for clarity, though not strictly needed
                 auctionSlots.put(i, auction.getAuctionId());
             } else {
                 break; // No more auctions to display on this page
@@ -171,8 +171,17 @@ public class AuctionGUI implements InventoryHolder {
         if (auction.getBuyNowPrice() > 0) {
             ItemStack buyNowButton = new ItemStack(Material.GOLD_BLOCK);
             ItemMeta buyNowMeta = buyNowButton.getItemMeta();
+            List<String> buyNowLore = new ArrayList<>(); // Initialize new list
             buyNowMeta.setDisplayName(ChatColor.GOLD + "" + ChatColor.BOLD + "Buy Now");
-            buyNowMeta.setLore(List.of(ChatColor.GREEN + "Price: " + ProAuction.format(auction.getBuyNowPrice())));
+            buyNowLore.add(ChatColor.GREEN + "Price: " + ProAuction.format(auction.getBuyNowPrice())); // Add initial lore
+
+            // Add tax info if applicable
+            double salesTaxPercentage = plugin.getSalesTaxPercentage();
+            if (salesTaxPercentage > 0) {
+                buyNowLore.add(ChatColor.GRAY + "Seller receives price minus " + salesTaxPercentage + "% tax.");
+            }
+            buyNowMeta.setLore(buyNowLore); // Set the potentially modified lore
+
             buyNowButton.setItemMeta(buyNowMeta);
             bidGui.setItem(24, buyNowButton); // Example slot, adjust as needed
         }
@@ -194,7 +203,7 @@ public class AuctionGUI implements InventoryHolder {
     }
 
 
-    public static ItemStack createDisplayItem(Auction auction) {
+    public ItemStack createDisplayItem(Auction auction) { // Made non-static
         ItemStack display = auction.getItem().clone(); // Get a clone of the actual item
         ItemMeta meta = display.getItemMeta();
         if (meta == null) { // Should not happen for normal items, but good practice
@@ -202,9 +211,7 @@ public class AuctionGUI implements InventoryHolder {
         }
 
         List<String> lore = new ArrayList<>(); // Single declaration
-        // If the original item has lore, we might want to preserve it or just show auction info.
-        // For now, let's overwrite with auction-specific lore for clarity in the GUI.
-        // if (meta.hasLore()) { lore.addAll(meta.getLore()); lore.add(""); }
+        // if (meta.hasLore()) { lore.addAll(meta.getLore()); lore.add(""); } // Example of preserving original lore
 
         lore.add(ChatColor.GOLD + "Seller: " + ChatColor.GRAY + auction.getSellerName());
         if (auction.getHighestBidderUuid() != null) {
@@ -222,14 +229,21 @@ public class AuctionGUI implements InventoryHolder {
         lore.add(ChatColor.DARK_GRAY + "ID: " + auction.getAuctionId().toString().substring(0, 8));
         lore.add(ChatColor.BLUE + "" + ChatColor.ITALIC + "Click for more options!");
 
-        meta.setLore(lore);
-        meta.setDisplayName(ChatColor.AQUA + getItemNamePlain(display));
+        // Add sales tax information if applicable
+        double salesTaxPercentage = plugin.getSalesTaxPercentage();
+        if (salesTaxPercentage > 0) {
+            lore.add(""); // Add a separator line
+            lore.add(ChatColor.DARK_AQUA + "Note: Sale price for seller is subject to a " + salesTaxPercentage + "% tax.");
+        }
+
+        meta.setLore(lore); // Set the complete lore
+        meta.setDisplayName(ChatColor.AQUA + getItemNamePlain(display)); // Set display name
 
         display.setItemMeta(meta);
         return display;
     }
 
-    private static String getItemNamePlain(ItemStack item) {
+    private String getItemNamePlain(ItemStack item) { // Made non-static
         if (item.hasItemMeta() && item.getItemMeta().hasDisplayName()) {
             return ChatColor.stripColor(item.getItemMeta().getDisplayName());
         }
@@ -237,7 +251,7 @@ public class AuctionGUI implements InventoryHolder {
         return Character.toUpperCase(typeName.charAt(0)) + typeName.substring(1);
     }
 
-    private static String formatTimeRemaining(long millis) {
+    private String formatTimeRemaining(long millis) { // Made non-static
         if (millis < 0) return ChatColor.RED + "Ended";
         long hours = TimeUnit.MILLISECONDS.toHours(millis);
         millis -= TimeUnit.HOURS.toMillis(hours);
