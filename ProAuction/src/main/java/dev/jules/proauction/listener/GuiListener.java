@@ -139,9 +139,31 @@ public class GuiListener implements Listener {
 
         // Attempt deposit to seller
         OfflinePlayer seller = plugin.getServer().getOfflinePlayer(auction.getSellerUuid());
-        if (!ProAuction.depositMoney(seller, auction.getBuyNowPrice())) {
-            plugin.logSevere("CRITICAL: Failed to deposit BuyNow funds to seller " + seller.getName() + " for auction " + auction.getAuctionId() + ". Refunding buyer " + player.getName());
-            ProAuction.depositMoney(player, auction.getBuyNowPrice()); // Attempt to refund buyer
+
+        // Calculate tax and commission
+        double salesTaxPercentage = plugin.getSalesTaxPercentage();
+        double commissionPercentage = plugin.getCommissionPercentage();
+        double buyNowPrice = auction.getBuyNowPrice();
+        double salesTax = 0.0;
+        double commission = 0.0;
+        double amountToSeller = buyNowPrice;
+
+        if (salesTaxPercentage > 0) {
+            salesTax = buyNowPrice * (salesTaxPercentage / 100.0);
+            amountToSeller -= salesTax;
+        }
+        if (commissionPercentage > 0) {
+            commission = buyNowPrice * (commissionPercentage / 100.0);
+            amountToSeller -= commission;
+        }
+
+        if (amountToSeller < 0) {
+            amountToSeller = 0; // Ensure seller doesn't receive negative amount
+        }
+
+        if (!ProAuction.depositMoney(seller, amountToSeller)) {
+            plugin.logSevere("CRITICAL: Failed to deposit BuyNow funds (after deductions) to seller " + seller.getName() + " for auction " + auction.getAuctionId() + ". Refunding buyer " + player.getName());
+            ProAuction.depositMoney(player, buyNowPrice); // Attempt to refund buyer the original amount
             plugin.sendMessage(player, ChatColor.RED + "Payment to seller failed. Your money has been refunded. Please report this to an admin.");
             return;
         }
@@ -150,23 +172,31 @@ public class GuiListener implements Listener {
         if (!player.getInventory().addItem(auction.getItem().clone()).isEmpty()) {
             plugin.sendMessage(player, ChatColor.RED + "Your inventory is full! The item has been dropped at your feet.");
             player.getWorld().dropItemNaturally(player.getLocation(), auction.getItem().clone());
-            // Critical: money already exchanged. Item drop is last resort.
-            // Could also try to put it in a temporary "delivery box" or similar for later.
         } else {
-            plugin.sendMessage(player, ChatColor.GREEN + "You purchased " + getItemName(auction.getItem()) + " for " + ProAuction.format(auction.getBuyNowPrice()) + "!");
+            plugin.sendMessage(player, ChatColor.GREEN + "You purchased " + getItemName(auction.getItem()) + " for " + ProAuction.format(buyNowPrice) + "!");
         }
 
         auction.setActive(false);
         plugin.updateAuctionInStorage(auction); // Save change to inactive
         plugin.removeAuction(auction.getAuctionId()); // Remove from active list & storage file after processing
 
+        String sellerMessage = String.format(
+            ChatColor.GREEN + "Your auction for %s was bought by %s for %s. Sales Tax: %s. Commission: %s. You received: %s!",
+            getItemName(auction.getItem()),
+            player.getName(),
+            ProAuction.format(buyNowPrice),
+            ProAuction.format(salesTax),
+            ProAuction.format(commission),
+            ProAuction.format(amountToSeller)
+        );
+
         if (seller.isOnline() && seller.getPlayer() != null) {
-            plugin.sendMessage(seller.getPlayer(), ChatColor.GREEN + "Your auction for " + getItemName(auction.getItem()) + " was bought by " + player.getName() + " for " + ProAuction.format(auction.getBuyNowPrice()) + "!");
+            plugin.sendMessage(seller.getPlayer(), sellerMessage);
         } else {
-            // Optionally, log that the seller was offline and couldn't be notified immediately
-            plugin.logInfo("Seller " + seller.getName() + " was offline and could not be notified of Buy Now for auction " + auction.getAuctionId());
+            plugin.logInfo("Seller " + seller.getName() + " was offline. Buy Now details for auction " + auction.getAuctionId() + ": " + sellerMessage);
+            // Consider storing offline notifications if this is a required feature
         }
-        plugin.broadcastMessage(ChatColor.YELLOW + player.getName() + " bought " + getItemName(auction.getItem()) + " from " + auction.getSellerName() + " for " + ProAuction.format(auction.getBuyNowPrice()) + " using Buy Now!");
+        plugin.broadcastMessage(ChatColor.YELLOW + player.getName() + " bought " + getItemName(auction.getItem()) + " from " + auction.getSellerName() + " for " + ProAuction.format(buyNowPrice) + " using Buy Now!");
 
         player.closeInventory();
         // Consider refreshing the main AH view for other players or the current player if they reopen

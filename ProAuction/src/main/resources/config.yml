@@ -2,3 +2,18 @@
 
 # Prefix for all plugin messages. Use '&' for color codes.
 message-prefix: "&6[ProAuction]&r " # Default prefix with orange color and a reset, plus a space
+
+# Sales tax percentage to be deducted from the final sale price.
+# This amount is taken from the seller's earnings.
+# Example: 5 for a 5% sales tax. Set to 0 to disable.
+sales-tax-percentage: 0
+
+# Listing fee: A flat amount charged to the seller when they create an auction.
+# This fee is charged regardless of whether the item sells.
+# Set to 0 to disable.
+listing-fee: 0
+
+# Commission percentage: A percentage of the final sale price taken by the auction house.
+# This amount is taken from the seller's earnings.
+# Example: 2.5 for a 2.5% commission. Set to 0 to disable.
+commission-percentage: 0

@@ -194,7 +194,7 @@ public class AuctionGUI implements InventoryHolder {
     }
 
 
-    public static ItemStack createDisplayItem(Auction auction) {
+    public ItemStack createDisplayItem(Auction auction) { // Made non-static
         ItemStack display = auction.getItem().clone(); // Get a clone of the actual item
         ItemMeta meta = display.getItemMeta();
         if (meta == null) { // Should not happen for normal items, but good practice
@@ -218,12 +218,22 @@ public class AuctionGUI implements InventoryHolder {
             lore.add(ChatColor.GOLD + "Buy Now: " + ChatColor.AQUA + ProAuction.format(auction.getBuyNowPrice()));
         }
         lore.add(ChatColor.GOLD + "Time Remaining: " + ChatColor.RED + formatTimeRemaining(auction.getEndTimeMillis() - System.currentTimeMillis()));
+
+        // Add tax/commission info if applicable
+        if (plugin.getSalesTaxPercentage() > 0 || plugin.getCommissionPercentage() > 0) {
+            lore.add(ChatColor.GOLD + "Taxes/Commissions may apply to seller.");
+        }
+
         lore.add("");
         lore.add(ChatColor.DARK_GRAY + "ID: " + auction.getAuctionId().toString().substring(0, 8));
         lore.add(ChatColor.BLUE + "" + ChatColor.ITALIC + "Click for more options!");
 
         meta.setLore(lore);
-        meta.setDisplayName(ChatColor.AQUA + getItemNamePlain(display));
+        // Ensure display name is set, potentially using existing logic if getItemNamePlain is preferred
+        // Also ensuring that ChatColor is reset if we are just setting a plain name, or that custom names keep their color.
+        if (!meta.hasDisplayName()) { // Only set if no custom display name exists
+             meta.setDisplayName(ChatColor.AQUA + getItemNamePlain(display));
+        }
 
         display.setItemMeta(meta);
         return display;

@@ -72,10 +72,31 @@ public class AuctionManager {
                 return;
             }
 
-            // 5. Deposit to seller
-            if (!ProAuction.depositMoney(seller, auction.getCurrentBid())) {
-                plugin.logSevere("CRITICAL: Failed to deposit " + ProAuction.format(auction.getCurrentBid()) + " to seller " + seller.getName() + " for auction " + auction.getAuctionId() + ". Attempting to refund winner.");
-                if (!ProAuction.depositMoney(winner, auction.getCurrentBid())) { // Attempt to refund winner
+            // Calculate tax and commission
+            double salesTaxPercentage = plugin.getSalesTaxPercentage();
+            double commissionPercentage = plugin.getCommissionPercentage();
+            double currentBid = auction.getCurrentBid();
+            double salesTax = 0.0;
+            double commission = 0.0;
+            double amountToSeller = currentBid;
+
+            if (salesTaxPercentage > 0) {
+                salesTax = currentBid * (salesTaxPercentage / 100.0);
+                amountToSeller -= salesTax;
+            }
+            if (commissionPercentage > 0) {
+                commission = currentBid * (commissionPercentage / 100.0);
+                amountToSeller -= commission;
+            }
+
+            if (amountToSeller < 0) {
+                amountToSeller = 0; // Ensure seller doesn't receive negative amount
+            }
+
+            // 5. Deposit to seller (with deductions)
+            if (!ProAuction.depositMoney(seller, amountToSeller)) {
+                plugin.logSevere("CRITICAL: Failed to deposit " + ProAuction.format(amountToSeller) + " (after deductions) to seller " + seller.getName() + " for auction " + auction.getAuctionId() + ". Attempting to refund winner their original bid amount.");
+                if (!ProAuction.depositMoney(winner, currentBid)) { // Attempt to refund winner original amount
                     plugin.logSevere("CRITICAL: FAILED TO REFUND WINNER " + winner.getName() + " for auction " + auction.getAuctionId() + ". THIS IS A DUPE/LOSS SCENARIO. Manual intervention required.");
                 }
                 notifyPlayer(onlineWinner, ChatColor.RED + "There was an error paying the seller for auction " + getItemName(auction.getItem()) + ". Your bid has been refunded. Please contact an admin.");
@@ -86,20 +107,31 @@ public class AuctionManager {
 
             // 6. Give item to online winner
             if (onlineWinner.getInventory().addItem(auction.getItem().clone()).isEmpty()) { // Success
-                plugin.logInfo("Auction " + auction.getAuctionId() + " for " + getItemName(auction.getItem()) + " sold to " + winner.getName() + " for " + ProAuction.format(auction.getCurrentBid()));
-                notifyPlayer(seller, ChatColor.GREEN + "Your auction for " + getItemName(auction.getItem()) + " sold to " + winner.getName() + " for " + ProAuction.format(auction.getCurrentBid()) + ".");
-                notifyPlayer(onlineWinner, ChatColor.GREEN + "You won the auction for " + getItemName(auction.getItem()) + " for " + ProAuction.format(auction.getCurrentBid()) + "! The item has been added to your inventory.");
-                plugin.broadcastMessage(ChatColor.YELLOW + getItemName(auction.getItem()) + " was sold to " + winner.getName() + " for " + ProAuction.format(auction.getCurrentBid()) + "!");
+                plugin.logInfo("Auction " + auction.getAuctionId() + " for " + getItemName(auction.getItem()) + " sold to " + winner.getName() + " for " + ProAuction.format(currentBid) + ". Seller received " + ProAuction.format(amountToSeller));
+
+                String sellerMessage = String.format(
+                    ChatColor.GREEN + "Your auction for %s sold to %s for %s. Sales Tax: %s. Commission: %s. You received: %s.",
+                    getItemName(auction.getItem()),
+                    winner.getName(),
+                    ProAuction.format(currentBid),
+                    ProAuction.format(salesTax),
+                    ProAuction.format(commission),
+                    ProAuction.format(amountToSeller)
+                );
+                notifyPlayer(seller, sellerMessage);
+                notifyPlayer(onlineWinner, ChatColor.GREEN + "You won the auction for " + getItemName(auction.getItem()) + " for " + ProAuction.format(currentBid) + "! The item has been added to your inventory.");
+                plugin.broadcastMessage(ChatColor.YELLOW + getItemName(auction.getItem()) + " was sold to " + winner.getName() + " for " + ProAuction.format(currentBid) + "!");
             } else { // Inventory full
                 plugin.logInfo("Auction " + auction.getAuctionId() + " winner " + winner.getName() + "'s inventory was full. Rolling back transaction.");
-                notifyPlayer(onlineWinner, ChatColor.RED + "You won the auction for " + getItemName(auction.getItem()) + ", but your inventory is full! The transaction has been voided.");
+                notifyPlayer(onlineWinner, ChatColor.RED + "You won the auction for " + getItemName(auction.getItem()) + ", but your inventory is full! The transaction has been voided and funds reversed.");
 
-                // Rollback: refund winner, take back from seller (if possible, though Vault doesn't have "take" from offline easily)
-                if (!ProAuction.depositMoney(winner, auction.getCurrentBid())) {
-                     plugin.logSevere("CRITICAL: FAILED TO REFUND WINNER " + winner.getName() + " during inventory full rollback for auction " + auction.getAuctionId());
+                // Rollback: refund winner (original bid), take back from seller (amount they received)
+                if (!ProAuction.depositMoney(winner, currentBid)) { // Refund full bid to winner
+                     plugin.logSevere("CRITICAL: FAILED TO REFUND WINNER " + winner.getName() + " " + ProAuction.format(currentBid) + " during inventory full rollback for auction " + auction.getAuctionId());
                 }
-                if(!ProAuction.withdrawMoney(seller, auction.getCurrentBid())) {
-                    plugin.logSevere("CRITICAL: FAILED TO RECLAIM FUNDS FROM SELLER " + seller.getName() + " during inventory full rollback for auction " + auction.getAuctionId());
+                // Attempt to reclaim the actual amount deposited to seller
+                if(!ProAuction.withdrawMoney(seller, amountToSeller)) {
+                    plugin.logSevere("CRITICAL: FAILED TO RECLAIM FUNDS " + ProAuction.format(amountToSeller) + " FROM SELLER " + seller.getName() + " during inventory full rollback for auction " + auction.getAuctionId());
                 }
                 returnItemToSeller(seller, auction, "Winner " + winner.getName() + "'s inventory was full. Auction voided, funds reversed.");
             }

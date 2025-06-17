@@ -124,6 +124,21 @@ public class AuctionCommand implements CommandExecutor {
             return;
         }
 
+        // Listing Fee Logic
+        double listingFee = plugin.getListingFee();
+        if (listingFee > 0) {
+            if (!ProAuction.hasEnough(player, listingFee)) {
+                plugin.sendMessage(player, ChatColor.RED + "You do not have enough money to pay the listing fee of " + ProAuction.format(listingFee) + ".");
+                return;
+            }
+            if (!ProAuction.withdrawMoney(player, listingFee)) {
+                plugin.sendMessage(player, ChatColor.RED + "Failed to charge the listing fee of " + ProAuction.format(listingFee) + ". Please try again.");
+                plugin.logWarning("Failed to withdraw listing fee " + ProAuction.format(listingFee) + " from " + player.getName() + " even after hasEnough check.");
+                return;
+            }
+            plugin.sendMessage(player, ChatColor.YELLOW + "You have been charged a listing fee of " + ProAuction.format(listingFee) + ".");
+        }
+
         UUID auctionId = UUID.randomUUID();
         long endTimeMillis = System.currentTimeMillis() + (durationMinutes * 60 * 1000L);
 
@@ -142,6 +157,9 @@ public class AuctionCommand implements CommandExecutor {
         player.getInventory().setItemInMainHand(null); // Remove item from hand
 
         plugin.sendMessage(player, ChatColor.GREEN + "Auction started for " + getItemName(itemInHand) + " with ID: " + auctionId.toString().substring(0, 8));
+        if (plugin.getSalesTaxPercentage() > 0 || plugin.getCommissionPercentage() > 0) {
+            plugin.sendMessage(player, ChatColor.GRAY + "Note: If sold, applicable sales tax and commission will be deducted from the final sale price.");
+        }
         plugin.broadcastMessage(ChatColor.YELLOW + player.getName() + " has started an auction for " + getItemName(itemInHand) + "!");
     }
 
