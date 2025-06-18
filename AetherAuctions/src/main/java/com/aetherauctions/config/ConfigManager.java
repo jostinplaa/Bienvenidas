@@ -69,26 +69,24 @@ public class ConfigManager {
 
         this.availableDurations = config.getList("auction.available_durations", Collections.emptyList())
             .stream()
+            .filter(entry -> entry instanceof Map) // Ensure entry is a Map
             .map(entry -> {
-                if (entry instanceof String) {
-                    String[] parts = ((String) entry).split(":", 2);
-                    if (parts.length == 2) {
-                        try {
-                            return Map.of("label", parts[0], "seconds", Long.parseLong(parts[1]));
-                        } catch (NumberFormatException e) {
-                            plugin.getLogger().warning("Formato de duración inválido en config.yml: " + entry);
-                            return null;
-                        }
-                    }
+                Map<?, ?> rawMap = (Map<?, ?>) entry; // Cast to Map<?, ?> first
+                // Ensure keys are String and values are of expected types before creating the final Map
+                if (rawMap.get("label") instanceof String && rawMap.get("seconds") instanceof Number) {
+                    String label = (String) rawMap.get("label");
+                    long seconds = ((Number) rawMap.get("seconds")).longValue();
+                    // Use a mutable map if you intend to modify it later, otherwise Map.of is fine
+                    return new java.util.HashMap<String, Object>(Map.of("label", label, "seconds", seconds));
                 }
-                 plugin.getLogger().warning("Entrada de duración inválida en config.yml: " + entry);
+                plugin.getLogger().warning("Entrada de duración inválida en config.yml (formato de mapa incorrecto): " + entry);
                 return null;
             })
             .filter(map -> map != null && map.containsKey("label") && map.containsKey("seconds"))
             .collect(Collectors.toList());
         if (this.availableDurations.isEmpty()) { // Fallback if parsing fails or empty
-            this.availableDurations = List.of(Map.of("label", "1 Día", "seconds", 86400L));
-             plugin.getLogger().warning("available_durations estaba vacío o mal configurado. Usando valor por defecto: 1 Día:86400");
+            this.availableDurations = List.of(new java.util.HashMap<String, Object>(Map.of("label", "1 Día", "seconds", 86400L)));
+            plugin.getLogger().warning("available_durations estaba vacío o mal configurado. Usando valor por defecto: 1 Día:86400");
         }
 
 

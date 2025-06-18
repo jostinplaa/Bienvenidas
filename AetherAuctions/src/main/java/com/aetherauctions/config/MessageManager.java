@@ -127,4 +127,11 @@ public class MessageManager {
     public String getPrefix() {
         return prefix;
     }
+
+    public String stripColors(String input) {
+        if (input == null) {
+            return null;
+        }
+        return ChatColor.stripColor(input);
+    }
 }

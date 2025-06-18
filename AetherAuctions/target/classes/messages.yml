@@ -1,0 +1,142 @@
+# Mensajes de AetherAuctions (Todos soportan códigos de color con &)
+prefix: "&e&lAetherAuctions &8» " # Se puede sobreescribir config.general.plugin_prefix si se desea, o usar este como fallback.
+
+# Comandos Generales
+reload_success: "&aConfiguración recargada exitosamente."
+player_only_command: "&cEste comando solo puede ser ejecutado por un jugador."
+no_permission: "&cNo tienes permiso para ejecutar este comando."
+invalid_command_usage: "&c¡Uso incorrecto! Prueba: %usage%"
+invalid_auction_id: "&cEl ID de subasta '%id%' no es válido o no existe."
+auction_id_must_be_number: "&cEl ID de la subasta debe ser un número."
+
+# Creación de Subasta
+auction_create_gui_title: "&8Crear Nueva Subasta"
+# GUI Create elements
+button_set_duration: "&bEstablecer Duración"
+lore_current_duration: "&7Actual: &f%duration%"
+button_set_start_price: "&6Establecer Precio Inicial"
+lore_current_start_price: "&7Actual: &f%price%"
+button_set_buy_now_price: "&aEstablecer Compra Directa"
+lore_current_buy_now_price: "&7Actual: &f%price%"
+button_confirm_create: "&aConfirmar y Crear Subasta"
+lore_confirm_create_review: "&eRevisa los detalles antes de confirmar."
+lore_confirm_create_missing_details: "&cFaltan detalles: %details%"
+item_slot_placeholder_name: "&7Coloca aquí el ítem a subastar"
+item_slot_placeholder_lore: "&8<-- Slot para tu ítem"
+
+chat_prompt_enter_start_price: "&eIntroduce el precio inicial de la subasta en el chat:"
+chat_prompt_enter_buy_now_price: "&eIntroduce el precio de compra directa en el chat (o '0' para no establecer):"
+chat_prompt_enter_duration: "&eIntroduce la duración (ej: 1d, 2h30m, 3600s) o elige de la GUI de duraciones:"
+chat_prompt_enter_bid_amount: "&eIntroduce el monto de tu puja para la subasta #%id% en el chat:" # %item%
+duration_selection_gui_title: "&8Seleccionar Duración"
+
+invalid_price_format: "&cEl precio ingresado no es válido. Debe ser un número positivo."
+invalid_duration_format: "&cLa duración ingresada no es válida. Ej: 1d, 2h30m, 3600 (segundos)."
+duration_too_short: "&cLa duración mínima es %duration%."
+duration_too_long: "&cLa duración máxima es %duration%."
+item_blacklisted: "&cEl ítem '%item%' no puede ser subastado."
+auction_created_success: "&a¡Subasta #%id% creada exitosamente!"
+auction_create_fee_charged: "&6Se te ha cobrado %amount% %currency% por crear la subasta."
+not_enough_money_create_fee: "&cNo tienes suficiente dinero para pagar la tarifa de creación (%amount% %currency%)."
+max_auctions_reached: "&cHas alcanzado el límite de %limit% subastas activas."
+item_slot_empty: "&cDebes colocar un ítem en el slot designado para subastar."
+start_price_too_low: "&cEl precio inicial debe ser mayor o igual a %min_price%." # Not used if min_bid_increment handles it
+start_price_too_high: "&cEl precio inicial no puede exceder %max_price% %currency%."
+buy_now_must_be_greater: "&cEl precio de Compra Directa debe ser mayor que el Precio Inicial."
+
+
+# Pujas y Compra
+bid_placed_success: "&a¡Puja de %bid% %currency% realizada en la subasta #%id% por '%item%'"
+bid_too_low_initial: "&cTu puja debe ser de al menos %min_bid% %currency% (precio inicial)."
+bid_too_low_increment: "&cTu puja debe ser de al menos %min_bid% %currency% (puja actual + incremento mínimo)."
+cannot_bid_on_own_auction: "&cNo puedes pujar en tu propia subasta."
+already_highest_bidder: "&cYa eres el máximo pujador en esta subasta."
+not_enough_money_bid: "&cNo tienes suficiente dinero para realizar esa puja."
+auction_bought_success: "&aHas comprado el ítem '%item%' por %price% %currency%!"
+seller_paid_commission: "&e%seller% ha recibido %amount% %currency% (después de %commission_percent%% comisión)."
+auction_ended_won: "&a¡Has ganado la subasta #%id% por el ítem '%item%' con una puja de %bid% %currency%!"
+auction_ended_seller_sold: "&aTu subasta #%id% por '%item%' ha sido vendida a %buyer% por %price% %currency%. Recibiste %received_amount% %currency%."
+auction_ended_expired_seller: "&eTu subasta #%id% por '%item%' ha expirado sin pujas. El ítem ha sido devuelto."
+auction_ended_expired_claim: "&eTu subasta #%id% por '%item%' ha expirado. El ítem está en /auc reclamar."
+auction_ended_no_longer_exists: "&cEsta subasta ya no existe o ha finalizado."
+outbid_notification: "&e¡%new_bidder% ha superado tu puja en la subasta #%id% por '%item%'! Tu puja de %old_bid% %currency% ha sido devuelta."
+bid_equals_buy_now: "&eTu puja iguala el precio de Compra Directa. La subasta se procesará como compra directa."
+
+# Cancelación
+auction_cancelled_success: "&aSubasta #%id% cancelada exitosamente."
+auction_cancelled_admin: "&aSubasta #%id% cancelada por un administrador."
+cannot_cancel_auction: "&cNo puedes cancelar esta subasta (ya finalizó o no te pertenece)."
+item_returned_to_inventory: "&aEl ítem '%item%' de la subasta cancelada ha sido devuelto a tu inventario."
+item_sent_to_claim: "&eEl ítem '%item%' de la subasta cancelada no pudo ser devuelto a tu inventario y ha sido enviado a /subasta reclamar."
+bid_refunded_on_cancel: "&eLa subasta #%id% fue cancelada. Tu puja de %bid% %currency% ha sido devuelta."
+
+
+# GUI Principal
+main_gui_title: "&8Subastas (Pág. %page%/%max_pages%)" # Shortened for clarity
+button_previous_page: "&aPágina Anterior"
+button_next_page: "&aPágina Siguiente"
+button_refresh: "&eRefrescar Subastas"
+button_create_auction: "&bCrear Nueva Subasta"
+button_my_auctions: "&dVer Mis Subastas"
+button_history: "&cVer Historial"
+button_search_items: "&6Buscar Ítem"
+lore_search_items_coming_soon: "&e(Próximamente)"
+button_filters: "&6Filtros"
+lore_filters_coming_soon: "&e(Próximamente)"
+# Item Lore en Main GUI
+item_lore_id: "&0ID:%id%" # Hidden ID
+item_lore_seller: "&7Vendedor: &f%seller%"
+item_lore_start_price: "&7Precio Inicial: &f%price% %currency%"
+item_lore_current_bid: "&7Oferta Actual: &f%bid% %currency% (por %bidder%)"
+item_lore_no_bids: "&7Oferta Actual: &fSin ofertas"
+item_lore_buy_now_price: "&7Compra Directa: &f%price% %currency%"
+item_lore_buy_now_not_available: "&7Compra Directa: &cNo disponible"
+item_lore_time_left: "&7Tiempo restante: &b%time%"
+item_lore_status: "&7Estado: &e%status%"
+item_lore_left_click_bid: "&eClic izquierdo: &aPujar"
+item_lore_right_click_details: "&eClic derecho: &aVer detalles"
+
+# GUI Info de Ítem
+auction_info_gui_title: "&8Detalles de la Subasta"
+button_place_bid: "&eRealizar Puja"
+lore_place_bid_current: "&7Oferta actual: &f%bid% %currency%"
+lore_place_bid_your_bid: "&7Tu puja (mínima): &f%next_bid% %currency%"
+button_buy_now: "&aComprar Ahora"
+lore_buy_now_price: "&7Precio: &f%price% %currency%"
+button_back_to_auctions: "&7Volver a Subastas"
+info_item_title: "&bInformación de la Subasta"
+
+# GUI Mis Subastas
+my_auctions_gui_title: "&8Mis Subastas (Pág. %page%/%max_pages%)"
+lore_my_auction_click_to_cancel: "&eClic: &cCancelar Subasta (si está activa)"
+lore_my_auction_status_sold: "&7Vendido a: &f%buyer% por %price% %currency%"
+lore_my_auction_status_expired_unclaimed: "&7Expirado, ítem en /auc reclamar"
+lore_my_auction_status_cancelled: "&7Cancelada, ítem devuelto/reclamable"
+
+# GUI Historial
+auction_history_gui_title: "&8Historial (Pág. %page%/%max_pages%)" # Could be player specific or global
+lore_history_item_ended_date: "&7Fecha finalización: &b%date%"
+
+# GUI Durations (si se usa una GUI para ello)
+duration_gui_title: "&8Seleccionar Duración de Subasta"
+
+# Reclamar Items
+claim_gui_title: "&8Reclamar Ítems (Pág. %page%/%max_pages%)"
+claim_item_reason: "&7Razón: &f%reason%"
+claim_item_click_to_claim: "&e¡Clic para reclamar!"
+item_claimed_success: "&aHas reclamado '%item%'."
+no_items_to_claim: "&eNo tienes ítems para reclamar en este momento."
+inventory_full_claim: "&cTu inventario está lleno. No se pudo reclamar '%item%'."
+
+# Errores generales
+internal_error: "&cOcurrió un error interno. Por favor, contacta a un administrador."
+not_enough_inventory_space: "&cNo tienes suficiente espacio en el inventario."
+item_delivery_failed_claim: "&cNo se pudo entregar el ítem. Será enviado a tus ítems reclamables (/auc reclamar)."
+
+# Admin
+admin_auction_removed: "&aSubasta #%id% eliminada por un administrador."
+admin_force_removed_auction: "&cSubasta #%id% eliminada forzosamente." # Distinto mensaje para admin remove
+admin_help_header: "&6--- Ayuda Admin AetherAuctions ---"
+admin_help_reload: "&e/auc admin reload - Recarga la configuración."
+admin_help_remove: "&e/auc admin eliminar <id> - Elimina una subasta."
+# ... más mensajes de admin

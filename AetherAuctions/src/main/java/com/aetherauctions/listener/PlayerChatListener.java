@@ -5,6 +5,7 @@ import com.aetherauctions.auction.AuctionItem;
 import com.aetherauctions.auction.AuctionManager;
 import com.aetherauctions.config.MessageManager; // Import MessageManager
 import com.aetherauctions.gui.GUIManager;
+import com.aetherauctions.util.InventoryUtil; // Import InventoryUtil
 import org.bukkit.Bukkit;
 // import org.bukkit.ChatColor; // Will be replaced by MessageManager
 import org.bukkit.entity.Player;

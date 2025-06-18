@@ -13,6 +13,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
+import com.aetherauctions.util.InventoryUtil; // Import InventoryUtil
 
 import java.sql.SQLException;
 import java.io.IOException;
@@ -32,7 +33,8 @@ public class AuctionManager {
     private final ConfigManager configManager; // Add ConfigManager
     private final MessageManager messageManager; // Add MessageManager
     private final Map<Integer, AuctionItem> activeAuctions; // Cache for active auctions
-    private BukkitTask expiredAuctionCheckerTask;
+    private BukkitTask expiredAuctionCheckerTask = null;
+    private long currentCheckInterval; // To store the period of the task
 
     public AuctionManager(AetherAuctions plugin, DatabaseManager databaseManager) {
         this.plugin = plugin;
@@ -293,26 +295,26 @@ public class AuctionManager {
         }
 
         if (auction == null || auction.getStatus() != AuctionStatus.ACTIVE) {
-            buyer.sendMessage(ChatColor.RED + "Esta subasta no está activa o no existe.");
+            messageManager.sendMessage(buyer, "auction_ended_no_longer_exists"); // Assuming a message key
             return false;
         }
         if (auction.getBuyNowPrice() <= 0) {
-            buyer.sendMessage(ChatColor.RED + "Esta subasta no tiene opción de compra directa.");
+            messageManager.sendMessage(buyer, "buy_now_not_available"); // Assuming a message key
             return false;
         }
         if (auction.getSellerUUID().equals(buyer.getUniqueId().toString())) {
-            buyer.sendMessage(ChatColor.RED + "No puedes comprar tu propia subasta.");
+            messageManager.sendMessage(buyer, "cannot_buy_own_auction"); // Assuming a message key
             return false;
         }
 
         Economy econ = AetherAuctions.getEconomy();
         if (!econ.has(buyer, auction.getBuyNowPrice())) {
-            buyer.sendMessage(ChatColor.RED + "No tienes suficiente dinero para comprar esto (" + String.format("%.2f", auction.getBuyNowPrice()) + ").");
+            messageManager.sendMessage(buyer, "not_enough_money_buy_now", "%amount%", String.format("%.2f", auction.getBuyNowPrice()), "%currency%", configManager.getCurrencySymbol());
             return false;
         }
 
         if (!econ.withdrawPlayer(buyer, auction.getBuyNowPrice()).transactionSuccess()) {
-            buyer.sendMessage(ChatColor.RED + "Error al retirar fondos para la compra directa.");
+            messageManager.sendMessage(buyer, "internal_error_buy_now_withdraw"); // Assuming a message key
             return false;
         }
 
@@ -320,7 +322,7 @@ public class AuctionManager {
             OfflinePlayer previousBidder = Bukkit.getOfflinePlayer(UUID.fromString(auction.getHighestBidderUUID()));
             econ.depositPlayer(previousBidder, auction.getCurrentBid());
             if (previousBidder.isOnline()) {
-                previousBidder.getPlayer().sendMessage(ChatColor.YELLOW + "La subasta ID: " + auction.getId() + " fue comprada directamente. Tu puja de "+String.format("%.2f", auction.getCurrentBid())+" ha sido devuelta.");
+                messageManager.sendMessage(previousBidder.getPlayer(), "auction_bought_out_refund", "%id%", String.valueOf(auction.getId()), "%old_bid%", String.format("%.2f", auction.getCurrentBid()), "%currency%", configManager.getCurrencySymbol());
             }
         }
 
@@ -333,11 +335,16 @@ public class AuctionManager {
         String itemDisplayName = auction.getItemStack().hasItemMeta() && auction.getItemStack().getItemMeta().hasDisplayName() ? auction.getItemStack().getItemMeta().getDisplayName() : auction.getItemStack().getType().toString();
 
         if (buyer.getInventory().firstEmpty() == -1) {
-            buyer.sendMessage(ChatColor.RED + "No tienes espacio en tu inventario. El ítem '" + itemDisplayName + "' ha sido enviado a tus ítems reclamables.");
-            databaseManager.addClaimableItem(buyer.getUniqueId().toString(), auction.getItemStack().clone(), "Comprado en subasta ID: " + auction.getId());
+            messageManager.sendMessage(buyer, "inventory_full_claimable", "%item%", itemDisplayName, "%id%", String.valueOf(auction.getId()));
+            try {
+                databaseManager.addClaimableItem(buyer.getUniqueId().toString(), auction.getItemStack().clone(), "Comprado en subasta ID: " + auction.getId());
+            } catch (SQLException e) {
+                plugin.getLogger().log(Level.SEVERE, "Error adding claimable item after BuyNow for auction " + auction.getId(), e);
+                messageManager.sendMessage(buyer, "internal_error_claim_item"); // Consider a specific message
+            }
         } else {
             buyer.getInventory().addItem(auction.getItemStack().clone());
-            buyer.sendMessage(ChatColor.GREEN + "¡Has comprado el ítem '" + itemDisplayName + "'!");
+            messageManager.sendMessage(buyer, "buy_now_success", "%item%", itemDisplayName);
         }
 
         auction.setStatus(AuctionStatus.SOLD_VIA_BUYOUT);
@@ -350,16 +357,17 @@ public class AuctionManager {
             databaseManager.saveAuction(auction);
 
             if (seller.isOnline()) {
-                seller.getPlayer().sendMessage(ChatColor.GREEN + "Tu ítem '" + itemDisplayName + "' (ID: " + auction.getId() + ") ha sido comprado directamente por " + buyer.getName() + " por " + String.format("%.2f", auction.getBuyNowPrice()) + ". Has recibido " + String.format("%.2f", amountToSeller) + " (después de comisión).");
+                 messageManager.sendMessage(seller.getPlayer(), "your_item_bought_out", "%item%", itemDisplayName, "%id%", String.valueOf(auction.getId()), "%buyer%", buyer.getName(), "%price%", String.format("%.2f", auction.getBuyNowPrice()), "%received%", String.format("%.2f", amountToSeller), "%currency%", configManager.getCurrencySymbol());
             }
             return true;
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Error SQL al actualizar estado de subasta (BuyNow) " + auction.getId(), e);
-            buyer.sendMessage(ChatColor.RED + "Error interno al procesar la compra.");
+            messageManager.sendMessage(buyer, "internal_error_buy_now_process");
+            // Rollback
             econ.depositPlayer(buyer, auction.getBuyNowPrice());
-            econ.withdrawPlayer(seller, amountToSeller);
-            auction.setStatus(AuctionStatus.ACTIVE);
-            activeAuctions.put(auction.getId(), auction);
+            econ.withdrawPlayer(seller, amountToSeller); // Attempt to reverse seller deposit
+            auction.setStatus(AuctionStatus.ACTIVE); // Revert status
+            activeAuctions.put(auction.getId(), auction); // Put back in cache if removed
             return false;
         }
     }
@@ -372,18 +380,18 @@ public class AuctionManager {
         }
 
         if (auction == null) {
-            player.sendMessage(ChatColor.RED + "La subasta no existe.");
+            messageManager.sendMessage(player, "auction_not_found", "%id%", String.valueOf(auctionId));
             return false;
         }
 
         if (auction.getStatus() != AuctionStatus.ACTIVE) {
-            player.sendMessage(ChatColor.RED + "Esta subasta no está activa y no puede ser cancelada.");
+            messageManager.sendMessage(player, "auction_not_active_cancel", "%id%", String.valueOf(auctionId));
             return false;
         }
 
         boolean isAdmin = player.hasPermission("aetherauctions.admin");
         if (!auction.getSellerUUID().equals(player.getUniqueId().toString()) && !isAdmin) {
-            player.sendMessage(ChatColor.RED + "No tienes permiso para cancelar esta subasta.");
+            messageManager.sendMessage(player, "cannot_cancel_others_auction");
             return false;
         }
         String itemDisplayName = auction.getItemStack().hasItemMeta() && auction.getItemStack().getItemMeta().hasDisplayName() ? auction.getItemStack().getItemMeta().getDisplayName() : auction.getItemStack().getType().toString();
@@ -391,14 +399,22 @@ public class AuctionManager {
         OfflinePlayer seller = Bukkit.getOfflinePlayer(UUID.fromString(auction.getSellerUUID()));
         if (seller.isOnline()) {
             if(seller.getPlayer().getInventory().firstEmpty() == -1){
-                 seller.getPlayer().sendMessage(ChatColor.RED + "No tienes espacio en tu inventario para tu ítem de la subasta cancelada ID " + auction.getId() + ". El ítem ha sido enviado a tus ítems reclamables.");
-                 databaseManager.addClaimableItem(auction.getSellerUUID(), auction.getItemStack().clone(), "Subasta ID " + auction.getId() + " ("+itemDisplayName+") cancelada.");
+                 messageManager.sendMessage(seller.getPlayer(), "inventory_full_claimable_cancelled", "%id%", String.valueOf(auction.getId()), "%item%", itemDisplayName);
+                try {
+                    databaseManager.addClaimableItem(auction.getSellerUUID(), auction.getItemStack().clone(), "Subasta ID " + auction.getId() + " ("+itemDisplayName+") cancelada.");
+                } catch (SQLException e) {
+                    plugin.getLogger().log(Level.SEVERE, "Error adding claimable item after cancel for auction " + auction.getId(), e);
+                }
             } else {
                 seller.getPlayer().getInventory().addItem(auction.getItemStack().clone());
-                seller.getPlayer().sendMessage(ChatColor.YELLOW + "Tu subasta ID " + auction.getId() + " (" + itemDisplayName + ") ha sido cancelada y el ítem devuelto a tu inventario.");
+                messageManager.sendMessage(seller.getPlayer(), "auction_cancelled_item_returned", "%id%", String.valueOf(auction.getId()), "%item%", itemDisplayName);
             }
         } else {
-            databaseManager.addClaimableItem(auction.getSellerUUID(), auction.getItemStack().clone(), "Subasta ID " + auction.getId() + " ("+itemDisplayName+") cancelada.");
+            try {
+                databaseManager.addClaimableItem(auction.getSellerUUID(), auction.getItemStack().clone(), "Subasta ID " + auction.getId() + " ("+itemDisplayName+") cancelada.");
+            } catch (SQLException e) {
+                plugin.getLogger().log(Level.SEVERE, "Error adding claimable item (offline seller) after cancel for auction " + auction.getId(), e);
+            }
             plugin.getLogger().info("Ítem de subasta cancelada ID " + auction.getId() + " para " + seller.getName() + " enviado a ítems reclamables (offline).");
         }
 
@@ -407,7 +423,7 @@ public class AuctionManager {
             Economy econ = AetherAuctions.getEconomy();
             econ.depositPlayer(highestBidder, auction.getCurrentBid());
             if (highestBidder.isOnline()) {
-                highestBidder.getPlayer().sendMessage(ChatColor.YELLOW + "La subasta ID " + auction.getId() + " ("+itemDisplayName+") en la que pujabas ha sido cancelada. Tu puja de " + String.format("%.2f", auction.getCurrentBid()) + " ha sido devuelta.");
+                messageManager.sendMessage(highestBidder.getPlayer(), "auction_cancelled_bid_refunded", "%id%", String.valueOf(auction.getId()), "%item%", itemDisplayName, "%bid%", String.format("%.2f", auction.getCurrentBid()), "%currency%", configManager.getCurrencySymbol());
             }
         }
 
@@ -417,12 +433,13 @@ public class AuctionManager {
         try {
             databaseManager.saveAuction(auction);
             if (isAdmin && !auction.getSellerUUID().equals(player.getUniqueId().toString())) {
-                 player.sendMessage(ChatColor.GREEN + "Subasta " + auctionId + " cancelada administrativamente.");
+                 messageManager.sendMessage(player, "auction_cancelled_admin", "%id%", String.valueOf(auctionId));
             }
             return true;
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Error SQL al cancelar la subasta " + auctionId, e);
-            player.sendMessage(ChatColor.RED + "Error interno al cancelar la subasta.");
+            messageManager.sendMessage(player, "internal_error_cancel_auction");
+            // Rollback
             auction.setStatus(AuctionStatus.ACTIVE);
             activeAuctions.put(auction.getId(), auction);
             return false;
@@ -449,33 +466,49 @@ public class AuctionManager {
 
             if (winner.isOnline()) {
                 if(winner.getPlayer().getInventory().firstEmpty() == -1){
-                    winner.getPlayer().sendMessage(ChatColor.RED + "No tienes espacio en tu inventario para '" + itemDisplayName + "' (Subasta ID " + auction.getId() + "). El ítem ha sido enviado a tus ítems reclamables.");
-                    databaseManager.addClaimableItem(winner.getUniqueId().toString(), auction.getItemStack().clone(), "Ganado en subasta ID: " + auction.getId());
+                    messageManager.sendMessage(winner.getPlayer(), "inventory_full_claimable_won", "%item%", itemDisplayName, "%id%", String.valueOf(auction.getId()));
+                    try {
+                        databaseManager.addClaimableItem(winner.getUniqueId().toString(), auction.getItemStack().clone(), "Ganado en subasta ID: " + auction.getId());
+                    } catch (SQLException e) {
+                        plugin.getLogger().log(Level.SEVERE, "Error adding claimable item after win for auction " + auction.getId(), e);
+                    }
                 } else {
                     winner.getPlayer().getInventory().addItem(auction.getItemStack().clone());
-                    winner.getPlayer().sendMessage(ChatColor.GREEN + "¡Has ganado la subasta ID " + auction.getId() + " por '" + itemDisplayName + "'! El ítem ha sido añadido a tu inventario.");
+                    messageManager.sendMessage(winner.getPlayer(), "auction_won_item_received", "%id%", String.valueOf(auction.getId()), "%item%", itemDisplayName);
                 }
             } else {
-                 databaseManager.addClaimableItem(winner.getUniqueId().toString(), auction.getItemStack().clone(), "Ganado en subasta ID: " + auction.getId());
+                try {
+                    databaseManager.addClaimableItem(winner.getUniqueId().toString(), auction.getItemStack().clone(), "Ganado en subasta ID: " + auction.getId());
+                } catch (SQLException e) {
+                    plugin.getLogger().log(Level.SEVERE, "Error adding claimable item (offline winner) for auction " + auction.getId(), e);
+                }
                  plugin.getLogger().info("Ítem '" + itemDisplayName + "' ganado en subasta ID " + auction.getId() + " por " + winner.getName() + " enviado a ítems reclamables (offline).");
             }
 
             auction.setStatus(AuctionStatus.SOLD_VIA_BID);
             if(seller.isOnline()){
-                seller.getPlayer().sendMessage(ChatColor.GREEN + "Tu subasta ID " + auction.getId() + " ('" + itemDisplayName + "') ha finalizado. Vendida a " + auction.getHighestBidderName() + " por " + String.format("%.2f", auction.getCurrentBid()) + ". Has recibido " + String.format("%.2f", amountToSeller) + " (después de comisión).");
+                 messageManager.sendMessage(seller.getPlayer(), "your_auction_ended_sold", "%id%", String.valueOf(auction.getId()), "%item%", itemDisplayName, "%winner%", auction.getHighestBidderName(), "%price%", String.format("%.2f", auction.getCurrentBid()), "%received%", String.format("%.2f", amountToSeller), "%currency%", configManager.getCurrencySymbol());
             }
 
-        } else {
+        } else { // No highest bidder - auction expired without bids
             if (seller.isOnline()) {
                  if(seller.getPlayer().getInventory().firstEmpty() == -1){
-                    seller.getPlayer().sendMessage(ChatColor.RED + "No tienes espacio en tu inventario para tu ítem de la subasta expirada ID " + auction.getId() + " ('"+itemDisplayName+"'). El ítem ha sido enviado a tus ítems reclamables.");
-                    databaseManager.addClaimableItem(seller.getUniqueId().toString(), auction.getItemStack().clone(), "Subasta ID " + auction.getId() + " ("+itemDisplayName+") expirada sin pujas.");
+                    messageManager.sendMessage(seller.getPlayer(), "inventory_full_claimable_expired_no_bids", "%id%", String.valueOf(auction.getId()), "%item%", itemDisplayName);
+                    try {
+                        databaseManager.addClaimableItem(seller.getUniqueId().toString(), auction.getItemStack().clone(), "Subasta ID " + auction.getId() + " ("+itemDisplayName+") expirada sin pujas.");
+                    } catch (SQLException e) {
+                        plugin.getLogger().log(Level.SEVERE, "Error adding claimable item after expiry (no bids) for auction " + auction.getId(), e);
+                    }
                  } else {
                     seller.getPlayer().getInventory().addItem(auction.getItemStack().clone());
-                    seller.getPlayer().sendMessage(ChatColor.YELLOW + "Tu subasta ID " + auction.getId() + " (" + itemDisplayName + ") ha expirado sin pujas. El ítem ha sido devuelto a tu inventario.");
+                    messageManager.sendMessage(seller.getPlayer(), "auction_expired_no_bids_item_returned", "%id%", String.valueOf(auction.getId()), "%item%", itemDisplayName);
                  }
             } else {
-                 databaseManager.addClaimableItem(auction.getSellerUUID(), auction.getItemStack().clone(), "Subasta ID " + auction.getId() + " ("+itemDisplayName+") expirada sin pujas.");
+                try {
+                    databaseManager.addClaimableItem(auction.getSellerUUID(), auction.getItemStack().clone(), "Subasta ID " + auction.getId() + " ("+itemDisplayName+") expirada sin pujas.");
+                } catch (SQLException e) {
+                    plugin.getLogger().log(Level.SEVERE, "Error adding claimable item (offline seller, no bids) for auction " + auction.getId(), e);
+                }
                  plugin.getLogger().info("Ítem de subasta expirada ID " + auction.getId() + " ("+itemDisplayName+") para " + seller.getName() + " enviado a ítems reclamables (offline).");
             }
             auction.setStatus(AuctionStatus.EXPIRED);
@@ -495,6 +528,7 @@ public class AuctionManager {
             expiredAuctionCheckerTask.cancel();
         }
         long checkInterval = plugin.getConfig().getLong("auction.expired_check_interval_seconds", 60) * 20L;
+        this.currentCheckInterval = checkInterval; // Store the interval
         expiredAuctionCheckerTask = new BukkitRunnable() {
             @Override
             public void run() {
@@ -530,7 +564,8 @@ public class AuctionManager {
         }
 
         long dbFallbackInterval = plugin.getConfig().getLong("auction.db_fallback_expired_check_millis", 5 * 60 * 1000);
-        if (dbFallbackInterval > 0 && (System.currentTimeMillis() % dbFallbackInterval < (checkExpiredAuctionsTask.getPeriod() * 50))) { // Check less frequently, e.g. every 5 mins if task is 1 min
+        // Use currentCheckInterval (converted to milliseconds) for comparison logic
+        if (expiredAuctionCheckerTask != null && dbFallbackInterval > 0 && (System.currentTimeMillis() % dbFallbackInterval < (this.currentCheckInterval / 20 * 1000))) {
             try {
                 List<AuctionItem> dbExpired = databaseManager.getExpiredAuctions();
                 if (!dbExpired.isEmpty()) {

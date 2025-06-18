@@ -34,7 +34,7 @@ public class CommandManager implements CommandExecutor, TabCompleter {
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length == 0) {
             if (sender instanceof Player) {
-                guiManager.openMainAuctionGui((Player) sender);
+                guiManager.openMainAuctionGui((Player) sender, 1); // Added page argument
             } else {
                 sendHelpMessage(sender, label);
             }
@@ -55,14 +55,14 @@ public class CommandManager implements CommandExecutor, TabCompleter {
                 break;
             case "mis":
                 if (sender instanceof Player) {
-                    guiManager.openMyAuctionsGui((Player) sender);
+                    guiManager.openMyAuctionsGui((Player) sender, 1); // Added page argument
                 } else {
                     messageManager.sendMessage(sender, "player_only_command");
                 }
                 break;
             case "historial":
                 if (sender instanceof Player) {
-                    guiManager.openAuctionHistoryGui((Player) sender);
+                    guiManager.openAuctionHistoryGui((Player) sender, 1); // Added page argument
                 } else {
                     messageManager.sendMessage(sender, "player_only_command");
                 }

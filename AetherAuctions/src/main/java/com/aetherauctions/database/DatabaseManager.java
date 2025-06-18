@@ -295,4 +295,17 @@ public class DatabaseManager {
             throw e;
         }
     }
+
+    public synchronized void addClaimableItem(String playerUUID, ItemStack item, String reason) throws SQLException {
+        String sql = "INSERT INTO claimable_items(player_uuid, item_serialized, reason_message) VALUES(?,?,?)";
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setString(1, playerUUID);
+            pstmt.setString(2, ItemSerializer.itemStackToBase64(item));
+            pstmt.setString(3, reason);
+            pstmt.executeUpdate();
+        } catch (IllegalStateException | SQLException e) { // IllegalStateException from ItemSerializer
+            plugin.getLogger().log(Level.SEVERE, "Error añadiendo ítem reclamable para el jugador: " + playerUUID, e);
+            throw e;
+        }
+    }
 }
