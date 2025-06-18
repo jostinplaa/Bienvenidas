@@ -1,0 +1,13 @@
+name: Subastas
+version: 0.1.0
+main: com.julesmc.subastas.SubastasPlugin
+api-version: 1.18
+authors: [Jules, TuNombreDeUsuario]
+description: Un plugin de subastas completo y profesional.
+website: # (Opcional, se puede añadir después)
+depend: [Vault]
+commands:
+  subastas:
+    description: Comando principal para el plugin de Subastas.
+    aliases: [sub, auction, auctions]
+permissions: # (Se definirán más adelante)

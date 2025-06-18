@@ -1,0 +1,36 @@
+# Configuración General del Plugin Subastas
+# Desarrollado por Jules y [TuNombreDeUsuario]
+
+# Prefijo que se mostrará antes de cada mensaje del plugin.
+# Puedes usar códigos de color de Minecraft con '&'.
+plugin-prefix: "&e[Subastas]&r "
+
+# Configuración de la base de datos
+# Opciones soportadas actualmente: sqlite
+database:
+  type: "sqlite"
+  # Configuración específica para sqlite (solo nombre de archivo por ahora)
+  sqlite:
+    file: "subastas.db"
+  # Espacio para futuras configuraciones de MySQL, etc.
+  # mysql:
+  #   host: "localhost"
+  #   port: 3306
+  #   database: "subastas"
+  #   username: "user"
+  #   password: "password"
+
+# Mensajes del Plugin (Internacionalización básica)
+# Los mensajes se cargarán desde el archivo de idioma correspondiente (ej: lang_es.yml)
+# Esta sección podría usarse para overrides o configuraciones de idioma por defecto si no se encuentra el archivo.
+language: "es" # Idioma por defecto
+
+# Opciones de Subasta
+auction-settings:
+  default-duration: "24h" # Duración por defecto de una subasta (ej: 10m, 1h, 3d)
+  max-auctions-per-player: 5
+  end-task-interval-seconds: 30 # Intervalo en segundos para verificar subastas finalizadas
+  # Comisiones (0.0 para deshabilitar)
+  commission:
+    create-auction-fee: 0 # Costo fijo por crear una subasta
+    sales-tax-percentage: 0.0 # Porcentaje de la venta final como impuesto (ej: 0.05 para 5%)

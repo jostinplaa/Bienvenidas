@@ -1,0 +1,21 @@
+command:
+  reload: "¡La configuración del plugin Subastas ha sido recargada!"
+  help: "Usa /subastas <comando> para interactuar con el sistema de subastas."
+  player-only: "Este comando solo puede ser ejecutado por un jugador."
+  no-permission: "No tienes permiso para ejecutar este comando."
+  unknown-command: "Comando desconocido. Usa /subastas help para ver la lista de comandos."
+
+error:
+  generic: "Ha ocurrido un error inesperado."
+  vault-not-found: "&cVault no encontrado. El plugin Subastas se deshabilitará. Asegúrate de tener Vault instalado."
+  database-connection: "No se pudo conectar a la base de datos: {error}"
+  config-load: "Error al cargar la configuración: {error}"
+  messages-load: "Error al cargar los mensajes del idioma '{lang}': {error}"
+
+auction:
+  created: "¡Has puesto en subasta {item} por {price}!"
+  # Más mensajes relacionados con subastas aquí...
+
+plugin:
+  enabled: "&aEl plugin Subastas ha sido habilitado correctamente."
+  disabled: "&cEl plugin Subastas ha sido deshabilitado."
