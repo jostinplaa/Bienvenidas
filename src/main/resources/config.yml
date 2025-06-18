@@ -1,0 +1,56 @@
+# AetherAuctions Configuration
+
+# Impuesto al publicar una subasta (porcentaje sobre el precio inicial o cantidad fija)
+# Ejemplo: 0.05 para 5% o 10 para 10 monedas
+publication-tax: 0.05
+
+# Comisión por venta exitosa (porcentaje sobre el precio final)
+# Ejemplo: 0.02 para 2%
+sales-commission: 0.02
+
+# Límites de subastas activas simultáneamente
+limits:
+  default-player: 5
+  vip-player: 10
+
+# Incremento mínimo para una puja (en la moneda del servidor)
+minimum-bid-increment: 10
+
+# Símbolo de la moneda (usado en mensajes y GUIs)
+currency-symbol: "$"
+
+# Duraciones de subasta disponibles (en segundos)
+# Formato: 'Nombre para GUI': segundos
+# Ejemplo: '1 Hora': 3600
+auction-durations:
+  '30 Minutos': 1800
+  '1 Hora': 3600
+  '6 Horas': 21600
+  '12 Horas': 43200
+  '1 Día': 86400
+  '3 Días': 259200 # VIP Only
+  '7 Días': 604800 # VIP Only
+
+# Lista negra de ítems (no se pueden subastar)
+# Usar Material names de Spigot: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Material.html
+item-blacklist:
+  - "BARRIER"
+  - "COMMAND_BLOCK"
+  - "STRUCTURE_VOID"
+
+# Configuración de la base de datos SQLite
+database:
+  # Nombre del archivo de la base de datos. Se guardará en la carpeta del plugin.
+  file: "auctions.db"
+
+# Configuraciones de idioma y logs
+language-file: "messages.yml" # Nombre del archivo de mensajes
+debug-logging: false # Activar para ver logs detallados en la consola
+
+# Opciones para VIPs
+vip:
+  extended-durations:
+    - 259200 # 3 Días
+    - 604800 # 7 Días
+  no-publication-tax: true
+  # exclusive-filters: [] # Futuro placeholder para filtros VIP

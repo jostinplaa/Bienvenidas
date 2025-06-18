@@ -1,0 +1,25 @@
+name: AetherAuctions
+version: 1.0.0
+main: com.example.aetherauctions.AetherAuctions
+api-version: 1.18
+authors: [AetherAuctions Development Team]
+description: A comprehensive GUI-based auction system.
+depend: [Vault]
+commands:
+  subasta:
+    description: Opens the main auction house GUI.
+    usage: /subasta
+  subastadmin:
+    description: Admin commands for AetherAuctions.
+    usage: /subastadmin <reload|eliminar>
+    permission: aetherauctions.admin
+permissions:
+  aetherauctions.admin:
+    description: Allows access to admin commands.
+    default: op
+  aetherauctions.vip:
+    description: Grants VIP perks.
+    default: false
+  aetherauctions.use:
+    description: Allows players to use the auction house.
+    default: true
