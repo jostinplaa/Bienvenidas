@@ -1,6 +1,7 @@
 dev/jules/proauction/AuctionManager.class
 dev/jules/proauction/gui/AuctionGUI.class
 dev/jules/proauction/ProAuction.class
+dev/jules/proauction/util/LanguageManager.class
 dev/jules/proauction/util/TaxFeeCalculator.class
 dev/jules/proauction/model/Auction.class
 dev/jules/proauction/util/TaxFeeCalculator$FeeCalculationResult.class

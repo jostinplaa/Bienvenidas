@@ -1,0 +1,157 @@
+# ProAuction Spanish Language File - messages_es.yml
+
+# General Plugin Messages
+plugin.prefix: "&6[ProAuction]&r "
+plugin.enabled: "¡Plugin activado!"
+plugin.disabled: "¡Plugin desactivado!"
+plugin.reloaded: "¡Configuración y archivos de idioma de ProAuction recargados!"
+plugin.vault.notfound: "¡Plugin Vault no encontrado!"
+plugin.vault.noecon: "¡No se encontró ningún plugin de economía a través de Vault!"
+plugin.vault.success: "Conectado exitosamente a Vault y se encontró un plugin de economía."
+plugin.vault.unhook: "Desconectando de Vault."
+plugin.data.saveall: "Guardando todas las subastas activas..."
+plugin.data.clearactive: "Limpiando el mapa de subastas activas de la memoria."
+plugin.vault.disabled: "&c¡Plugin desactivado! Falta una dependencia crítica de Vault o de Economía."
+
+# General Errors
+error.generic: "&cOcurrió un error inesperado. Por favor, contacta a un administrador."
+error.nopermission: "&cNo tienes permiso para hacer eso."
+error.playeronly: "&cSolo los jugadores pueden ejecutar este comando."
+error.mustbeholdingitem: "&cDebes tener un ítem en la mano para subastarlo."
+error.invalidprice: "&cPrecio especificado inválido."
+error.invalidincrement: "&cIncremento mínimo inválido."
+error.invalidduration: "&cDuración especificada inválida: {duration}"
+error.invalidbuynowprice: "&cPrecio de Compra Directa inválido: {price}"
+error.pricenotpositive: "&cEl precio inicial, incremento y duración deben ser positivos."
+error.buynowpricenotpositive: "&cEl precio de Compra Directa debe ser positivo si se establece."
+error.buynowtoolow: "&cEl precio de Compra Directa debe ser mayor que el precio inicial."
+error.auctionnotfound: "&cSubasta no encontrada o ha finalizado."
+error.bidtoolow: "&cTu puja debe ser más alta que la puja actual ({current_bid})."
+error.bidnotenough: "&cTu puja debe ser de al menos {min_next_bid} (puja actual + incremento mínimo)."
+error.notenoughmoney: "&cNo tienes suficiente dinero. Necesitas {amount}."
+error.notenoughmoney.listingfee: "&cNo tienes suficiente dinero para pagar la comisión por listar de {fee}."
+error.failedcharge.listingfee: "&cNo se pudo cobrar la comisión por listar de {fee}. Subasta no creada."
+error.cannotbidown: "&cNo puedes pujar en tu propia subasta."
+error.cannotbuyown: "&cNo puedes comprar el ítem de tu propia subasta."
+error.paymentfailed: "&cError en el pago. No se pudo retirar el dinero."
+error.paytochestfailed: "&cError al pagar al vendedor. Tu dinero ha sido devuelto. Por favor, reporta esto a un administrador."
+error.inventoryfull.general: "&c¡Tu inventario está lleno!"
+error.inventoryfull.itemdropped: "&c¡Tu inventario está lleno! El ítem ha sido arrojado a tus pies."
+error.auctionidinvalid: "&cID de subasta inválido o subasta no encontrada por ID corto."
+error.invalidbidamount: "&cMonto de puja inválido."
+
+# Auction Command Specific
+auction.help.header: "&6--- Ayuda de ProAuction ---"
+auction.help.usageprefix: "&eUso: "
+auction.help.availablecommands: "&6Comandos disponibles:"
+
+auction.help.detailed.sell.usage: "&e/auction sell <precio> [incremento] [duracion_min] [precio_compra_directa]"
+auction.help.detailed.sell.description: "&7- Pone en subasta el ítem que tienes en la mano."
+auction.help.detailed.sell.note: "&b  ↳ Nota: Las ventas pueden estar sujetas a impuestos. Pueden aplicarse comisiones por listar."
+
+auction.help.detailed.list.usage: "&e/auction list"
+auction.help.detailed.list.description: "&7- Muestra todos los ítems actualmente en subasta."
+auction.help.detailed.list.info.salestax: "&3Info: A los vendedores se les cobra un impuesto del {tax_percentage}% sobre el precio final de venta."
+auction.help.detailed.list.info.listingfee: "&3Info: Se aplica una comisión del {fee_percentage}% (del precio inicial) al listar un ítem."
+
+auction.help.detailed.bid.usage: "&e/auction bid <id_subasta> <cantidad>"
+auction.help.detailed.bid.description: "&7- Realiza una puja en la subasta especificada."
+
+auction.help.detailed.ah.usage: "&e/ah"
+auction.help.detailed.ah.description: "&7- Abre la interfaz gráfica de la Casa de Subastas."
+
+auction.help.detailed.reload.usage: "&e/auction reload"
+auction.help.detailed.reload.description: "&7- Recarga los archivos de configuración e idioma del plugin."
+
+# Usage messages for commands
+auction.sell.usage: "&cUso: /auction sell <precio> [incremento] [duracion_minutos] [precio_compra_directa]"
+auction.bid.usage: "&cUso: /auction bid <id_subasta> <cantidad>"
+auction.list.header: "&6--- Subastas Activas ---"
+
+auction.sell.success: "&aSubasta iniciada para {item_name} con ID: {auction_id}"
+auction.sell.broadcast: "&e¡{player_name} ha iniciado una subasta para {item_name}!"
+auction.sell.chargedlistingfee: "&eSe cobró una comisión por listar de {fee}."
+
+auction.list.noauctions: "&eNo hay subastas activas."
+auction.list.itemformat: "&7ID: {short_id} | Ítem: {item_name} ({item_amount}) | Vendedor: {seller_name} | Puja: {current_bid} | Termina en: {time_remaining}"
+
+auction.bid.success: "&a¡Ahora eres el máximo pujador por {item_name} con una puja de {bid_amount}!"
+auction.bid.outbid: "&eHas sido superado en la subasta por {item_name} por {new_bidder_name}."
+auction.bid.tobidder.info: "&7(El dinero se tomará cuando la subasta termine si ganas)"
+auction.bid.toseller.update: "&b{bidder_name} ha pujado {bid_amount} en tu subasta por {item_name}."
+
+# Buy Now Specific
+buynow.unavailable: "&cEste ítem no está disponible para Compra Directa."
+buynow.success.buyer: "&a¡Compraste {item_name} por {price}!"
+buynow.success.seller: "&a¡Tu subasta por {item_name} fue comprada por {player_name} por {price} (Compra Directa)!"
+buynow.success.seller.withtax: "&a¡Tu subasta por {item_name} fue comprada por {player_name} por {price} (Compra Directa)! Después de un impuesto de venta del {tax_percentage}% ({tax_amount}), recibiste {net_amount}."
+buynow.broadcast: "&e¡{player_name} compró {item_name} de {seller_name} por {price} usando Compra Directa!"
+
+# Auction End Specific
+auction.end.sold.seller: "&aTu subasta por {item_name} se vendió a {winner_name} por {price}."
+auction.end.sold.seller.withtax: "&aTu subasta por {item_name} se vendió a {winner_name} por {price}. Después de un impuesto de venta del {tax_percentage}% ({tax_amount}), recibiste {net_amount}."
+auction.end.sold.winner: "&a¡Ganaste la subasta por {item_name} por {price}! El ítem ha sido añadido a tu inventario."
+auction.end.sold.broadcast: "&e¡{item_name} se vendió a {winner_name} por {price}!"
+auction.end.winneroffline: "El ganador estaba desconectado. Subasta anulada."
+auction.end.winnernotenoughfunds: "El ganador {winner_name} no tenía fondos suficientes. Subasta anulada."
+auction.end.winnernotenoughfunds.notify: "&cGanaste la subasta por {item_name} pero no tenías fondos suficientes ({price})."
+auction.end.withdrawfailed: "Error al retirar fondos del ganador {winner_name}. Subasta anulada."
+auction.end.withdrawfailed.notify: "&cError al retirar fondos para la subasta {item_name}. Por favor, contacta a un administrador."
+auction.end.depositfailed.seller: "Error al depositar fondos para ti por la subasta {item_name}. El ganador ha sido reembolsado. Subasta anulada."
+auction.end.depositfailed.admin: "CRÍTICO: Error al depositar {amount} al vendedor {seller_name} por la subasta {auction_id}. Intentando reembolsar al ganador."
+auction.end.refundfailed.admin: "CRÍTICO: ERROR AL REEMBOLSAR AL GANADOR {winner_name} por la subasta {auction_id}. ESTO ES UN ESCENARIO DE DUPE/PÉRDIDA."
+auction.end.inventoryfull.winner: "&c¡Ganaste la subasta por {item_name}, pero tu inventario está lleno! La transacción ha sido anulada."
+auction.end.inventoryfull.sellerreason: "El inventario del ganador {winner_name} estaba lleno. Subasta anulada, fondos revertidos."
+auction.end.nobids: "Tu subasta terminó sin pujas."
+auction.end.itemreturned.seller: "&e{reason} El ítem {item_name} ha sido devuelto a tu inventario."
+auction.end.itemreturned.seller.dropped: "&e{reason} Tu inventario estaba lleno, así que el ítem {item_name} fue arrojado a tus pies."
+auction.end.itemreturned.seller.offline: "&e{reason} El ítem {item_name} no pudo ser devuelto ya que estás desconectado. Requerirá intervención administrativa o un futuro sistema de reclamación."
+
+# GUI Specific
+gui.title.main: "&1Casa de Subastas - Pág. {page}/{total_pages}"
+gui.title.main.prefix: "&1Casa de Subastas - Pág. " # For startsWith check
+gui.title.bidconfirm: "&1Pujar por: {item_name}"
+gui.title.bidconfirm.prefix: "&1Pujar por: " # For startsWith check
+
+gui.button.nextpage: "&aSiguiente Página"
+gui.button.prevpage: "&aPágina Anterior"
+gui.button.close: "&cCerrar"
+gui.button.backtoauctions: "&eVolver a Subastas"
+gui.button.bidminimum: "&aPujar Mínimo"
+gui.button.bidcustom: "&6Puja Personalizada"
+gui.button.buynow: "&6&lCompra Directa"
+
+gui.lore.sellernote.salestax: "&3Nota: El precio de venta para el vendedor está sujeto a un impuesto del {tax_percentage}%."
+gui.lore.buynow.sellernote.salestax: "&7El vendedor recibe el precio menos el impuesto del {tax_percentage}%."
+
+gui.itemdisplay.seller: "&6Vendedor: &7{name}"
+gui.itemdisplay.highestbid: "&6Puja Máxima: &a{amount}"
+gui.itemdisplay.highestbidder: "&6Máximo Pujador: &7{name}"
+gui.itemdisplay.startingprice: "&6Precio Inicial: &a{amount}"
+gui.itemdisplay.minincrement: "&6Incremento Mín.: &a{amount}"
+gui.itemdisplay.buynowprice: "&6Compra Directa: &b{amount}"
+gui.itemdisplay.timeremaining: "&6Tiempo Restante: &c{time}"
+gui.itemdisplay.id: "&8ID: {id}"
+gui.itemdisplay.clickformore: "&9&o¡Haz clic para más opciones!"
+
+gui.bidconfirm.sellerinfo: "&6Vendedor: &7{name}"
+gui.bidconfirm.currentbidinfo: "&6Puja Actual: &a{amount}"
+gui.bidconfirm.currentbidinfo.by: "&7Por: {name}"
+gui.bidconfirm.currentbidinfo.nobids: "&7Sin pujas aún (Precio Inicial)"
+gui.bidconfirm.minnextbidinfo: "&6Próxima Puja Mín.: &a{amount}"
+gui.bidconfirm.timeinfo: "&6Tiempo Restante: &c{time}"
+gui.bidconfirm.balanceinfo: "&6Tu Saldo: &a{amount}"
+gui.bidconfirm.bidminimum.lore: "&7Pujar {amount}"
+gui.bidconfirm.custombid.lore: "&7Ingresa una puja personalizada en el chat."
+gui.bidconfirm.buynow.loreprice: "&aPrecio: {amount}"
+
+gui.status.auctionunavailable: "&cEsta subasta ya no está disponible."
+gui.status.bidconfirm.errorcontext: "&cError: No se pudo encontrar el contexto de la subasta. Por favor, reabre la casa de subastas."
+gui.status.custombid.prompt: "&6Por favor, escribe tu puja en el chat para la subasta: &b{item_name}"
+gui.status.custombid.prompt.id: "&7(ID Subasta: {auction_id})"
+gui.status.custombid.invalidamount: "&cCantidad de puja inválida: &f{amount}"
+gui.status.custombid.tryagain: "&ePor favor, intenta pujar de nuevo a través de la GUI."
+
+# Reload command specific
+auction.reload.success: "&a¡Configuración y archivos de idioma de ProAuction recargados exitosamente!"
+auction.reload.nopermission: "&cNo tienes permiso para recargar la configuración."

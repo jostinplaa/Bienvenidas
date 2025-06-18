@@ -1,5 +1,10 @@
 # ProAuction Configuration
 
+# Language for plugin messages. Examples: "en" (English), "es" (Spanish).
+# Plugin will look for a messages_xx.yml file corresponding to this code.
+# If not found, it will attempt to use messages_en.yml as a base.
+language: "es"
+
 # Prefix for all plugin messages. Use '&' for color codes.
 message-prefix: "&6[ProAuction]&r " # Default prefix with orange color and a reset, plus a space
 

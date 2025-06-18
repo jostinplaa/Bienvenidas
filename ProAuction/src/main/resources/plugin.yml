@@ -7,9 +7,9 @@ description: A professional auction plugin.
 depend: [Vault]
 commands:
   auction:
-    description: Manages auctions.
-    usage: /auction <sell|bid|list> ...
-    aliases: [auc]
+    description: Main command for ProAuction plugin. # Changed description slightly for clarity
+    usage: /auction <sell|bid|list|reload|help> [args...] # Ensured usage is comprehensive
+    aliases: [auc, ct] # Added 'ct'
   ah:
     description: Opens the Auction House GUI.
     usage: /ah
@@ -17,14 +17,17 @@ commands:
     permission: proauction.gui
 permissions:
   proauction.sell:
-    description: Allows selling items via auction.
-    default: true
-  proauction.bid:
-    description: Allows bidding on auctions.
+    description: Allows selling items via auction command.
     default: true
   proauction.list:
     description: Allows listing active auctions.
     default: true
+  proauction.bid:
+    description: Allows bidding on auctions.
+    default: true
   proauction.gui:
     description: Allows opening the Auction House GUI.
     default: true
+  proauction.reload:
+    description: Allows reloading the plugin's configuration.
+    default: op

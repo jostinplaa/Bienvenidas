@@ -3,7 +3,7 @@ package dev.jules.proauction.gui;
 import dev.jules.proauction.ProAuction;
 import dev.jules.proauction.model.Auction;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
+import org.bukkit.ChatColor; // Added import
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
@@ -29,18 +29,8 @@ public class AuctionGUI implements InventoryHolder {
     // Tracks players expected to make a bid via chat
     private final Map<UUID, UUID> playerPendingChatBid = new HashMap<>();
 
-
     public static final int AUCTIONS_PER_PAGE = 45; // 5 rows of 9 slots for auctions
-    public static final String AUCTION_LIST_TITLE_PREFIX = ChatColor.DARK_BLUE + "Auction House - Page ";
-    public static final String BID_CONFIRM_TITLE_PREFIX = ChatColor.DARK_BLUE + "Bid on: ";
-
-    public static final String NEXT_PAGE_NAME = ChatColor.GREEN + "Next Page";
-    public static final String PREV_PAGE_NAME = ChatColor.GREEN + "Previous Page";
-    public static final String CLOSE_BUTTON_NAME = ChatColor.RED + "Close";
-    public static final String BACK_BUTTON_NAME = ChatColor.YELLOW + "Back to Auctions";
-    public static final String BID_MINIMUM_NAME = ChatColor.GREEN + "Bid Minimum";
-    public static final String BID_CUSTOM_NAME = ChatColor.GOLD + "Custom Bid";
-
+    // Title prefixes and button names will be handled by LanguageManager
 
     public AuctionGUI(ProAuction plugin) {
         this.plugin = plugin;
@@ -56,7 +46,10 @@ public class AuctionGUI implements InventoryHolder {
 
         pageNumber = Math.max(0, Math.min(pageNumber, totalPages - 1)); // Clamp page number
 
-        Inventory gui = Bukkit.createInventory(this, 54, AUCTION_LIST_TITLE_PREFIX + (pageNumber + 1) + "/" + totalPages);
+        Map<String, String> titlePlaceholders = new HashMap<>();
+        titlePlaceholders.put("page", String.valueOf(pageNumber + 1));
+        titlePlaceholders.put("total_pages", String.valueOf(totalPages));
+        Inventory gui = Bukkit.createInventory(this, 54, plugin.getLanguageManager().getMessage("gui.title.main", titlePlaceholders));
 
         Map<Integer, UUID> auctionSlots = new HashMap<>();
         playerViewingBidConfirmation.remove(player.getUniqueId()); // Clear bid confirmation state
@@ -76,7 +69,7 @@ public class AuctionGUI implements InventoryHolder {
         if (pageNumber > 0) {
             ItemStack prevPage = new ItemStack(Material.ARROW);
             ItemMeta prevMeta = prevPage.getItemMeta();
-            prevMeta.setDisplayName(PREV_PAGE_NAME);
+            prevMeta.setDisplayName(plugin.getLanguageManager().getMessage("gui.button.prevpage"));
             prevPage.setItemMeta(prevMeta);
             gui.setItem(45, prevPage); // Bottom left
         }
@@ -84,14 +77,14 @@ public class AuctionGUI implements InventoryHolder {
         if (pageNumber < totalPages - 1) {
             ItemStack nextPage = new ItemStack(Material.ARROW);
             ItemMeta nextMeta = nextPage.getItemMeta();
-            nextMeta.setDisplayName(NEXT_PAGE_NAME);
+            nextMeta.setDisplayName(plugin.getLanguageManager().getMessage("gui.button.nextpage"));
             nextPage.setItemMeta(nextMeta);
             gui.setItem(53, nextPage); // Bottom right
         }
 
         ItemStack closeButton = new ItemStack(Material.BARRIER);
         ItemMeta closeMeta = closeButton.getItemMeta();
-        closeMeta.setDisplayName(CLOSE_BUTTON_NAME);
+        closeMeta.setDisplayName(plugin.getLanguageManager().getMessage("gui.button.close"));
         closeButton.setItemMeta(closeMeta);
         gui.setItem(49, closeButton); // Bottom middle
 
@@ -102,33 +95,40 @@ public class AuctionGUI implements InventoryHolder {
 
     public void openBidConfirmationGUI(Player player, Auction auction) {
         if (auction == null || !auction.isActive()) {
-            plugin.sendMessage(player, ChatColor.RED + "This auction is no longer available.");
+            plugin.sendMessage(player, "gui.status.auctionunavailable");
             openMainAuctionPage(player, playerOpenAuctionPage.getOrDefault(player.getUniqueId(), 0));
             return;
         }
 
-        Inventory bidGui = Bukkit.createInventory(this, 27, BID_CONFIRM_TITLE_PREFIX + getItemNamePlain(auction.getItem()));
+        Inventory bidGui = Bukkit.createInventory(this, 27, plugin.getLanguageManager().getMessage("gui.title.bidconfirm", "item_name", getItemNamePlain(auction.getItem())));
 
         // Display Item (Slot 4 - center of top row)
         bidGui.setItem(4, auction.getItem().clone());
 
         // Information Items
         ItemMeta tempMeta;
+        Map<String, String> placeholders = new HashMap<>();
 
-        ItemStack sellerInfo = new ItemStack(Material.PLAYER_HEAD); // Or other suitable material
+        ItemStack sellerInfo = new ItemStack(Material.PLAYER_HEAD);
         tempMeta = sellerInfo.getItemMeta();
-        tempMeta.setDisplayName(ChatColor.GOLD + "Seller: " + ChatColor.GRAY + auction.getSellerName());
+        placeholders.clear();
+        placeholders.put("name", auction.getSellerName());
+        tempMeta.setDisplayName(plugin.getLanguageManager().getMessage("gui.bidconfirm.sellerinfo", placeholders));
         sellerInfo.setItemMeta(tempMeta);
         bidGui.setItem(10, sellerInfo);
 
         ItemStack currentBidInfo = new ItemStack(Material.GOLD_NUGGET);
         tempMeta = currentBidInfo.getItemMeta();
-        tempMeta.setDisplayName(ChatColor.GOLD + "Current Bid: " + ChatColor.GREEN + ProAuction.format(auction.getCurrentBid()));
+        placeholders.clear();
+        placeholders.put("amount", ProAuction.format(auction.getCurrentBid()));
+        tempMeta.setDisplayName(plugin.getLanguageManager().getMessage("gui.bidconfirm.currentbidinfo", placeholders));
         List<String> bidLore = new ArrayList<>();
         if (auction.getHighestBidderUuid() != null) {
-            bidLore.add(ChatColor.GRAY + "By: " + auction.getHighestBidderName());
+            placeholders.clear();
+            placeholders.put("name", auction.getHighestBidderName());
+            bidLore.add(plugin.getLanguageManager().getMessage("gui.bidconfirm.currentbidinfo.by", placeholders));
         } else {
-            bidLore.add(ChatColor.GRAY + "No bids yet (Starting Price)");
+            bidLore.add(plugin.getLanguageManager().getMessage("gui.bidconfirm.currentbidinfo.nobids"));
         }
         tempMeta.setLore(bidLore);
         currentBidInfo.setItemMeta(tempMeta);
@@ -137,66 +137,78 @@ public class AuctionGUI implements InventoryHolder {
         double nextMinBid = auction.getCurrentBid() == auction.getStartingPrice() && auction.getHighestBidderUuid() == null ? auction.getStartingPrice() : auction.getCurrentBid() + auction.getMinIncrement();
         ItemStack minNextBidInfo = new ItemStack(Material.COMPARATOR);
         tempMeta = minNextBidInfo.getItemMeta();
-        tempMeta.setDisplayName(ChatColor.GOLD + "Minimum Next Bid: " + ChatColor.GREEN + ProAuction.format(nextMinBid));
+        placeholders.clear();
+        placeholders.put("amount", ProAuction.format(nextMinBid));
+        tempMeta.setDisplayName(plugin.getLanguageManager().getMessage("gui.bidconfirm.minnextbidinfo", placeholders));
         minNextBidInfo.setItemMeta(tempMeta);
         bidGui.setItem(12, minNextBidInfo);
 
         ItemStack timeInfo = new ItemStack(Material.CLOCK);
         tempMeta = timeInfo.getItemMeta();
-        tempMeta.setDisplayName(ChatColor.GOLD + "Time Remaining: " + ChatColor.RED + formatTimeRemaining(auction.getEndTimeMillis() - System.currentTimeMillis()));
+        placeholders.clear();
+        placeholders.put("time", formatTimeRemaining(auction.getEndTimeMillis() - System.currentTimeMillis()));
+        tempMeta.setDisplayName(plugin.getLanguageManager().getMessage("gui.bidconfirm.timeinfo", placeholders));
         timeInfo.setItemMeta(tempMeta);
         bidGui.setItem(13, timeInfo);
 
         ItemStack balanceInfo = new ItemStack(Material.EMERALD);
         tempMeta = balanceInfo.getItemMeta();
-        tempMeta.setDisplayName(ChatColor.GOLD + "Your Balance: " + ChatColor.GREEN + ProAuction.format(ProAuction.getEconomy().getBalance(player)));
+        placeholders.clear();
+        placeholders.put("amount", ProAuction.format(ProAuction.getEconomy().getBalance(player)));
+        tempMeta.setDisplayName(plugin.getLanguageManager().getMessage("gui.bidconfirm.balanceinfo", placeholders));
         balanceInfo.setItemMeta(tempMeta);
         bidGui.setItem(14, balanceInfo);
 
         // Action Buttons
         ItemStack bidMinimum = new ItemStack(Material.GREEN_WOOL);
         tempMeta = bidMinimum.getItemMeta();
-        tempMeta.setDisplayName(BID_MINIMUM_NAME);
-        tempMeta.setLore(List.of(ChatColor.GRAY + "Bid " + ProAuction.format(nextMinBid)));
+        tempMeta.setDisplayName(plugin.getLanguageManager().getMessage("gui.button.bidminimum"));
+        placeholders.clear();
+        placeholders.put("amount", ProAuction.format(nextMinBid));
+        tempMeta.setLore(List.of(plugin.getLanguageManager().getMessage("gui.bidconfirm.bidminimum.lore", placeholders)));
         bidMinimum.setItemMeta(tempMeta);
         bidGui.setItem(20, bidMinimum);
 
         ItemStack customBid = new ItemStack(Material.GOLD_INGOT);
         tempMeta = customBid.getItemMeta();
-        tempMeta.setDisplayName(BID_CUSTOM_NAME);
-        tempMeta.setLore(List.of(ChatColor.GRAY + "Enter a custom bid amount in chat."));
+        tempMeta.setDisplayName(plugin.getLanguageManager().getMessage("gui.button.bidcustom"));
+        tempMeta.setLore(List.of(plugin.getLanguageManager().getMessage("gui.bidconfirm.custombid.lore")));
         customBid.setItemMeta(tempMeta);
         bidGui.setItem(22, customBid);
 
         if (auction.getBuyNowPrice() > 0) {
             ItemStack buyNowButton = new ItemStack(Material.GOLD_BLOCK);
             ItemMeta buyNowMeta = buyNowButton.getItemMeta();
-            List<String> buyNowLore = new ArrayList<>(); // Initialize new list
-            buyNowMeta.setDisplayName(ChatColor.GOLD + "" + ChatColor.BOLD + "Buy Now");
-            buyNowLore.add(ChatColor.GREEN + "Price: " + ProAuction.format(auction.getBuyNowPrice())); // Add initial lore
+            List<String> buyNowLoreList = new ArrayList<>();
+            buyNowMeta.setDisplayName(plugin.getLanguageManager().getMessage("gui.button.buynow"));
 
-            // Add tax info if applicable
+            placeholders.clear();
+            placeholders.put("amount", ProAuction.format(auction.getBuyNowPrice()));
+            buyNowLoreList.add(plugin.getLanguageManager().getMessage("gui.bidconfirm.buynow.loreprice", placeholders));
+
             double salesTaxPercentage = plugin.getSalesTaxPercentage();
             if (salesTaxPercentage > 0) {
-                buyNowLore.add(ChatColor.GRAY + "Seller receives price minus " + salesTaxPercentage + "% tax.");
+                 placeholders.clear();
+                 placeholders.put("tax_percentage", String.valueOf(salesTaxPercentage));
+                 buyNowLoreList.add(plugin.getLanguageManager().getMessage("gui.lore.buynow.sellernote.salestax", placeholders));
             }
-            buyNowMeta.setLore(buyNowLore); // Set the potentially modified lore
+            buyNowMeta.setLore(buyNowLoreList);
 
             buyNowButton.setItemMeta(buyNowMeta);
-            bidGui.setItem(24, buyNowButton); // Example slot, adjust as needed
+            bidGui.setItem(24, buyNowButton);
         }
 
         ItemStack backButton = new ItemStack(Material.ARROW);
         tempMeta = backButton.getItemMeta();
-        tempMeta.setDisplayName(BACK_BUTTON_NAME);
+        tempMeta.setDisplayName(plugin.getLanguageManager().getMessage("gui.button.backtoauctions"));
         backButton.setItemMeta(tempMeta);
-        bidGui.setItem(18, backButton); // Bottom left for bid GUI
+        bidGui.setItem(18, backButton);
 
         ItemStack closeInvButton = new ItemStack(Material.BARRIER);
         tempMeta = closeInvButton.getItemMeta();
-        tempMeta.setDisplayName(CLOSE_BUTTON_NAME);
+        tempMeta.setDisplayName(plugin.getLanguageManager().getMessage("gui.button.close"));
         closeInvButton.setItemMeta(tempMeta);
-        bidGui.setItem(26, closeInvButton); // Bottom right for bid GUI
+        bidGui.setItem(26, closeInvButton);
 
         playerViewingBidConfirmation.put(player.getUniqueId(), auction.getAuctionId());
         player.openInventory(bidGui);
@@ -211,33 +223,55 @@ public class AuctionGUI implements InventoryHolder {
         }
 
         List<String> lore = new ArrayList<>(); // Single declaration
-        // if (meta.hasLore()) { lore.addAll(meta.getLore()); lore.add(""); } // Example of preserving original lore
+        // if (meta.hasLore()) { lore.addAll(meta.getLore()); lore.add(""); }
 
-        lore.add(ChatColor.GOLD + "Seller: " + ChatColor.GRAY + auction.getSellerName());
+        Map<String, String> placeholders = new HashMap<>();
+        placeholders.put("name", auction.getSellerName());
+        lore.add(plugin.getLanguageManager().getMessage("gui.itemdisplay.seller", placeholders));
+
         if (auction.getHighestBidderUuid() != null) {
-            lore.add(ChatColor.GOLD + "Highest Bid: " + ChatColor.GREEN + ProAuction.format(auction.getCurrentBid()));
-            lore.add(ChatColor.GOLD + "Highest Bidder: " + ChatColor.GRAY + auction.getHighestBidderName());
+            placeholders.clear();
+            placeholders.put("amount", ProAuction.format(auction.getCurrentBid()));
+            lore.add(plugin.getLanguageManager().getMessage("gui.itemdisplay.highestbid", placeholders));
+            placeholders.clear();
+            placeholders.put("name", auction.getHighestBidderName());
+            lore.add(plugin.getLanguageManager().getMessage("gui.itemdisplay.highestbidder", placeholders));
         } else {
-            lore.add(ChatColor.GOLD + "Starting Price: " + ChatColor.GREEN + ProAuction.format(auction.getStartingPrice()));
+            placeholders.clear();
+            placeholders.put("amount", ProAuction.format(auction.getStartingPrice()));
+            lore.add(plugin.getLanguageManager().getMessage("gui.itemdisplay.startingprice", placeholders));
         }
-        lore.add(ChatColor.GOLD + "Min Increment: " + ChatColor.GREEN + ProAuction.format(auction.getMinIncrement()));
-        if (auction.getBuyNowPrice() > 0) {
-            lore.add(ChatColor.GOLD + "Buy Now: " + ChatColor.AQUA + ProAuction.format(auction.getBuyNowPrice()));
-        }
-        lore.add(ChatColor.GOLD + "Time Remaining: " + ChatColor.RED + formatTimeRemaining(auction.getEndTimeMillis() - System.currentTimeMillis()));
-        lore.add("");
-        lore.add(ChatColor.DARK_GRAY + "ID: " + auction.getAuctionId().toString().substring(0, 8));
-        lore.add(ChatColor.BLUE + "" + ChatColor.ITALIC + "Click for more options!");
+        placeholders.clear();
+        placeholders.put("amount", ProAuction.format(auction.getMinIncrement()));
+        lore.add(plugin.getLanguageManager().getMessage("gui.itemdisplay.minincrement", placeholders));
 
-        // Add sales tax information if applicable
+        if (auction.getBuyNowPrice() > 0) {
+            placeholders.clear();
+            placeholders.put("amount", ProAuction.format(auction.getBuyNowPrice()));
+            lore.add(plugin.getLanguageManager().getMessage("gui.itemdisplay.buynowprice", placeholders));
+        }
+        placeholders.clear();
+        placeholders.put("time", formatTimeRemaining(auction.getEndTimeMillis() - System.currentTimeMillis()));
+        lore.add(plugin.getLanguageManager().getMessage("gui.itemdisplay.timeremaining", placeholders));
+
+        lore.add(""); // Separator
+        placeholders.clear();
+        placeholders.put("id", auction.getAuctionId().toString().substring(0, 8));
+        lore.add(plugin.getLanguageManager().getMessage("gui.itemdisplay.id", placeholders));
+        lore.add(plugin.getLanguageManager().getMessage("gui.itemdisplay.clickformore"));
+
         double salesTaxPercentage = plugin.getSalesTaxPercentage();
         if (salesTaxPercentage > 0) {
             lore.add(""); // Add a separator line
-            lore.add(ChatColor.DARK_AQUA + "Note: Sale price for seller is subject to a " + salesTaxPercentage + "% tax.");
+            placeholders.clear();
+            placeholders.put("tax_percentage", String.valueOf(salesTaxPercentage));
+            lore.add(plugin.getLanguageManager().getMessage("gui.lore.sellernote.salestax", placeholders));
         }
 
-        meta.setLore(lore); // Set the complete lore
-        meta.setDisplayName(ChatColor.AQUA + getItemNamePlain(display)); // Set display name
+        meta.setLore(lore);
+        // Display name should remain the item's actual name, possibly colored by other means if needed.
+        // For now, using a simple colored version of its plain name.
+        meta.setDisplayName(org.bukkit.ChatColor.AQUA + getItemNamePlain(display));
 
         display.setItemMeta(meta);
         return display;

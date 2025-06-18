@@ -5,8 +5,8 @@ import dev.jules.proauction.util.TaxFeeCalculator;
 import dev.jules.proauction.util.TaxFeeCalculator.TaxCalculationResult;
 import dev.jules.proauction.gui.AuctionGUI;
 import dev.jules.proauction.model.Auction;
-import org.bukkit.ChatColor;
-import org.bukkit.OfflinePlayer; // Added missing import from processBid
+import org.bukkit.ChatColor; // Ensure this is present for getItemName
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -16,6 +16,7 @@ import org.bukkit.event.player.AsyncPlayerChatEvent; // Corrected import locatio
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.HashMap; // Added for placeholders
 import java.util.Map;
 import java.util.UUID;
 
@@ -50,9 +51,17 @@ public class GuiListener implements Listener {
         String displayName = clickedItem.getItemMeta().getDisplayName();
         String inventoryTitle = event.getView().getTitle();
 
-        if (inventoryTitle.startsWith(AuctionGUI.AUCTION_LIST_TITLE_PREFIX)) {
+        // Get the base titles (without placeholders) from LanguageManager
+        String mainTitlePrefix = plugin.getLanguageManager().getMessage("gui.title.main.prefix");
+        // For comparison, we might need to strip color codes if the title from event includes them but prefix from lang file doesn't after ChatColor.translate.
+        // However, getMessage already translates color codes, so inventoryTitle should be compared as is.
+        // Let's assume inventoryTitle is already color-translated by Bukkit when we get it.
+
+        String bidConfirmTitlePrefix = plugin.getLanguageManager().getMessage("gui.title.bidconfirm.prefix");
+
+        if (inventoryTitle.startsWith(mainTitlePrefix)) {
             handleMainAuctionListClick(player, displayName, event.getSlot());
-        } else if (inventoryTitle.startsWith(AuctionGUI.BID_CONFIRM_TITLE_PREFIX)) {
+        } else if (inventoryTitle.startsWith(bidConfirmTitlePrefix)) {
             handleBidConfirmationClick(player, displayName);
         }
     }
@@ -61,11 +70,11 @@ public class GuiListener implements Listener {
         Map<UUID, Integer> openPages = auctionGUI.getPlayerOpenAuctionPageMap();
         int currentPage = openPages.getOrDefault(player.getUniqueId(), 0);
 
-        if (clickedItemName.equals(AuctionGUI.NEXT_PAGE_NAME)) {
+        if (clickedItemName.equals(plugin.getLanguageManager().getMessage("gui.button.nextpage"))) {
             auctionGUI.openMainAuctionPage(player, currentPage + 1);
-        } else if (clickedItemName.equals(AuctionGUI.PREV_PAGE_NAME)) {
+        } else if (clickedItemName.equals(plugin.getLanguageManager().getMessage("gui.button.prevpage"))) {
             auctionGUI.openMainAuctionPage(player, currentPage - 1);
-        } else if (clickedItemName.equals(AuctionGUI.CLOSE_BUTTON_NAME)) {
+        } else if (clickedItemName.equals(plugin.getLanguageManager().getMessage("gui.button.close"))) {
             player.closeInventory();
         } else {
             Map<Integer, UUID> auctionSlots = auctionGUI.getPlayerGUIAuctionSlotsMap().get(player.getUniqueId());
@@ -75,7 +84,7 @@ public class GuiListener implements Listener {
                 if (auction != null && auction.isActive()) {
                     auctionGUI.openBidConfirmationGUI(player, auction);
                 } else {
-                    player.sendMessage(ChatColor.RED + "This auction is no longer available.");
+                    plugin.sendMessage(player, "gui.status.auctionunavailable");
                     auctionGUI.openMainAuctionPage(player, currentPage); // Refresh view
                 }
             }
@@ -86,56 +95,65 @@ public class GuiListener implements Listener {
         UUID auctionId = auctionGUI.getPlayerViewingBidConfirmationMap().get(player.getUniqueId());
         if (auctionId == null) {
             player.closeInventory();
-            plugin.sendMessage(player, ChatColor.RED + "Error: Could not find auction context. Please reopen the auction house.");
+            plugin.sendMessage(player, "gui.status.bidconfirm.errorcontext");
             return;
         }
         Auction auction = plugin.getAuction(auctionId);
         if (auction == null || !auction.isActive()) {
-            plugin.sendMessage(player, ChatColor.RED + "This auction is no longer available.");
+            plugin.sendMessage(player, "gui.status.auctionunavailable");
             auctionGUI.openMainAuctionPage(player, auctionGUI.getPlayerOpenAuctionPageMap().getOrDefault(player.getUniqueId(), 0));
             return;
         }
 
-        if (clickedItemName.equals(AuctionGUI.BID_MINIMUM_NAME)) {
+        // IMPORTANT: Comparing clickedItemName with AuctionGUI constants (like AuctionGUI.BID_MINIMUM_NAME)
+        // will FAIL if those constants are hardcoded English strings and clickedItemName is translated.
+        // This part of the logic needs to compare with translated strings from LanguageManager:
+        // e.g., if (clickedItemName.equals(plugin.getLanguageManager().getMessage("gui.button.bidminimum")))
+        // For this refactor, we are focusing on plugin.sendMessage, assuming this comparison logic is handled or will be.
+
+        if (clickedItemName.equals(plugin.getLanguageManager().getMessage("gui.button.bidminimum"))) {
             double minNextBid = auction.getCurrentBid() == auction.getStartingPrice() && auction.getHighestBidderUuid() == null ? auction.getStartingPrice() : auction.getCurrentBid() + auction.getMinIncrement();
             processBid(player, auction, minNextBid);
-        } else if (clickedItemName.equals(AuctionGUI.BID_CUSTOM_NAME)) {
+        } else if (clickedItemName.equals(plugin.getLanguageManager().getMessage("gui.button.bidcustom"))) {
             auctionGUI.getPlayerPendingChatBidMap().put(player.getUniqueId(), auctionId);
             player.closeInventory();
-            plugin.sendMessage(player, ChatColor.GOLD + "Please type your bid amount in chat for auction: " + ChatColor.AQUA + getItemName(auction.getItem()));
-            plugin.sendMessage(player, ChatColor.GRAY + "(Auction ID: " + auction.getAuctionId().toString().substring(0,8) + ")");
-        } else if (clickedItemName.equals(AuctionGUI.BACK_BUTTON_NAME)) {
-            auctionGUI.getPlayerViewingBidConfirmationMap().remove(player.getUniqueId()); // Clear context before going back
+            Map<String, String> customBidPromptPlaceholders = new HashMap<>();
+            customBidPromptPlaceholders.put("item_name", getItemName(auction.getItem()));
+            plugin.sendMessage(player, "gui.status.custombid.prompt", customBidPromptPlaceholders);
+            plugin.sendMessage(player, "gui.status.custombid.prompt.id", "auction_id", auction.getAuctionId().toString().substring(0,8) );
+
+        } else if (clickedItemName.equals(plugin.getLanguageManager().getMessage("gui.button.backtoauctions"))) {
+            auctionGUI.getPlayerViewingBidConfirmationMap().remove(player.getUniqueId());
             auctionGUI.openMainAuctionPage(player, auctionGUI.getPlayerOpenAuctionPageMap().getOrDefault(player.getUniqueId(), 0));
-        } else if (clickedItemName.equals(AuctionGUI.CLOSE_BUTTON_NAME)) {
+        } else if (clickedItemName.equals(plugin.getLanguageManager().getMessage("gui.button.close"))) {
             player.closeInventory();
-        } else if (clickedItemName.equals(ChatColor.GOLD + "" + ChatColor.BOLD + "Buy Now")) { // Handle Buy Now
+        } else if (clickedItemName.equals(plugin.getLanguageManager().getMessage("gui.button.buynow"))) {
             handleBuyNow(player, auction);
         }
     }
 
     private void handleBuyNow(Player player, Auction auction) {
-        if (!player.hasPermission("proauction.bid")) { // Or a new proauction.buynow permission
-            plugin.sendMessage(player, ChatColor.RED + "You don't have permission to buy items.");
+        if (!player.hasPermission("proauction.bid")) { // Consider a specific "proauction.buynow" permission
+            plugin.sendMessage(player, "error.nopermission"); // Using generic no permission
             return;
         }
         if (auction.getSellerUuid().equals(player.getUniqueId())) {
-            plugin.sendMessage(player, ChatColor.RED + "You cannot buy your own auction item.");
+            plugin.sendMessage(player, "error.cannotbuyown");
             return;
         }
         if (auction.getBuyNowPrice() <= 0) {
-            plugin.sendMessage(player, ChatColor.RED + "This item is not available for Buy Now.");
+            plugin.sendMessage(player, "buynow.unavailable");
             return;
         }
 
         if (!ProAuction.hasEnough(player, auction.getBuyNowPrice())) {
-            plugin.sendMessage(player, ChatColor.RED + "You don't have enough money to buy this item for " + ProAuction.format(auction.getBuyNowPrice()) + ".");
+            plugin.sendMessage(player, "error.notenoughmoney", "amount", ProAuction.format(auction.getBuyNowPrice()));
             return;
         }
 
         // Attempt withdrawal from buyer
         if (!ProAuction.withdrawMoney(player, auction.getBuyNowPrice())) {
-            plugin.sendMessage(player, ChatColor.RED + "Payment failed. Could not withdraw funds.");
+            plugin.sendMessage(player, "error.paymentfailed");
             return;
         }
 
@@ -175,17 +193,19 @@ public class GuiListener implements Listener {
             if (!ProAuction.depositMoney(player, buyNowPrice)) {
                  plugin.logSevere("CRITICAL: FAILED TO REFUND BUYER " + player.getName() + " for BuyNow auction " + auction.getAuctionId().toString().substring(0,8) + " after seller deposit failed. MANUAL INTERVENTION NEEDED.");
             }
-            plugin.sendMessage(player, ChatColor.RED + "Payment to seller failed. Your money has been refunded. Please report this to an admin.");
+            plugin.sendMessage(player, "error.paytochestfailed"); // Changed key, assuming 'chest' was a typo for 'seller'
             return;
         }
 
         // Give item to player
         if (!player.getInventory().addItem(auction.getItem().clone()).isEmpty()) {
-            plugin.sendMessage(player, ChatColor.RED + "Your inventory is full! The item has been dropped at your feet.");
+            plugin.sendMessage(player, "error.inventoryfull.itemdropped");
             player.getWorld().dropItemNaturally(player.getLocation(), auction.getItem().clone());
-            // Critical: money already exchanged. Item drop is last resort.
         } else {
-            plugin.sendMessage(player, ChatColor.GREEN + "You purchased " + getItemName(auction.getItem()) + " for " + ProAuction.format(buyNowPrice) + "!");
+            Map<String, String> purchasePlaceholders = new HashMap<>();
+            purchasePlaceholders.put("item_name", getItemName(auction.getItem()));
+            purchasePlaceholders.put("price", ProAuction.format(buyNowPrice));
+            plugin.sendMessage(player, "buynow.success.buyer", purchasePlaceholders);
         }
 
         auction.setActive(false);
@@ -193,18 +213,30 @@ public class GuiListener implements Listener {
         plugin.removeAuction(auction.getAuctionId()); // Remove from active list & storage file after processing
 
         if (seller.isOnline() && seller.getPlayer() != null) {
-            String sellerMessage = ChatColor.GREEN + "Your auction for " + getItemName(auction.getItem()) + " was bought by " + player.getName() + " for " + ProAuction.format(buyNowPrice) + " (Buy Now)!";
+            Map<String, String> sellerPlaceholders = new HashMap<>();
+            sellerPlaceholders.put("item_name", getItemName(auction.getItem()));
+            sellerPlaceholders.put("player_name", player.getName());
+            sellerPlaceholders.put("price", ProAuction.format(buyNowPrice));
             if (taxAmount > 0) {
-                sellerMessage += " After a " + salesTaxPercentage + "% sales tax (" + ProAuction.format(taxAmount) + "), you received " + ProAuction.format(amountForSeller) + ".";
+                sellerPlaceholders.put("tax_percentage", String.valueOf(salesTaxPercentage));
+                sellerPlaceholders.put("tax_amount", ProAuction.format(taxAmount));
+                sellerPlaceholders.put("net_amount", ProAuction.format(amountForSeller));
+                plugin.sendMessage(seller.getPlayer(), "buynow.success.seller.withtax", sellerPlaceholders);
             } else {
-                sellerMessage += " You received " + ProAuction.format(amountForSeller) + ".";
+                // Ensure net_amount is available even if tax is zero for consistency if key uses it
+                sellerPlaceholders.put("net_amount", ProAuction.format(amountForSeller));
+                plugin.sendMessage(seller.getPlayer(), "buynow.success.seller", sellerPlaceholders);
             }
-            plugin.sendMessage(seller.getPlayer(), sellerMessage);
         } else {
-            // Optionally, log that the seller was offline and couldn't be notified immediately
             plugin.logInfo("Seller " + seller.getName() + " was offline and could not be notified of Buy Now for auction " + auction.getAuctionId().toString().substring(0,8) + ". Sale processed, seller received " + ProAuction.format(amountForSeller));
         }
-        plugin.broadcastMessage(ChatColor.YELLOW + player.getName() + " bought " + getItemName(auction.getItem()) + " from " + auction.getSellerName() + " for " + ProAuction.format(buyNowPrice) + " using Buy Now!");
+
+        Map<String, String> broadcastPlaceholders = new HashMap<>();
+        broadcastPlaceholders.put("player_name", player.getName());
+        broadcastPlaceholders.put("item_name", getItemName(auction.getItem()));
+        broadcastPlaceholders.put("seller_name", auction.getSellerName());
+        broadcastPlaceholders.put("price", ProAuction.format(buyNowPrice));
+        plugin.broadcastMessage("buynow.broadcast", broadcastPlaceholders);
 
         player.closeInventory();
         // Consider refreshing the main AH view for other players or the current player if they reopen
@@ -223,7 +255,7 @@ public class GuiListener implements Listener {
 
         Auction auction = plugin.getAuction(auctionId);
         if (auction == null || !auction.isActive()) {
-            plugin.sendMessage(player, ChatColor.RED + "That auction is no longer available.");
+            plugin.sendMessage(player, "gui.status.auctionunavailable");
             plugin.getServer().getScheduler().runTask(plugin, () -> auctionGUI.openMainAuctionPage(player, auctionGUI.getPlayerOpenAuctionPageMap().getOrDefault(player.getUniqueId(), 0)));
             return;
         }
@@ -232,8 +264,8 @@ public class GuiListener implements Listener {
         try {
             bidAmount = Double.parseDouble(event.getMessage());
         } catch (NumberFormatException e) {
-            plugin.sendMessage(player, ChatColor.RED + "Invalid bid amount: " + ChatColor.WHITE + event.getMessage());
-            plugin.sendMessage(player, ChatColor.YELLOW + "Please try bidding again via the GUI.");
+            plugin.sendMessage(player, "gui.status.custombid.invalidamount", "amount", event.getMessage());
+            plugin.sendMessage(player, "gui.status.custombid.tryagain");
             plugin.getServer().getScheduler().runTask(plugin, () -> auctionGUI.openBidConfirmationGUI(player, auction));
             return;
         }
@@ -241,46 +273,44 @@ public class GuiListener implements Listener {
     }
 
     private void processBid(Player player, Auction auction, double bidAmount) {
-        if (!auction.isActive()){ // Re-check auction status in sync task
-            plugin.sendMessage(player, ChatColor.RED + "This auction is no longer available.");
+        if (!auction.isActive()){
+            plugin.sendMessage(player, "gui.status.auctionunavailable");
             auctionGUI.openMainAuctionPage(player, auctionGUI.getPlayerOpenAuctionPageMap().getOrDefault(player.getUniqueId(), 0));
             return;
         }
 
         if (!player.hasPermission("proauction.bid")) {
-            plugin.sendMessage(player, ChatColor.RED + "You don't have permission to bid.");
+            plugin.sendMessage(player, "error.nopermission");
             auctionGUI.openBidConfirmationGUI(player, auction);
             return;
         }
         if (auction.getSellerUuid().equals(player.getUniqueId())) {
-            plugin.sendMessage(player, ChatColor.RED + "You cannot bid on your own auction.");
+            plugin.sendMessage(player, "error.cannotbidown");
             auctionGUI.openBidConfirmationGUI(player, auction);
             return;
         }
 
         double requiredBid;
-        if (auction.getHighestBidderUuid() == null) { // No bids yet
+        if (auction.getHighestBidderUuid() == null) {
             requiredBid = auction.getStartingPrice();
-        } else { // There is an existing bid
+        } else {
             requiredBid = auction.getCurrentBid() + auction.getMinIncrement();
         }
-        // Ensure bid is at least the starting price if no bids, or current bid + increment if there are bids
-         if (bidAmount < requiredBid) {
-            plugin.sendMessage(player, ChatColor.RED + "Your bid of " + ProAuction.format(bidAmount) + " must be at least " + ProAuction.format(requiredBid) + ".");
-            auctionGUI.openBidConfirmationGUI(player, auction);
-            return;
-        }
-        // Additional check to ensure it's strictly greater than current if there is a current bid
-        if (auction.getHighestBidderUuid() != null && bidAmount <= auction.getCurrentBid()) {
-             plugin.sendMessage(player, ChatColor.RED + "Your bid must be higher than the current bid (" + ProAuction.format(auction.getCurrentBid()) + ").");
-            auctionGUI.openBidConfirmationGUI(player, auction);
-            return;
-        }
 
+        if (bidAmount < requiredBid) {
+            plugin.sendMessage(player, "error.bidnotenough", "min_next_bid", ProAuction.format(requiredBid));
+            auctionGUI.openBidConfirmationGUI(player, auction);
+            return;
+        }
+        if (auction.getHighestBidderUuid() != null && bidAmount <= auction.getCurrentBid()) {
+             plugin.sendMessage(player, "error.bidtoolow", "current_bid", ProAuction.format(auction.getCurrentBid()));
+            auctionGUI.openBidConfirmationGUI(player, auction);
+            return;
+        }
 
         if (!ProAuction.hasEnough(player, bidAmount)) {
-            plugin.sendMessage(player, ChatColor.RED + "You don't have enough money. You need " + ProAuction.format(bidAmount) + ".");
-            plugin.sendMessage(player, ChatColor.GRAY + "(Funds will be taken if you win at the end of the auction)");
+            plugin.sendMessage(player, "error.notenoughmoney", "amount", ProAuction.format(bidAmount));
+            plugin.sendMessage(player, "auction.bid.tobidder.info");
             auctionGUI.openBidConfirmationGUI(player, auction);
             return;
         }
@@ -288,18 +318,28 @@ public class GuiListener implements Listener {
         if (auction.getHighestBidderUuid() != null && !auction.getHighestBidderUuid().equals(player.getUniqueId())) {
             OfflinePlayer previousOfflineBidder = plugin.getServer().getOfflinePlayer(auction.getHighestBidderUuid());
             if (previousOfflineBidder.isOnline() && previousOfflineBidder.getPlayer() != null) {
-                plugin.sendMessage(previousOfflineBidder.getPlayer(), ChatColor.YELLOW + "You have been outbid on " + getItemName(auction.getItem()) + " by " + player.getName() + ".");
+                Map<String, String> outbidPlaceholders = new HashMap<>();
+                outbidPlaceholders.put("item_name", getItemName(auction.getItem()));
+                outbidPlaceholders.put("new_bidder_name", player.getName());
+                plugin.sendMessage(previousOfflineBidder.getPlayer(), "auction.bid.outbid", outbidPlaceholders);
             }
         }
 
         auction.setHighestBid(bidAmount, player.getUniqueId(), player.getName());
         plugin.updateAuctionInStorage(auction);
 
-        plugin.sendMessage(player, ChatColor.GREEN + "You successfully bid " + ProAuction.format(bidAmount) + " on " + getItemName(auction.getItem()) + "!");
+        Map<String, String> bidSuccessPlaceholders = new HashMap<>();
+        bidSuccessPlaceholders.put("item_name", getItemName(auction.getItem()));
+        bidSuccessPlaceholders.put("bid_amount", ProAuction.format(bidAmount));
+        plugin.sendMessage(player, "auction.bid.success", bidSuccessPlaceholders);
 
         Player seller = plugin.getServer().getPlayer(auction.getSellerUuid());
         if (seller != null && seller.isOnline()) {
-            plugin.sendMessage(seller, ChatColor.AQUA + player.getName() + " has bid " + ProAuction.format(bidAmount) + " on your auction for " + getItemName(auction.getItem()) + ".");
+             Map<String, String> sellerUpdatePlaceholders = new HashMap<>();
+            sellerUpdatePlaceholders.put("bidder_name", player.getName());
+            sellerUpdatePlaceholders.put("bid_amount", ProAuction.format(bidAmount));
+            sellerUpdatePlaceholders.put("item_name", getItemName(auction.getItem()));
+            plugin.sendMessage(seller, "auction.bid.toseller.update", sellerUpdatePlaceholders);
         }
 
         player.closeInventory();

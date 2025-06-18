@@ -1,0 +1,160 @@
+# ProAuction English Language File - messages_en.yml
+
+# General Plugin Messages
+plugin.prefix: "&6[ProAuction]&r "
+plugin.enabled: "Plugin enabled!"
+plugin.disabled: "Plugin disabled!"
+plugin.reloaded: "ProAuction configuration and language files reloaded!"
+plugin.vault.notfound: "Vault plugin not found!"
+plugin.vault.noecon: "No economy plugin found through Vault!"
+plugin.vault.success: "Successfully hooked into Vault and found an economy plugin."
+plugin.vault.unhook: "Unhooking from Vault."
+plugin.data.saveall: "Saving all active auctions..."
+plugin.data.clearactive: "Clearing active auctions map from memory."
+plugin.vault.disabled: "&cPlugin disabled! Critical Vault or Economy dependency missing."
+
+# General Errors
+error.generic: "&cAn unexpected error occurred. Please contact an administrator."
+error.nopermission: "&cYou don't have permission to do that."
+error.playeronly: "&cOnly players can perform this command."
+error.mustbeholdingitem: "&cYou must be holding an item to auction it."
+error.invalidprice: "&cInvalid price specified."
+error.invalidincrement: "&cInvalid minimum increment."
+error.invalidduration: "&cInvalid duration specified: {duration}"
+error.invalidbuynowprice: "&cInvalid Buy Now price specified: {price}"
+error.pricenotpositive: "&cStarting price, increment, and duration must be positive."
+error.buynowpricenotpositive: "&cBuy Now price must be positive if set."
+error.buynowtoolow: "&cBuy Now price must be greater than the starting price."
+error.auctionnotfound: "&cAuction not found or has ended."
+error.bidtoolow: "&cYour bid must be higher than the current bid ({current_bid})."
+error.bidnotenough: "&cYour bid must be at least {min_next_bid} (current bid + min increment)."
+error.notenoughmoney: "&cYou don't have enough money. You need {amount}."
+error.notenoughmoney.listingfee: "&cYou do not have enough money to pay the listing fee of {fee}."
+error.failedcharge.listingfee: "&cFailed to charge listing fee of {fee}. Auction not created."
+error.cannotbidown: "&cYou cannot bid on your own auction."
+error.cannotbuyown: "&cYou cannot buy your own auction item."
+error.paymentfailed: "&cPayment failed. Could not withdraw funds."
+error.paytochestfailed: "&cPayment to seller failed. Your money has been refunded. Please report this to an admin."
+error.inventoryfull.general: "&cYour inventory is full!"
+error.inventoryfull.itemdropped: "&cYour inventory is full! The item has been dropped at your feet."
+error.auctionidinvalid: "&cInvalid auction ID format or auction not found by short ID."
+error.invalidbidamount: "&cInvalid bid amount."
+
+# Auction Command Specific
+auction.help.header: "&6--- ProAuction Help ---"
+auction.help.usageprefix: "&eUsage: "
+auction.help.availablecommands: "&6Available commands:"
+
+auction.help.detailed.sell.usage: "&e/auction sell <price> [increment] [duration_min] [buy_now_price]"
+auction.help.detailed.sell.description: "&7- Puts the item you are holding up for auction."
+auction.help.detailed.sell.note: "&b  ↳ Note: Sales may be subject to tax. Listing fees may apply."
+
+auction.help.detailed.list.usage: "&e/auction list"
+auction.help.detailed.list.description: "&7- Displays all items currently up for auction."
+auction.help.detailed.list.info.salestax: "&3Info: Sellers are charged a {tax_percentage}% tax on the final sale price."
+auction.help.detailed.list.info.listingfee: "&3Info: A {fee_percentage}% fee (of starting price) applies when listing an item."
+
+auction.help.detailed.bid.usage: "&e/auction bid <auction_id> <amount>"
+auction.help.detailed.bid.description: "&7- Places a bid on the specified auction."
+
+auction.help.detailed.ah.usage: "&e/ah"
+auction.help.detailed.ah.description: "&7- Opens the Auction House graphical interface."
+
+auction.help.detailed.reload.usage: "&e/auction reload"
+auction.help.detailed.reload.description: "&7- Reloads the plugin's configuration and language files."
+
+# Usage messages for commands (if specific usage lines are needed beyond detailed help)
+auction.sell.usage: "&cUsage: /auction sell <price> [increment] [duration_minutes] [buy_now_price]"
+auction.bid.usage: "&cUsage: /auction bid <auction_id> <bid_amount>"
+auction.list.header: "&6--- Active Auctions ---"
+
+auction.sell.success: "&aAuction started for {item_name} with ID: {auction_id}"
+auction.sell.broadcast: "&e{player_name} has started an auction for {item_name}!"
+auction.sell.chargedlistingfee: "&eCharged a listing fee of {fee}."
+
+auction.list.noauctions: "&eNo active auctions."
+auction.list.itemformat: "&7ID: {short_id} | Item: {item_name} ({item_amount}) | Seller: {seller_name} | Bid: {current_bid} | Ends in: {time_remaining}"
+
+auction.bid.success: "&aYou are now the highest bidder for {item_name} with a bid of {bid_amount}!"
+auction.bid.outbid: "&eYou have been outbid on the auction for {item_name} by {new_bidder_name}."
+auction.bid.tobidder.info: "&7(Funds will be taken when the auction ends if you win)"
+auction.bid.toseller.update: "&b{bidder_name} has bid {bid_amount} on your auction for {item_name}."
+
+# Buy Now Specific
+buynow.unavailable: "&cThis item is not available for Buy Now."
+buynow.success.buyer: "&aYou purchased {item_name} for {price}!"
+buynow.success.seller: "&aYour auction for {item_name} was bought by {player_name} for {price} (Buy Now)!"
+buynow.success.seller.withtax: "&aYour auction for {item_name} was bought by {player_name} for {price} (Buy Now)! After a {tax_percentage}% sales tax ({tax_amount}), you received {net_amount}."
+buynow.broadcast: "&e{player_name} bought {item_name} from {seller_name} for {price} using Buy Now!"
+
+# Auction End Specific
+auction.end.sold.seller: "&aYour auction for {item_name} sold to {winner_name} for {price}."
+auction.end.sold.seller.withtax: "&aYour auction for {item_name} sold to {winner_name} for {price}. After a {tax_percentage}% sales tax ({tax_amount}), you received {net_amount}."
+auction.end.sold.winner: "&aYou won the auction for {item_name} for {price}! The item has been added to your inventory."
+auction.end.sold.broadcast: "&e{item_name} was sold to {winner_name} for {price}!"
+auction.end.winneroffline: "Winner was offline. Auction voided."
+auction.end.winnernotenoughfunds: "Winner {winner_name} could not afford the final bid. Auction voided."
+auction.end.winnernotenoughfunds.notify: "&cYou won the auction for {item_name} but could not afford {price}."
+auction.end.withdrawfailed: "Failed to withdraw funds from winner {winner_name}. Auction voided."
+auction.end.withdrawfailed.notify: "&cFailed to withdraw funds for auction {item_name}. Please contact an admin."
+auction.end.depositfailed.seller: "Failed to deposit funds to you for auction {item_name}. Winner was refunded. Auction voided."
+auction.end.depositfailed.admin: "CRITICAL: Failed to deposit {amount} to seller {seller_name} for auction {auction_id}. Attempting to refund winner."
+auction.end.refundfailed.admin: "CRITICAL: FAILED TO REFUND WINNER {winner_name} for auction {auction_id}. THIS IS A DUPE/LOSS SCENARIO."
+auction.end.inventoryfull.winner: "&cYou won the auction for {item_name}, but your inventory is full! The transaction has been voided."
+auction.end.inventoryfull.sellerreason: "Winner {winner_name}'s inventory was full. Auction voided, funds reversed."
+auction.end.nobids: "Your auction ended without bids."
+auction.end.itemreturned.seller: "&e{reason} The item {item_name} has been returned to your inventory."
+auction.end.itemreturned.seller.dropped: "&e{reason} Your inventory was full, so the item {item_name} was dropped at your feet."
+auction.end.itemreturned.seller.offline: "&e{reason} The item {item_name} could not be returned as you are offline. It will require admin intervention or a future claim system."
+
+# GUI Specific
+gui.title.main: "&1Auction House - Page {page}/{total_pages}"
+gui.title.main.prefix: "&1Auction House - Page " # For startsWith check
+gui.title.bidconfirm: "&1Bid on: {item_name}"
+gui.title.bidconfirm.prefix: "&1Bid on: " # For startsWith check
+
+gui.button.nextpage: "&aNext Page"
+gui.button.prevpage: "&aPrevious Page"
+gui.button.close: "&cClose"
+gui.button.backtoauctions: "&eBack to Auctions"
+gui.button.bidminimum: "&aBid Minimum"
+gui.button.bidcustom: "&6Custom Bid"
+gui.button.buynow: "&6&lBuy Now"
+
+gui.lore.sellernote.salestax: "&3Note: Sale price for seller is subject to a {tax_percentage}% tax."
+gui.lore.buynow.sellernote.salestax: "&7Seller receives price minus {tax_percentage}% tax."
+
+gui.itemdisplay.seller: "&6Seller: &7{name}"
+gui.itemdisplay.highestbid: "&6Highest Bid: &a{amount}"
+gui.itemdisplay.highestbidder: "&6Highest Bidder: &7{name}"
+gui.itemdisplay.startingprice: "&6Starting Price: &a{amount}"
+gui.itemdisplay.minincrement: "&6Min Increment: &a{amount}"
+gui.itemdisplay.buynowprice: "&6Buy Now: &b{amount}"
+gui.itemdisplay.timeremaining: "&6Time Remaining: &c{time}"
+gui.itemdisplay.id: "&8ID: {id}"
+gui.itemdisplay.clickformore: "&9&oClick for more options!"
+
+gui.bidconfirm.sellerinfo: "&6Seller: &7{name}"
+gui.bidconfirm.currentbidinfo: "&6Current Bid: &a{amount}"
+gui.bidconfirm.currentbidinfo.by: "&7By: {name}"
+gui.bidconfirm.currentbidinfo.nobids: "&7No bids yet (Starting Price)"
+gui.bidconfirm.minnextbidinfo: "&6Minimum Next Bid: &a{amount}"
+gui.bidconfirm.timeinfo: "&6Time Remaining: &c{time}"
+gui.bidconfirm.balanceinfo: "&6Your Balance: &a{amount}"
+gui.bidconfirm.bidminimum.lore: "&7Bid {amount}"
+gui.bidconfirm.custombid.lore: "&7Enter a custom bid amount in chat."
+gui.bidconfirm.buynow.loreprice: "&aPrice: {amount}"
+
+gui.status.auctionunavailable: "&cThis auction is no longer available."
+gui.status.bidconfirm.errorcontext: "&cError: Could not find auction context. Please reopen the auction house."
+gui.status.custombid.prompt: "&6Please type your bid amount in chat for auction: &b{item_name}"
+gui.status.custombid.prompt.id: "&7(Auction ID: {auction_id})"
+gui.status.custombid.invalidamount: "&cInvalid bid amount: &f{amount}"
+gui.status.custombid.tryagain: "&ePlease try bidding again via the GUI."
+
+# Reload command specific
+auction.reload.success: "&aProAuction configuration and language files reloaded successfully!"
+auction.reload.nopermission: "&cYou do not have permission to reload the configuration."
+
+# Log messages are typically not translated
+# ... (rest of commented out log messages)
