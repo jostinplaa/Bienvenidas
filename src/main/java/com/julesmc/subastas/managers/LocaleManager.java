@@ -43,7 +43,10 @@ public class LocaleManager {
         fallbackMessages.put("command.help-description-help", "Muestra este mensaje de ayuda.");
         fallbackMessages.put("command.help-description-reload", "Recarga la configuración del plugin.");
         fallbackMessages.put("command.help-description-crear", "Crea una nueva subasta con el ítem en tu mano.");
-        fallbackMessages.put("command.help-description-ver", "Abre la interfaz gráfica para ver las subastas activas.");
+        fallbackMessages.put("command.help-description-gui", "Abre la interfaz gráfica de subastas."); // Changed from ver
+        fallbackMessages.put("command.help-description-main", "Abre la interfaz gráfica de subastas."); // New
+
+        fallbackMessages.put("command.player-only-gui", "&cEste comando solo puede ser usado por un jugador para abrir la GUI."); // New
 
         fallbackMessages.put("command.crear.usage", "&cIncorrecto! Usa: {usage}");
         fallbackMessages.put("command.crear.no-item", "&cDebes tener un ítem en tu mano para crear una subasta.");
@@ -93,17 +96,22 @@ public class LocaleManager {
         // Auction GUI messages
         fallbackMessages.put("auction.gui.no-auctions", "&eNo hay subastas activas en este momento.");
         fallbackMessages.put("auction.gui.item-name-prefix", "&b");
-        fallbackMessages.put("auction.gui.seller", "&7Vendedor: &e{seller}");
-        fallbackMessages.put("auction.gui.initial-price-label", "&7Precio Inicial: &a");
-        fallbackMessages.put("auction.gui.current-bid-label", "&7Puja Actual: &a");
-        fallbackMessages.put("auction.gui.current-bidder", "&7Pujador Actual: &d{name}");
-        fallbackMessages.put("auction.gui.buy-now-price", "&7Compra Directa: &6{price}");
-        fallbackMessages.put("auction.gui.time-left", "&7Tiempo Restante: &c{time}");
-        fallbackMessages.put("auction.gui.bid-instruction", "&eClick Izquierdo: Pujar");
-        fallbackMessages.put("auction.gui.buy-instruction", "&6Click Derecho: Comprar");
-        fallbackMessages.put("auction.gui.previous-page", "&aPágina Anterior");
-        fallbackMessages.put("auction.gui.next-page", "&aPágina Siguiente");
-        fallbackMessages.put("auction.gui.refresh", "&eActualizar");
+        // Specific lore lines
+        fallbackMessages.put("auction.gui.lore.seller", "&7Vendedor: &e{seller_name}");
+        fallbackMessages.put("auction.gui.lore.initial-price", "&7Precio Inicial: &c{amount}");
+        fallbackMessages.put("auction.gui.lore.current-bid", "&7Puja Actual: &c{amount}");
+        fallbackMessages.put("auction.gui.lore.highest-bidder", "&7Pujador Máximo: &d{player_name}");
+        fallbackMessages.put("auction.gui.lore.no-current-bidder", "&7Pujador Máximo: &8Nadie");
+        fallbackMessages.put("auction.gui.lore.buy-now-price", "&7Compra Directa: &6{amount}");
+        fallbackMessages.put("auction.gui.lore.buy-now-not-available", "&7Compra Directa: &8No disponible");
+        fallbackMessages.put("auction.gui.lore.time-left", "&7Tiempo Restante: &b{time}");
+        fallbackMessages.put("auction.gui.lore.bid-instruction", "&eClick Izquierdo: Pujar");
+        fallbackMessages.put("auction.gui.lore.buy-instruction", "&6Click Derecho: Comprar");
+        // GUI Buttons
+        fallbackMessages.put("auction.gui.button.previous-page-name", "&aPágina Anterior");
+        fallbackMessages.put("auction.gui.button.next-page-name", "&aPágina Siguiente");
+        fallbackMessages.put("auction.gui.button.refresh-name", "&eActualizar");
+        fallbackMessages.put("auction.gui.button.close-gui-name", "&cCerrar");
 
         // Error messages
         fallbackMessages.put("error.generic", "Ha ocurrido un error inesperado.");
@@ -141,51 +149,54 @@ public class LocaleManager {
     public boolean loadMessages(String languageCode) {
         this.pluginPrefix = ChatColor.translateAlternateColorCodes('&', configManager.getString("plugin-prefix", "&e[Subastas]&r "));
 
-        File langFile = new File(plugin.getDataFolder(), "lang_" + languageCode + ".yml");
-        if (!langFile.exists()) {
-            plugin.getLogger().info("Language file lang_" + languageCode + ".yml not found in plugin data folder. Attempting to load from JAR resources as lang/" + languageCode + ".yml");
+        String targetFileName = "lang_" + languageCode + ".yml"; // e.g., "lang_es.yml"
+        File targetDir = new File(plugin.getDataFolder(), "lang"); // e.g., plugins/Subastas/lang/
+        File langFileOnDisk = new File(targetDir, targetFileName); // e.g., plugins/Subastas/lang/lang_es.yml
+
+        String resourcePathInJar = "lang/" + targetFileName; // e.g., lang/lang_es.yml (path inside JAR)
+
+        if (!langFileOnDisk.exists()) {
+            plugin.getLogger().info("Language file " + langFileOnDisk.getPath() + " not found. Attempting to save from JAR resource: " + resourcePathInJar);
             try {
-                plugin.saveResource("lang/" + languageCode + ".yml", false); // Copies if not present in data folder under lang/
-                // Move it to the root of the plugin's data folder if it was copied to lang/
-                File langDir = new File(plugin.getDataFolder(), "lang");
-                File copiedLangFile = new File(langDir, languageCode + ".yml"); // Corrected path
-                if (copiedLangFile.exists()) {
-                    // Attempt to rename/move
-                    if (!copiedLangFile.renameTo(langFile)) {
-                         plugin.getLogger().warning("Could not move " + copiedLangFile.getPath() + " to " + langFile.getPath() + ". Manual move might be required or messages will be loaded from lang/ directory if possible.");
-                         langFile = copiedLangFile; // Try to load from lang/ if move fails
-                    } else {
-                         plugin.getLogger().info("Successfully copied lang_" + languageCode + ".yml from JAR to plugin data folder.");
-                    }
-                } else {
-                     plugin.getLogger().warning("Could not find " + languageCode + ".yml in lang/ directory after saveResource attempt.");
-                }
-
-
-            } catch (Exception e) {
-                plugin.getLogger().log(Level.WARNING, "Could not save default language file lang_" + languageCode + ".yml from JAR.", e);
+                // This will save the JAR's lang/lang_es.yml to plugins/Subastas/lang/lang_es.yml
+                plugin.saveResource(resourcePathInJar, false);
+                plugin.getLogger().info("Successfully saved " + resourcePathInJar + " from JAR to " + langFileOnDisk.getPath());
+            } catch (IllegalArgumentException e) {
+                plugin.getLogger().log(Level.SEVERE, "CRITICAL: Language resource " + resourcePathInJar + " not found in JAR. Using fallback messages.", e);
+                langConfig = null; // Ensure fallback is used
+                return false;
+            } catch (Exception e) { // Catch other potential exceptions during saveResource
+                plugin.getLogger().log(Level.WARNING, "Could not save default language file " + targetFileName + " from JAR. Resource path attempted: " + resourcePathInJar, e);
+                // Still try to load fallback, but this is less critical than resource not found
+                langConfig = null;
+                return false; // Or handle differently, maybe allow plugin to run with fallback
             }
         }
 
-        if (langFile.exists()) {
-            langConfig = YamlConfiguration.loadConfiguration(langFile);
-            // Attempt to load defaults from JAR if some keys are missing in the external file
-            try (InputStream defLangStream = plugin.getResource("lang/" + languageCode + ".yml")) {
+        if (langFileOnDisk.exists()) {
+            langConfig = YamlConfiguration.loadConfiguration(langFileOnDisk);
+            // Attempt to load defaults from JAR stream for completeness, using the correct resourcePathInJar
+            try (InputStream defLangStream = plugin.getResource(resourcePathInJar)) {
                 if (defLangStream != null) {
-                    langConfig.setDefaults(YamlConfiguration.loadConfiguration(new InputStreamReader(defLangStream, StandardCharsets.UTF_8)));
-                    langConfig.options().copyDefaults(true); // Copy defaults for any missing keys
-                    // No need to save back to langFile here, just use the merged config
+                    YamlConfiguration jarLangConfig = YamlConfiguration.loadConfiguration(new InputStreamReader(defLangStream, StandardCharsets.UTF_8));
+                    // Set defaults from JAR config to the loaded disk config
+                    // This ensures that new keys added to the JAR's lang file are available
+                    // if the user's disk file is outdated, without overwriting their existing values.
+                    langConfig.setDefaults(jarLangConfig);
+                    langConfig.options().copyDefaults(true);
                 } else {
-                     plugin.getLogger().warning("Default lang/" + languageCode + ".yml not found in JAR resources.");
+                     plugin.getLogger().warning("Default language resource " + resourcePathInJar + " not found in JAR for setting defaults (this is unexpected if saveResource worked or file was present).");
                 }
             } catch (Exception e) {
-                plugin.getLogger().log(Level.WARNING, "Error loading default messages from JAR for lang_" + languageCode + ".yml", e);
+                plugin.getLogger().log(Level.WARNING, "Error loading default messages from JAR stream for " + resourcePathInJar, e);
             }
-             plugin.getLogger().info("Successfully loaded messages from lang_" + languageCode + ".yml.");
+             plugin.getLogger().info("Successfully loaded messages from " + langFileOnDisk.getPath());
             return true;
         } else {
-            plugin.getLogger().severe("Language file lang_" + languageCode + ".yml not found and could not be created from JAR. Using fallback messages.");
-            langConfig = null; // Ensure we use fallback
+            // This should ideally not be reached if saveResource failed with IllegalArgumentException (handled above)
+            // or if the file existed. This is a fallback for other unexpected scenarios.
+            plugin.getLogger().severe("Language file " + langFileOnDisk.getPath() + " could not be loaded or created. Using fallback messages.");
+            langConfig = null;
             return false;
         }
     }

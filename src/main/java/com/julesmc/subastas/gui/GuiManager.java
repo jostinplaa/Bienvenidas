@@ -15,6 +15,8 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.NamespacedKey; // Added import
+import org.bukkit.persistence.PersistentDataType; // Added import
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -94,36 +96,40 @@ public class GuiManager implements InventoryHolder {
                 }
 
                 List<String> lore = new ArrayList<>();
-                meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', localeManager.getRawMessage("auction.gui.item-name-prefix", "&b") + auction.getItemName()));
+                // Item Name - Use the actual display name if available, otherwise format from material
+                String displayItemName = auction.getItemStack() != null && auction.getItemStack().hasItemMeta() && auction.getItemStack().getItemMeta().hasDisplayName()
+                                       ? auction.getItemStack().getItemMeta().getDisplayName()
+                                       : (auction.getItemStack() != null ? formatMaterialName(auction.getItemStack().getType()) : auction.getItemName());
+                meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', localeManager.getRawMessage("auction.gui.item-name-prefix", "&b") + displayItemName));
 
-                lore.add(ChatColor.translateAlternateColorCodes('&', localeManager.getRawMessage("auction.gui.seller", "&7Vendedor: &e{seller}", "seller", auction.getSellerName())));
+                lore.add(localeManager.getMessage("auction.gui.lore.seller", "{seller_name}", auction.getSellerName()));
 
-                String priceLabel;
-                double priceValue;
                 if (auction.getCurrentBid() != null && auction.getCurrentBid() > 0) {
-                    priceLabel = localeManager.getRawMessage("auction.gui.current-bid-label", "&7Puja Actual: &a");
-                    priceValue = auction.getCurrentBid();
-                    lore.add(ChatColor.translateAlternateColorCodes('&', priceLabel + String.format("%,.2f", priceValue)));
+                    lore.add(localeManager.getMessage("auction.gui.lore.current-bid", "{amount}", String.format("%,.2f", auction.getCurrentBid())));
                     if (auction.getHighestBidderName() != null && !auction.getHighestBidderName().isEmpty()) {
-                        lore.add(ChatColor.translateAlternateColorCodes('&', localeManager.getRawMessage("auction.gui.current-bidder", "&7Pujador Actual: &d{name}", "name", auction.getHighestBidderName())));
+                        lore.add(localeManager.getMessage("auction.gui.lore.highest-bidder", "{player_name}", auction.getHighestBidderName()));
+                    } else {
+                        // This case should ideally not happen if currentBid > 0, but as a fallback:
+                        lore.add(localeManager.getMessage("auction.gui.lore.no-current-bidder"));
                     }
                 } else {
-                    priceLabel = localeManager.getRawMessage("auction.gui.initial-price-label", "&7Precio Inicial: &a");
-                    priceValue = auction.getInitialPrice();
-                    lore.add(ChatColor.translateAlternateColorCodes('&', priceLabel + String.format("%,.2f", priceValue)));
+                    lore.add(localeManager.getMessage("auction.gui.lore.initial-price", "{amount}", String.format("%,.2f", auction.getInitialPrice())));
+                    lore.add(localeManager.getMessage("auction.gui.lore.no-current-bidder")); // No bids yet means no highest bidder
                 }
 
                 if (auction.getBuyNowPrice() != null && auction.getBuyNowPrice() > 0) {
-                    lore.add(ChatColor.translateAlternateColorCodes('&', localeManager.getRawMessage("auction.gui.buy-now-price", "&7Compra Directa: &6{price}", "price", String.format("%,.2f", auction.getBuyNowPrice()))));
+                    lore.add(localeManager.getMessage("auction.gui.lore.buy-now-price", "{amount}", String.format("%,.2f", auction.getBuyNowPrice())));
+                } else {
+                    lore.add(localeManager.getMessage("auction.gui.lore.buy-now-not-available"));
                 }
 
                 long timeLeftMillis = auction.getEndTime() - System.currentTimeMillis();
-                lore.add(ChatColor.translateAlternateColorCodes('&', localeManager.getRawMessage("auction.gui.time-left", "&7Tiempo Restante: &c{time}", "time", TimeUtil.formatDuration(timeLeftMillis))));
+                lore.add(localeManager.getMessage("auction.gui.lore.time-left", "{time}", TimeUtil.formatDuration(timeLeftMillis > 0 ? timeLeftMillis : 0)));
 
                 lore.add(" "); // Spacer
-                lore.add(ChatColor.translateAlternateColorCodes('&', localeManager.getRawMessage("auction.gui.bid-instruction", "&eClick Izquierdo: Pujar")));
+                lore.add(localeManager.getMessage("auction.gui.lore.bid-instruction"));
                 if (auction.getBuyNowPrice() != null && auction.getBuyNowPrice() > 0) {
-                     lore.add(ChatColor.translateAlternateColorCodes('&', localeManager.getRawMessage("auction.gui.buy-instruction", "&6Click Derecho: Comprar")));
+                     lore.add(localeManager.getMessage("auction.gui.lore.buy-instruction"));
                 }
                 // Store auction ID in lore for click identification (less visible way)
                 // lore.add(ChatColor.BLACK + "ID:" + auction.getId());
@@ -143,26 +149,17 @@ public class GuiManager implements InventoryHolder {
         playerAuctionSlots.put(player.getUniqueId(), playerSlotMap);
 
         // Pagination controls (last row)
+        // Slot 45: Prev | Slot 49: Close | Slot 50: Refresh (Optional) | Slot 53: Next
         if (page > 1) {
-            ItemStack prevPage = new ItemStack(Material.ARROW);
-            ItemMeta prevMeta = prevPage.getItemMeta();
-            prevMeta.setDisplayName(ChatColor.GREEN + localeManager.getRawMessage("auction.gui.previous-page", "Página Anterior"));
-            prevPage.setItemMeta(prevMeta);
-            gui.setItem(45, prevPage); // Bottom-left
+            gui.setItem(45, createControlItem(Material.ARROW, localeManager.getMessage("auction.gui.button.previous-page-name"), "prev_page"));
         }
 
-        ItemStack refresh = new ItemStack(Material.SUNFLOWER); // Changed from LIME_DYE to something more distinct
-        ItemMeta refreshMeta = refresh.getItemMeta();
-        refreshMeta.setDisplayName(ChatColor.YELLOW + localeManager.getRawMessage("auction.gui.refresh", "Actualizar"));
-        refresh.setItemMeta(refreshMeta);
-        gui.setItem(49, refresh); // Bottom-center
+        gui.setItem(49, createControlItem(Material.BARRIER, localeManager.getMessage("auction.gui.button.close-gui-name"), "close_gui"));
+        gui.setItem(50, createControlItem(Material.SUNFLOWER, localeManager.getMessage("auction.gui.button.refresh-name"), "refresh_gui"));
+
 
         if (page < totalPages) {
-            ItemStack nextPage = new ItemStack(Material.ARROW);
-            ItemMeta nextMeta = nextPage.getItemMeta();
-            nextMeta.setDisplayName(ChatColor.GREEN + localeManager.getRawMessage("auction.gui.next-page", "Página Siguiente"));
-            nextPage.setItemMeta(nextMeta);
-            gui.setItem(53, nextPage); // Bottom-right
+            gui.setItem(53, createControlItem(Material.ARROW, localeManager.getMessage("auction.gui.button.next-page-name"), "next_page"));
         }
 
         openGUIPages.put(player.getUniqueId(), page);
@@ -176,6 +173,31 @@ public class GuiManager implements InventoryHolder {
         // This method is required by InventoryHolder.
         // Returning a new dummy inventory each time is fine as this manager instance is the holder.
         return Bukkit.createInventory(this, 9, "AuctionGUIManagerHolder");
+    }
+
+    private ItemStack createControlItem(Material material, String name, String actionTag) {
+        ItemStack item = new ItemStack(material);
+        ItemMeta meta = item.getItemMeta();
+        if (meta != null) {
+            meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', name));
+            NamespacedKey key = new NamespacedKey(plugin, "gui_action");
+            meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, actionTag);
+            item.setItemMeta(meta);
+        }
+        return item;
+    }
+
+    private String formatMaterialName(Material material) {
+        // Converts MATERIAL_NAME to "Material Name"
+        String name = material.name().toLowerCase().replace('_', ' ');
+        String[] parts = name.split(" ");
+        StringBuilder formattedName = new StringBuilder();
+        for (String part : parts) {
+            if (part.length() > 0) {
+                formattedName.append(Character.toUpperCase(part.charAt(0))).append(part.substring(1)).append(" ");
+            }
+        }
+        return formattedName.toString().trim();
     }
 
     public Inventory getOpenInventory(Player player) {
@@ -202,5 +224,48 @@ public class GuiManager implements InventoryHolder {
 
     public int getPlayerCurrentPage(Player player) {
         return openGUIPages.getOrDefault(player.getUniqueId(), 1);
+    }
+
+    public Set<UUID> getPlayersWithGuiOpen() {
+        return Collections.unmodifiableSet(openGUIPages.keySet()); // Provide read-only access
+    }
+
+    public void refreshAuctionGuiForPlayer(Player player) {
+        if (isPlayerViewingAuctionGUI(player)) {
+            // Re-fetch current page as it might be needed if player object is stale or for safety
+            int currentPage = getPlayerCurrentPage(player);
+            // To prevent issues if player logs off during refresh, ensure they are online.
+            // Bukkit.getPlayer(player.getUniqueId()) will return null if offline.
+            Player onlinePlayer = Bukkit.getPlayer(player.getUniqueId());
+            if (onlinePlayer != null && onlinePlayer.isOnline()) {
+                 // Run on next tick to avoid issues if called during an inventory event loop
+                Bukkit.getScheduler().runTask(plugin, () -> openActiveAuctionsGUI(onlinePlayer, currentPage));
+            } else {
+                // Player logged off, remove them
+                removePlayer(player.getUniqueId());
+            }
+        }
+    }
+
+    public void refreshOpenAuctionGuis() {
+        // Create a copy of the set to avoid ConcurrentModificationException if a GUI closure modifies the original map
+        Set<UUID> playersToRefresh = new HashSet<>(openGUIPages.keySet());
+
+        for (UUID playerUuid : playersToRefresh) {
+            Player player = Bukkit.getPlayer(playerUuid);
+            if (player != null && player.isOnline()) {
+                refreshAuctionGuiForPlayer(player);
+            } else {
+                // Player is offline, remove them from tracking
+                removePlayer(playerUuid); // Make removePlayer accept UUID
+            }
+        }
+    }
+
+    // Overload removePlayer to accept UUID for internal use
+    public void removePlayer(UUID playerUuid) {
+        openGUIPages.remove(playerUuid);
+        openInventories.remove(playerUuid);
+        playerAuctionSlots.remove(playerUuid);
     }
 }

@@ -14,12 +14,15 @@ import com.julesmc.subastas.objects.AuctionItem;
 import org.bukkit.Bukkit; // Added import
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey; // Added import
 import org.bukkit.OfflinePlayer;
-import java.util.UUID; // Added import
+import org.bukkit.persistence.PersistentDataType; // Added import
+import java.util.UUID;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent; // Added import
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
@@ -50,43 +53,39 @@ public class InventoryClickListener implements Listener {
         // Method 1: Check by title (less robust if titles change frequently or are complex)
         String inventoryTitle = event.getView().getTitle();
         if (inventoryTitle.startsWith(GuiManager.AUCTION_GUI_TITLE_PREFIX)) {
-             event.setCancelled(true); // Prevent taking items
+            event.setCancelled(true);
 
             ItemStack clickedItem = event.getCurrentItem();
             if (clickedItem == null || clickedItem.getType() == Material.AIR) {
                 return;
             }
 
-            if (!clickedItem.hasItemMeta() || !clickedItem.getItemMeta().hasDisplayName()) {
-                // Likely an auction item, handle later for bidding/buying
-                return;
-            }
-
-            String displayName = ChatColor.stripColor(clickedItem.getItemMeta().getDisplayName()); // Strip colors for comparison
-            String rawPrevPage = ChatColor.stripColor(localeManager.getRawMessage("auction.gui.previous-page", "Página Anterior"));
-            String rawNextPage = ChatColor.stripColor(localeManager.getRawMessage("auction.gui.next-page", "Página Siguiente"));
-            String rawRefresh = ChatColor.stripColor(localeManager.getRawMessage("auction.gui.refresh", "Actualizar"));
-
-            int currentPage = guiManager.getPlayerCurrentPage(player);
-
-            if (displayName.equals(rawPrevPage)) {
-                if (currentPage > 1) {
-                    guiManager.openActiveAuctionsGUI(player, currentPage - 1);
+            ItemMeta itemMeta = clickedItem.getItemMeta();
+            if (itemMeta != null && itemMeta.getPersistentDataContainer() != null) {
+                NamespacedKey key = new NamespacedKey(plugin, "gui_action");
+                if (itemMeta.getPersistentDataContainer().has(key, PersistentDataType.STRING)) {
+                    String action = itemMeta.getPersistentDataContainer().get(key, PersistentDataType.STRING);
+                    int currentPage = guiManager.getPlayerCurrentPage(player);
+                    switch (action) {
+                        case "prev_page":
+                            if (currentPage > 1) {
+                                guiManager.openActiveAuctionsGUI(player, currentPage - 1);
+                            }
+                            return; // Handled control item
+                        case "next_page":
+                            guiManager.openActiveAuctionsGUI(player, currentPage + 1);
+                            return; // Handled control item
+                        case "refresh_gui":
+                            guiManager.openActiveAuctionsGUI(player, currentPage);
+                            return; // Handled control item
+                        case "close_gui":
+                            player.closeInventory();
+                            return; // Handled control item
+                    }
                 }
-            } else if (displayName.equals(rawNextPage)) {
-                guiManager.openActiveAuctionsGUI(player, currentPage + 1);
-            } else if (displayName.equals(rawRefresh)) {
-                guiManager.openActiveAuctionsGUI(player, currentPage);
             }
-            // If none of the above, it's not a control item we explicitly named,
-            // so it could be an auction item or an empty slot.
-            // The initial event.setCancelled(true) handles preventing item pickup.
-            // Auction item clicks are handled below.
 
-        } else if (inventoryTitle.startsWith(GuiManager.AUCTION_GUI_TITLE_PREFIX) && event.getCurrentItem() != null && event.getCurrentItem().getType() != Material.AIR) {
-            // This is a click on an auction item (since it didn't match control items by display name)
-            // Used event.getCurrentItem() instead of potentially out-of-scope clickedItem
-            event.setCancelled(true);
+            // If not a control item, it might be an auction item
             Integer auctionId = guiManager.getAuctionIdForSlot(player.getUniqueId(), event.getRawSlot());
 
             if (auctionId == null) {
@@ -169,9 +168,8 @@ public class InventoryClickListener implements Listener {
             }
 
             plugin.getLogger().info("Auction ID " + freshAuction.getId() + " (" + freshAuction.getItemName() + ") bought directly by " + player.getName() + " for " + buyNowPrice);
-            player.closeInventory(); // Close GUI after purchase
-            // Consider a global GUI refresh for all viewers, or remove the item from other GUIs if possible
-            // For now, other players' GUIs will show the item until they refresh or it naturally expires/is processed by task.
+            player.closeInventory(); // Close GUI for the buyer
+            guiManager.refreshOpenAuctionGuis(); // Refresh for all other viewers
 
         } else {
             player.sendMessage(localeManager.getMessage("auction.payment-failed-notification-buyer", "item", freshAuction.getItemName()));
@@ -261,8 +259,8 @@ public class InventoryClickListener implements Listener {
                         // Since we are not holding money on bid, no refund needed here.
                     }
 
-                    // Refresh GUI for the player who bid
-                    Bukkit.getScheduler().runTask(plugin, () -> guiManager.openActiveAuctionsGUI(player, guiManager.getPlayerCurrentPage(player)));
+                    // Refresh GUI for all viewers
+                    Bukkit.getScheduler().runTask(plugin, () -> guiManager.refreshOpenAuctionGuis());
 
                 } else {
                     player.sendMessage(localeManager.getMessage("error.generic")); // Generic error if DB update fails
@@ -273,5 +271,28 @@ public class InventoryClickListener implements Listener {
             }
         });
         anvilHelper.openAnvil();
+    }
+
+    @EventHandler
+    public void onInventoryClose(InventoryCloseEvent event) {
+        if (!(event.getPlayer() instanceof Player)) {
+            return;
+        }
+        Player player = (Player) event.getPlayer();
+
+        // Check if the closed inventory was an auction GUI managed by GuiManager
+        // Using InventoryHolder check is more robust than title check
+        InventoryHolder holder = event.getInventory().getHolder();
+        if (holder instanceof GuiManager) {
+            // This check confirms it's one of the GUIs created with GuiManager as the holder.
+            // We also need to ensure it's specifically the main auction viewing GUI,
+            // not potentially other GUIs this manager might handle in the future.
+            // Checking the title prefix adds that specificity.
+            if (event.getView().getTitle().startsWith(GuiManager.AUCTION_GUI_TITLE_PREFIX)) {
+                 guiManager.removePlayer(player);
+            }
+        }
+        // If AnvilGUI was closed, its specific listener should handle its cleanup.
+        // This listener is primarily for the main auction GUIs.
     }
 }

@@ -12,7 +12,10 @@ command:
   help-description-help: "Muestra este mensaje de ayuda."
   help-description-reload: "Recarga la configuración del plugin."
   help-description-crear: "Crea una nueva subasta con el ítem en tu mano."
-  help-description-ver: "Abre la interfaz gráfica para ver las subastas activas."
+  help-description-gui: "Abre la interfaz gráfica de subastas." # Was help-description-ver
+  help-description-main: "Abre la interfaz gráfica de subastas." # For /subastas with no args
+
+  player-only-gui: "&cEste comando solo puede ser usado por un jugador para abrir la GUI." # New message
 
   crear:
     usage: "&cIncorrecto! Usa: {usage}"
@@ -66,20 +69,24 @@ auction:
 
   gui:
     no-auctions: "&eNo hay subastas activas en este momento."
-    item-name-prefix: "&b" # Prefix for item name in GUI, can be empty
-    seller: "&7Vendedor: &e{seller}"
-    initial-price-label: "&7Precio Inicial: &a"
-    current-bid-label: "&7Puja Actual: &a"
-    current-bidder: "&7Pujador Actual: &d{name}"
-    buy-now-price: "&7Compra Directa: &6{price}"
-    time-left: "&7Tiempo Restante: &c{time}"
-    bid-instruction: "&eClick Izquierdo: Pujar"
-    buy-instruction: "&6Click Derecho: Comprar" # Placeholder, buy logic not yet implemented
-    # click-to-bid: "&eClick para Pujar" # Replaced by more specific instructions
-    # shift-click-to-buy: "&6Shift-Click para Comprar" # Replaced
-    previous-page: "&aPágina Anterior"
-    next-page: "&aPágina Siguiente"
-    refresh: "&eActualizar"
+    item-name-prefix: "&b"
+    # Lore lines for items in auction GUI
+    lore:
+      seller: "&7Vendedor: &e{seller_name}"
+      initial-price: "&7Precio Inicial: &c{amount}"
+      current-bid: "&7Puja Actual: &c{amount}"
+      highest-bidder: "&7Pujador Máximo: &d{player_name}"
+      no-current-bidder: "&7Pujador Máximo: &8Nadie"
+      buy-now-price: "&7Compra Directa: &6{amount}"
+      buy-now-not-available: "&7Compra Directa: &8No disponible"
+      time-left: "&7Tiempo Restante: &b{time}"
+      bid-instruction: "&eClick Izquierdo: Pujar"
+      buy-instruction: "&6Click Derecho: Comprar"
+    button: # Renamed from direct previous-page, next-page etc. for structure
+      previous-page-name: "&aPágina Anterior"
+      next-page-name: "&aPágina Siguiente"
+      refresh-name: "&eActualizar"
+      close-gui-name: "&cCerrar"
 
 error:
   generic: "Ha ocurrido un error inesperado."

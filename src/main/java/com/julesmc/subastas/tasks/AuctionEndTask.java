@@ -110,6 +110,15 @@ public class AuctionEndTask extends BukkitRunnable {
                 "processed", String.valueOf(processed), "sold", String.valueOf(sold),
                 "expired", String.valueOf(expired), "failed_payment", String.valueOf(failedPayment)
             ));
+
+            // Schedule GUI refresh on the main thread
+            if (processed > 0) { // Only refresh if something actually changed
+                Bukkit.getScheduler().runTask(plugin, () -> {
+                    if (plugin.getGuiManager() != null) { // Ensure GuiManager is available
+                        plugin.getGuiManager().refreshOpenAuctionGuis();
+                    }
+                });
+            }
         }
     }
 }

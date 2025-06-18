@@ -46,13 +46,36 @@ public class SubastasCommand implements CommandExecutor, TabCompleter {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (args.length == 0) {
-            showHelp(sender);
+            if (!(sender instanceof Player)) {
+                sender.sendMessage(localeManager.getMessage("command.player-only-gui", "Este comando solo puede ser usado por un jugador para abrir la GUI.")); // new message key
+                // Optionally show console help here
+                showHelp(sender); // Show general help for console
+                return true;
+            }
+            Player player = (Player) sender;
+            if (!player.hasPermission("subastas.player.gui")) {
+                player.sendMessage(localeManager.getMessage("command.no-permission"));
+                return true;
+            }
+            guiManager.openActiveAuctionsGUI(player, 1);
             return true;
         }
 
         String subCommand = args[0].toLowerCase();
 
         switch (subCommand) {
+            case "gui": // New subcommand /subastas gui
+                if (!(sender instanceof Player)) {
+                    sender.sendMessage(localeManager.getMessage("command.player-only-gui", "Este comando solo puede ser usado por un jugador para abrir la GUI."));
+                    return true;
+                }
+                Player playerForGui = (Player) sender;
+                if (!playerForGui.hasPermission("subastas.player.gui")) {
+                    playerForGui.sendMessage(localeManager.getMessage("command.no-permission"));
+                    return true;
+                }
+                guiManager.openActiveAuctionsGUI(playerForGui, 1);
+                break;
             case "help":
                 if (sender.hasPermission("subastas.player.help")) {
                     showHelp(sender);
@@ -88,28 +111,11 @@ public class SubastasCommand implements CommandExecutor, TabCompleter {
                 }
                 handleCreateAuction((Player) sender, args);
                 break;
-            case "ver":
-                if (!(sender instanceof Player)) {
-                    sender.sendMessage(localeManager.getMessage("command.player-only"));
-                    return true;
-                }
-                if (!sender.hasPermission("subastas.player.view")) {
-                    sender.sendMessage(localeManager.getMessage("command.no-permission"));
-                    return true;
-                }
-                int page = 1;
-                if (args.length > 1) {
-                    try {
-                        page = Integer.parseInt(args[1]);
-                        if (page < 1) page = 1;
-                    } catch (NumberFormatException e) {
-                        ((Player) sender).sendMessage(localeManager.getMessage("command.ver.invalid-page", "input", args[1]));
-                        return true;
-                    }
-                }
-                guiManager.openActiveAuctionsGUI((Player) sender, page);
-                break;
+            // Removed "ver" case. Functionality merged into no-args and "gui"
             default:
+                // Check if it's a page number for the 'ver' functionality that was removed
+                // This part can be removed if we don't want /subastas <page_number>
+                // For now, let's treat any other first argument as an unknown command.
                 sender.sendMessage(localeManager.getMessage("command.unknown-command"));
                 break;
         }
@@ -235,6 +241,7 @@ public class SubastasCommand implements CommandExecutor, TabCompleter {
                     "item", itemName,
                     "price", String.valueOf(initialPrice)
             ));
+            plugin.getGuiManager().refreshOpenAuctionGuis(); // Refresh GUIs
             // Potentially log to console or discord webhook etc.
         } else {
             player.sendMessage(localeManager.getMessage("command.crear.creation-failed"));
@@ -256,8 +263,11 @@ public class SubastasCommand implements CommandExecutor, TabCompleter {
         if (sender.hasPermission("subastas.player.create")) {
             sender.sendMessage(localeManager.getMessage("command.help-format", "subcommand", "crear <precio> [compra_dir] [duración]", "description", localeManager.getRawMessage("command.help-description-crear", "Crea una nueva subasta.")));
         }
-        if (sender.hasPermission("subastas.player.view")) {
-             sender.sendMessage(localeManager.getMessage("command.help-format", "subcommand", "ver [página]", "description", localeManager.getRawMessage("command.help-description-ver", "Abre la GUI de subastas.")));
+        if (sender.hasPermission("subastas.player.gui")) {
+             sender.sendMessage(localeManager.getMessage("command.help-format", "subcommand", "gui", "description", localeManager.getRawMessage("command.help-description-gui", "Abre la interfaz gráfica de subastas.")));
+             if (sender instanceof Player) { // Only show this variant to players
+                 sender.sendMessage(localeManager.getMessage("command.help-format", "subcommand", "(sin argumentos)", "description", localeManager.getRawMessage("command.help-description-main", "Abre la interfaz gráfica de subastas.")));
+             }
         }
         sender.sendMessage(localeManager.getRawMessage("command.help-footer"));
     }
@@ -276,8 +286,8 @@ public class SubastasCommand implements CommandExecutor, TabCompleter {
             if (sender.hasPermission("subastas.player.create")) {
                 subcommands.add("crear");
             }
-            if (sender.hasPermission("subastas.player.view")) {
-                subcommands.add("ver");
+            if (sender.hasPermission("subastas.player.gui")) {
+                subcommands.add("gui");
             }
             return subcommands.stream()
                     .filter(s -> s.startsWith(args[0].toLowerCase()))
