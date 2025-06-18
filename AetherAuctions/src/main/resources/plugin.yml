@@ -1,0 +1,22 @@
+name: AetherAuctions
+version: 1.0.0
+main: com.aetherauctions.AetherAuctions # Clase principal del plugin
+api-version: 1.18
+authors: [YourName] # Se reemplazará o se puede dejar genérico
+description: Sistema de subastas por GUI para servidores de Minecraft.
+depend: [Vault] # Dependencia de Vault
+commands:
+  subasta:
+    description: Comando principal de AetherAuctions.
+    usage: /<command> [subcomando]
+    aliases: [auc, subastas, auction]
+permissions:
+  aetherauctions.admin:
+    description: Permite acceso a comandos de administración.
+    default: op
+  aetherauctions.vip:
+    description: Permisos VIP para AetherAuctions.
+    default: false
+  aetherauctions.user:
+    description: Permisos básicos para usar las subastas.
+    default: true
