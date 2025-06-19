@@ -63,10 +63,11 @@ outbid_notification: "&e¡%new_bidder% ha superado tu puja en la subasta #%id% p
 bid_equals_buy_now: "&eTu puja iguala el precio de Compra Directa. La subasta se procesará como compra directa."
 
 # Cancelación
-auction_cancelled_success: "&aSubasta #%id% cancelada exitosamente."
+auction_cancelled_success: "&aSubasta #%id% cancelada exitosamente." # General success message
 auction_cancelled_admin: "&aSubasta #%id% cancelada por un administrador."
 cannot_cancel_auction: "&cNo puedes cancelar esta subasta (ya finalizó o no te pertenece)."
-item_returned_to_inventory: "&aEl ítem '%item%' de la subasta cancelada ha sido devuelto a tu inventario."
+item_returned_to_inventory: "&aHas cancelado la subasta #%id% por '%item%'. El ítem ha sido devuelto a tu inventario."
+auction_cancelled_item_returned: "&aHas cancelado la subasta #%id% por '%item%'. El ítem ha sido devuelto a tu inventario." # Added as per subtask
 item_sent_to_claim: "&eEl ítem '%item%' de la subasta cancelada no pudo ser devuelto a tu inventario y ha sido enviado a /subasta reclamar."
 bid_refunded_on_cancel: "&eLa subasta #%id% fue cancelada. Tu puja de %bid% %currency% ha sido devuelta."
 
@@ -80,6 +81,8 @@ button_create_auction: "&bCrear Nueva Subasta"
 button_my_auctions: "&dVer Mis Subastas"
 button_history: "&cVer Historial"
 button_search_items: "&6Buscar Ítem"
+button_close_gui: "&cCerrar" # Added
+button_back_to_main_auctions: "&bVolver a Subastas" # Added
 lore_search_items_coming_soon: "&e(Próximamente)"
 button_filters: "&6Filtros"
 lore_filters_coming_soon: "&e(Próximamente)"
@@ -148,16 +151,35 @@ help_footer: "&8&m----------------------------------"
 help_line_format: "&a%command% &7- %description%" # General format for help lines
 
 help_line_main: "&a/%label% &7- Abre la casa de subastas."
-help_line_crear: "&a/%label% crear &7- Abre la GUI para crear una subasta."
+help_line_crear: "&a/%label% crear [precioCompraDirecta] [precioPuja] [duración] &7- Crea una subasta rápida (ítem en mano)."
 help_line_crear_console_hint: "&c(Desde consola, usa /%label% crear <jugador> ... para especificar el vendedor si es necesario en el futuro)" # Placeholder, not fully implemented
 help_line_mis: "&a/%label% mis &7- Muestra tus subastas activas."
 help_line_historial: "&a/%label% historial &7- Muestra tu historial de subastas."
-help_line_cancelar: "&a/%label% cancelar <id> &7- Cancela una de tus subastas activas."
+help_line_cancelar: "&a/%label% cancelar [id] &7- Cancela una de tus subastas activas."
 help_line_ayuda: "&a/%label% ayuda &7- Muestra este mensaje de ayuda."
 help_line_admin_command: "&c/%label% admin &7- Muestra los comandos de administración."
 
 admin_help_line_reload: "&c/%label% admin reload &7- Recarga la configuración del plugin."
-admin_help_line_remove: "&c/%label% admin eliminar <id> &7- Elimina forzosamente una subasta."
+admin_help_line_remove: "&c/%label% admin eliminar [id] &7- Elimina forzosamente una subasta."
+
+# Formato de Nombre de Ítem por Defecto
+item_default_name_format: "&r%item_name%" # %item_name% será el nombre visual del ítem
+
+# Lore Detallado del Ítem en GUI
+lore_auction_id: "&7ID de Subasta: &b%id%"
+lore_seller: "&7Vendedor: &6%player_name%"
+lore_buyout_price: "&7Precio Compra Directa: &a%price% %currency%" # Added %currency%
+lore_minimum_bid: "&7Oferta Mínima/Actual: &e%price% %currency%" # Added %currency%
+lore_time_remaining: "&7Tiempo Restante: &c%time%"
+lore_instruction_bid: "&eClic Izquierdo: &fPujar"
+lore_instruction_details: "&eClic Derecho: &fVer Detalles"
+time_ended: "&cFinalizada"
+# Optional: For fully translatable duration format (not strictly needed for this subtask if formatDuration is simpler)
+# time_format_days: "%days%d"
+# time_format_hours: "%hours%h"
+# time_format_minutes: "%minutes%m"
+# time_format_seconds: "%seconds%s"
+
 
 # Crear Subasta por Comando
 command_auction_created_successfully: "&aHas creado una subasta para %item% x%cantidad% por %precio% %currency% durante %duration%."
@@ -167,3 +189,5 @@ error_invalid_crear_usage: "&cIncorrecto. Uso: /subasta crear [cantidad precio d
 error_invalid_quantity: "&cLa cantidad debe ser al menos 1."
 error_invalid_price: "&cEl precio debe ser un valor positivo."
 error_invalid_duration: "&cLa duración debe ser un valor positivo en minutos."
+error_cannot_cancel_others_auction: "&cNo puedes cancelar una subasta que no te pertenece."
+error_console_command_ingame_only: "&cEste comando solo puede usarse en el juego."

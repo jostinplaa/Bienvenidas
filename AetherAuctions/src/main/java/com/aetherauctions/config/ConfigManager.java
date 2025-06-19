@@ -7,11 +7,17 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.ArrayList; // Added for mutable list
 
 public class ConfigManager {
 
     private final AetherAuctions plugin;
     private FileConfiguration config;
+
+    // Helper pattern for duration parsing
+    private static final Pattern DURATION_PATTERN = Pattern.compile("(\\d+)([smhd])");
 
     // General
     private String pluginPrefix;
@@ -67,28 +73,22 @@ public class ConfigManager {
         minDurationSeconds = config.getLong("auction.min_duration_seconds", 3600L);
         maxDurationSeconds = config.getLong("auction.max_duration_seconds", 604800L);
 
-        this.availableDurations = config.getList("auction.available_durations", Collections.emptyList())
-            .stream()
-            .filter(entry -> entry instanceof Map) // Ensure entry is a Map
-            .map(entry -> {
-                Map<?, ?> rawMap = (Map<?, ?>) entry; // Cast to Map<?, ?> first
-                // Ensure keys are String and values are of expected types before creating the final Map
-                if (rawMap.get("label") instanceof String && rawMap.get("seconds") instanceof Number) {
-                    String label = (String) rawMap.get("label");
-                    long seconds = ((Number) rawMap.get("seconds")).longValue();
-                    // Use a mutable map if you intend to modify it later, otherwise Map.of is fine
-                    return new java.util.HashMap<String, Object>(Map.of("label", label, "seconds", seconds));
-                }
-                plugin.getLogger().warning("Entrada de duración inválida en config.yml (formato de mapa incorrecto): " + entry);
-                return null;
-            })
-            .filter(map -> map != null && map.containsKey("label") && map.containsKey("seconds"))
-            .collect(Collectors.toList());
-        if (this.availableDurations.isEmpty()) { // Fallback if parsing fails or empty
-            this.availableDurations = List.of(new java.util.HashMap<String, Object>(Map.of("label", "1 Día", "seconds", 86400L)));
-            plugin.getLogger().warning("available_durations estaba vacío o mal configurado. Usando valor por defecto: 1 Día:86400");
+        List<String> durationStrings = config.getStringList("auction.available_durations");
+        if (durationStrings == null || durationStrings.isEmpty()) {
+            plugin.getLogger().warning("auction.available_durations no encontrado o vacío en config.yml. Usando valores por defecto.");
+            this.availableDurations = new ArrayList<>(); // Ensure it's mutable for the default
+            this.availableDurations.add(new java.util.HashMap<>(Map.of("label", "1 Día", "seconds", 86400L)));
+        } else {
+            this.availableDurations = durationStrings.stream()
+                .map(this::parseDurationConfigEntry)
+                .filter(map -> map != null && map.containsKey("label") && map.containsKey("seconds"))
+                .collect(Collectors.toList());
         }
 
+        if (this.availableDurations.isEmpty()) { // Fallback if all parsing fails
+            plugin.getLogger().warning("Todas las entradas de available_durations eran inválidas. Usando valor por defecto: 1 Día:86400");
+            this.availableDurations.add(new java.util.HashMap<>(Map.of("label", "1 Día", "seconds", 86400L)));
+        }
 
         creationFeeEnabled = config.getBoolean("auction.creation_fee.enabled", true);
         creationFeeAmount = config.getDouble("auction.creation_fee.amount", 100.0);
@@ -124,10 +124,49 @@ public class ConfigManager {
     public int getMaxActiveAuctionsPerPlayer() { return maxActiveAuctionsPerPlayer; }
     public String getLogLevel() { return logLevel; }
 
+    private Map<String, Object> parseDurationConfigEntry(String durationString) {
+        if (durationString == null || durationString.trim().isEmpty()) {
+            return null;
+        }
+        Matcher matcher = DURATION_PATTERN.matcher(durationString.trim().toLowerCase());
+        if (matcher.matches()) {
+            try {
+                long value = Long.parseLong(matcher.group(1));
+                char unit = matcher.group(2).charAt(0);
+                long seconds;
+                switch (unit) {
+                    case 's':
+                        seconds = value;
+                        break;
+                    case 'm':
+                        seconds = value * 60;
+                        break;
+                    case 'h':
+                        seconds = value * 3600;
+                        break;
+                    case 'd':
+                        seconds = value * 86400;
+                        break;
+                    default:
+                        plugin.getLogger().warning("Unidad de duración desconocida '" + unit + "' en la entrada: " + durationString);
+                        return null;
+                }
+                // Using the original string as label for simplicity, can be enhanced
+                return new java.util.HashMap<>(Map.of("label", durationString, "seconds", seconds));
+            } catch (NumberFormatException e) {
+                plugin.getLogger().warning("Número inválido en la entrada de duración: " + durationString);
+                return null;
+            }
+        } else {
+            plugin.getLogger().warning("Formato de duración inválido en la entrada: " + durationString + ". Use formato como '5m', '1h', '3d'.");
+            return null;
+        }
+    }
+
     public long getDefaultDurationSeconds() { return defaultDurationSeconds; }
     public long getMinDurationSeconds() { return minDurationSeconds; }
     public long getMaxDurationSeconds() { return maxDurationSeconds; }
-    public List<Map<String, Object>> getAvailableDurations() { return availableDurations; } // Example: Map<"label", "1 Hora", "seconds", 3600L>
+    public List<Map<String, Object>> getAvailableDurations() { return Collections.unmodifiableList(availableDurations); }
     public boolean isCreationFeeEnabled() { return creationFeeEnabled; }
     public double getCreationFeeAmount() { return creationFeeAmount; }
     public boolean isCommissionOnSaleEnabled() { return commissionOnSaleEnabled; }

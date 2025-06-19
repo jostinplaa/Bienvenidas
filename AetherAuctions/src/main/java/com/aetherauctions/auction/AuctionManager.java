@@ -394,7 +394,7 @@ public class AuctionManager {
 
         boolean isAdmin = player.hasPermission("aetherauctions.admin");
         if (!auction.getSellerUUID().equals(player.getUniqueId().toString()) && !isAdmin) {
-            messageManager.sendMessage(player, "cannot_cancel_others_auction");
+            messageManager.sendMessage(player, "error_cannot_cancel_others_auction");
             return false;
         }
         String itemDisplayName = auction.getItemStack().hasItemMeta() && auction.getItemStack().getItemMeta().hasDisplayName() ? auction.getItemStack().getItemMeta().getDisplayName() : auction.getItemStack().getType().toString();

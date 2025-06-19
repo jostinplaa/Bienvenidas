@@ -1,48 +1,49 @@
-# Configuración General de AetherAuctions
-general:
-  plugin_prefix: "&e&lAetherAuctions &8» " # Prefijo para mensajes del plugin
-  currency_symbol: "$" # Símbolo de la moneda
-  date_format: "dd/MM/yyyy HH:mm" # Formato de fecha para historial, etc.
-  max_active_auctions_per_player: 5 # Límite de subastas activas por jugador normal
-  log_level: INFO # Nivel de log (INFO, DEBUG, NONE)
+# AetherAuctions Configuration File
 
-# Configuración de Subastas
+general:
+  plugin_prefix: "&e&lAetherAuctions &8» "
+  currency_symbol: "$"
+  date_format: "dd/MM/yyyy HH:mm"
+  max_active_auctions_per_player: 5
+  log_level: INFO
+
 auction:
-  default_duration_seconds: 86400 # 1 día en segundos
-  min_duration_seconds: 3600    # 1 hora
-  max_duration_seconds: 604800  # 7 días
-  available_durations: # Formato: "Etiqueta:segundos"
-    - "1 Hora:3600"
-    - "6 Horas:21600"
-    - "12 Horas:43200"
-    - "1 Día:86400"
-    - "3 Días:259200"
-    - "7 Días:604800"
-  creation_fee: # Impuesto al publicar
+  default_duration_seconds: 86400 # Fallback if available_durations is empty or unparseable initially
+  min_duration_seconds: 300    # 5 minutes (updated to match new list's minimum)
+  max_duration_seconds: 604800  # 7 days (updated to match new list's maximum)
+  # Define available durations for auctions.
+  # Format: <number><unit>, where unit can be 'm' (minutes), 'h' (hours), 'd' (days).
+  available_durations:
+    - "5m"
+    - "15m"
+    - "30m"
+    - "1h"
+    - "6h"
+    - "12h"
+    - "1d"
+    - "3d"
+    - "7d"
+  creation_fee:
     enabled: true
     amount: 100.0
-  commission_on_sale: # Comisión por venta (porcentaje)
+  commission_on_sale:
     enabled: true
-    percentage: 5.0 # 5%
-  min_bid_increment: # Incremento mínimo para una puja
+    percentage: 5.0
+  min_bid_increment:
     amount: 10.0
-  buy_now_allowed: true # Permitir la opción de compra directa globalmente
-  max_start_price: 1000000.0 # Precio inicial máximo permitido
-  item_blacklist: # Items que no se pueden subastar
+  buy_now_allowed: true
+  max_start_price: 1000000.0
+  item_blacklist:
     - "BEDROCK"
     - "COMMAND_BLOCK"
-    # - "BARRIER" # Ejemplo, se pueden añadir más
 
-# Configuración VIP
 vip:
   permission: "aetherauctions.vip"
   max_active_auctions: 15
-  extended_duration_seconds: 1209600 # 14 días
+  extended_duration_seconds: 1209600 # 14 días (can be an option in available_durations too)
   no_creation_fee: true
-  # exclusive_filters: true # Placeholder para futura funcionalidad de filtros
 
-# Configuración de Base de Datos
 database:
-  type: "sqlite" # Por ahora solo sqlite, podría expandirse
+  type: "sqlite"
   sqlite:
-    file_name: "aetherauctions.db" # En la carpeta del plugin
+    file_name: "aetherauctions.db"

@@ -35,11 +35,11 @@ public class CommandManager implements CommandExecutor, TabCompleter {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length == 0) {
-            if (sender instanceof Player) {
-                guiManager.openMainAuctionGui((Player) sender, 1); // Added page argument
-            } else {
-                sendHelpMessage(sender, label);
+            if (!(sender instanceof Player)) {
+                sender.sendMessage(messageManager.getMessage("error_console_command_ingame_only"));
+                return true;
             }
+            guiManager.openMainAuctionGui((Player) sender, 1);
             return true;
         }
 
@@ -52,11 +52,11 @@ public class CommandManager implements CommandExecutor, TabCompleter {
                         guiManager.clearCreateAuctionData(((Player) sender).getUniqueId());
                         guiManager.openCreateAuctionGui((Player) sender);
                     } else {
-                        messageManager.sendMessage(sender, "player_only_command");
+                        sender.sendMessage(messageManager.getMessage("error_console_command_ingame_only"));
                     }
                 } else if (args.length == 4) { // /subasta crear <cantidad> <precio> <duracion_minutos>
                     if (!(sender instanceof Player)) {
-                        messageManager.sendMessage(sender, "player_only_command");
+                        sender.sendMessage(messageManager.getMessage("error_console_command_ingame_only"));
                         return true;
                     }
                     Player player = (Player) sender;
@@ -136,14 +136,14 @@ public class CommandManager implements CommandExecutor, TabCompleter {
                 if (sender instanceof Player) {
                     guiManager.openMyAuctionsGui((Player) sender, 1); // Added page argument
                 } else {
-                    messageManager.sendMessage(sender, "player_only_command");
+                    sender.sendMessage(messageManager.getMessage("error_console_command_ingame_only"));
                 }
                 break;
             case "historial":
                 if (sender instanceof Player) {
                     guiManager.openAuctionHistoryGui((Player) sender, 1); // Added page argument
                 } else {
-                    messageManager.sendMessage(sender, "player_only_command");
+                    sender.sendMessage(messageManager.getMessage("error_console_command_ingame_only"));
                 }
                 break;
             case "cancelar":
@@ -153,6 +153,10 @@ public class CommandManager implements CommandExecutor, TabCompleter {
                 handleAdminCommand(sender, args, label);
                 break;
             default:
+                if (!(sender instanceof Player)) {
+                    sender.sendMessage(messageManager.getMessage("error_console_command_ingame_only"));
+                    return true;
+                }
                 sendHelpMessage(sender, label);
                 break;
         }
@@ -161,7 +165,7 @@ public class CommandManager implements CommandExecutor, TabCompleter {
 
     private void handleCancelCommand(CommandSender sender, String[] args, String label) {
         if (!(sender instanceof Player)) {
-            messageManager.sendMessage(sender, "player_only_command");
+            sender.sendMessage(messageManager.getMessage("error_console_command_ingame_only"));
             return;
         }
         Player player = (Player) sender;
@@ -215,7 +219,7 @@ public class CommandManager implements CommandExecutor, TabCompleter {
                     // For now, using cancelAuction which has permission checks.
                     // If sender is console, auctionManager.cancelAuction would need adaptation or a new method.
                     if (!(sender instanceof Player)) {
-                         messageManager.sendMessage(sender, "player_only_command"); // Current cancelAuction expects a player
+                         sender.sendMessage(messageManager.getMessage("error_console_command_ingame_only"));
                          plugin.getLogger().warning("Admin command 'eliminar' from console is not fully supported yet for auction ID: " + auctionId + " due to cancel requiring player.");
                          // TODO: Implement a console-friendly force-remove in AuctionManager
                         return;

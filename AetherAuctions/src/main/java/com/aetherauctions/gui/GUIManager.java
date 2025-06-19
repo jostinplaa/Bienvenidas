@@ -36,6 +36,40 @@ public class GUIManager {
 
     // Static titles are not needed here anymore as they come from MessageManager
 
+    // Helper method to format duration
+    private String formatDuration(long millis) {
+        if (millis < 0) return messageManager.getMessage("time_ended", "Error"); // Should not happen with active auctions
+        if (millis == 0) return messageManager.getMessage("time_ended", "Finalizada");
+
+        long seconds = millis / 1000;
+        long days = seconds / 86400;
+        seconds %= 86400;
+        long hours = seconds / 3600;
+        seconds %= 3600;
+        long minutes = seconds / 60;
+        seconds %= 60;
+
+        StringBuilder sb = new StringBuilder();
+        if (days > 0) sb.append(days).append("d ");
+        if (hours > 0) sb.append(hours).append("h ");
+        if (minutes > 0) sb.append(minutes).append("m ");
+        if (seconds > 0 || sb.length() == 0) { // Show seconds if it's the only unit or if total time is < 1 min
+            sb.append(seconds).append("s");
+        }
+
+        String result = sb.toString().trim();
+        // If the auction is very short (e.g., a few seconds) and formatDuration results in an empty string
+        // or if only seconds are left and they are, for example, less than a threshold for "ending soon"
+        if (result.isEmpty() && millis > 0) { // Should not be empty if millis > 0 due to seconds append logic
+             return millis / 1000 + "s"; // Fallback to raw seconds
+        }
+        if (millis > 0 && millis < 60000 && !result.contains("s")) { // Less than a minute, ensure seconds are shown
+            // This case might be covered by "seconds > 0 || sb.length() == 0" already
+        }
+        return result.isEmpty() ? messageManager.getMessage("time_ended", "Finalizada") : result;
+    }
+
+
     public GUIManager(AetherAuctions plugin, AuctionManager auctionManager) {
         this.plugin = plugin;
         this.auctionManager = auctionManager;
@@ -65,28 +99,38 @@ public class GUIManager {
             AuctionItem auction = activeAuctions.get(i);
             ItemStack displayItem = auction.getItemStack().clone();
             ItemMeta meta = displayItem.getItemMeta();
-            if (meta == null) meta = Bukkit.getItemFactory().getItemMeta(displayItem.getType());
+            if (meta == null) { // Should not happen with a cloned item, but good practice
+                meta = Bukkit.getItemFactory().getItemMeta(displayItem.getType());
+            }
+
+            // Set display name using the new format
+            String originalItemName = displayItem.hasItemMeta() && displayItem.getItemMeta().hasDisplayName()
+                                    ? displayItem.getItemMeta().getDisplayName()
+                                    : auction.getItemStack().getType().name().replace("_", " "); // Fallback to material name
+            meta.setDisplayName(messageManager.getMessage("item_default_name_format", "%item_name%", originalItemName));
 
             List<String> lore = new ArrayList<>();
-            lore.add(messageManager.getMessage("item_lore_seller", "%seller%", auction.getSellerName()));
-            lore.add(messageManager.getMessage("item_lore_start_price", "%price%", String.format("%.2f", auction.getStartPrice()), "%currency%", configManager.getCurrencySymbol()));
-            if (auction.getHighestBidderName() != null) {
-                lore.add(messageManager.getMessage("item_lore_current_bid", "%bid%", String.format("%.2f", auction.getCurrentBid()), "%currency%", configManager.getCurrencySymbol(), "%bidder%", auction.getHighestBidderName()));
-            } else {
-                lore.add(messageManager.getMessage("item_lore_no_bids"));
-            }
-            if (configManager.isBuyNowAllowed() && auction.getBuyNowPrice() > 0) {
-                lore.add(messageManager.getMessage("item_lore_buy_now_price", "%price%", String.format("%.2f", auction.getBuyNowPrice()), "%currency%", configManager.getCurrencySymbol()));
-            } else {
-                lore.add(messageManager.getMessage("item_lore_buy_now_not_available"));
-            }
-            lore.add(messageManager.getMessage("item_lore_time_left", "%time%", InventoryUtil.formatTime(auction.getStartTime() + auction.getDuration() - System.currentTimeMillis())));
-            lore.add(" "); // Separator
-            lore.add(messageManager.getMessage("item_lore_left_click_bid")); // Assuming this key exists for combined instructions or use specific
-            lore.add(messageManager.getMessage("item_lore_right_click_details"));
-            lore.add(messageManager.getMessage("item_lore_id", "%id%", String.valueOf(auction.getId()))); // Hidden ID
+            lore.add(messageManager.getMessage("lore_auction_id", "%id%", String.valueOf(auction.getId())));
+            lore.add(messageManager.getMessage("lore_seller", "%player_name%", auction.getSellerName()));
 
-            if (!meta.hasDisplayName()) meta.setDisplayName(messageManager.getMessage("item_default_name_format", "%item_type%", auction.getItemStack().getType().name().replace("_", " ").toLowerCase())); // Example new key
+            if (configManager.isBuyNowAllowed() && auction.getBuyNowPrice() > 0) {
+                lore.add(messageManager.getMessage("lore_buyout_price",
+                                                "%price%", String.format("%.2f", auction.getBuyNowPrice()),
+                                                "%currency%", configManager.getCurrencySymbol()));
+            }
+
+            // Using getCurrentBid() for minimum/current bid display as per new key
+            lore.add(messageManager.getMessage("lore_minimum_bid",
+                                            "%price%", String.format("%.2f", auction.getCurrentBid()),
+                                            "%currency%", configManager.getCurrencySymbol()));
+
+            lore.add(messageManager.getMessage("lore_time_remaining", "%time%", formatDuration(auction.getStartTime() + auction.getDuration() - System.currentTimeMillis())));
+            lore.add(" "); // Separator
+            lore.add(messageManager.getMessage("lore_instruction_bid"));
+            lore.add(messageManager.getMessage("lore_instruction_details"));
+            // The old item_lore_id was visible, the new one is also visible by default.
+            // If it needs to be "hidden" (e.g., color codes to make it unreadable), that should be in messages.yml
+
             meta.setLore(lore);
             displayItem.setItemMeta(meta);
             gui.setItem(i - startIndex, displayItem);
