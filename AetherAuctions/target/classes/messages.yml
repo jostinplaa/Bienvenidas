@@ -6,7 +6,8 @@ reload_success: "&aConfiguración recargada exitosamente."
 player_only_command: "&cEste comando solo puede ser usado por jugadores."
 no_permission: "&cNo tienes permiso para ejecutar este comando."
 invalid_command_usage: "&c¡Uso incorrecto! Prueba: %usage%"
-invalid_auction_id: "&cEl ID de subasta '%id%' no es válido o no existe."
+invalid_auction_id: "&cEl ID de subasta '%id%' no es válido o no existe." # This is generic, new one is more specific
+auction_not_found: "&cNo se encontró ninguna subasta con ese ID." # New specific message
 auction_id_must_be_number: "&cEl ID de la subasta debe ser un número."
 
 # Creación de Subasta
@@ -70,10 +71,12 @@ item_returned_to_inventory: "&aHas cancelado la subasta #%id% por '%item%'. El �
 auction_cancelled_item_returned: "&aHas cancelado la subasta #%id% por '%item%'. El ítem ha sido devuelto a tu inventario." # Added as per subtask
 item_sent_to_claim: "&eEl ítem '%item%' de la subasta cancelada no pudo ser devuelto a tu inventario y ha sido enviado a /subasta reclamar."
 bid_refunded_on_cancel: "&eLa subasta #%id% fue cancelada. Tu puja de %bid% %currency% ha sido devuelta."
+auction_not_active_cancel: "&cEsa subasta ya no está activa."
 
 
 # GUI Principal
-main_gui_title: "&8Subastas (Pág. %page%/%max_pages%)" # Shortened for clarity
+main_gui_title: "&8Subastas (Pág. %page%/%max_pages%)" # Old main GUI title
+new_main_gui_title_prefix: "&1Subastas Activas" # New main GUI title prefix (page info added in code)
 button_previous_page: "&aPágina Anterior"
 button_next_page: "&aPágina Siguiente"
 button_refresh: "&eRefrescar Subastas"
@@ -185,9 +188,16 @@ time_ended: "&cFinalizada"
 command_auction_created_successfully: "&aHas creado una subasta para %item% x%cantidad% por %precio% %currency% durante %duration%."
 error_must_hold_item_command: "&cDebes tener un ítem en la mano para crear una subasta con este comando."
 error_invalid_number_format: "&cError: '%value%' no es un número válido."
-error_invalid_crear_usage: "&cIncorrecto. Uso: /subasta crear [cantidad precio duracion_minutos]"
-error_invalid_quantity: "&cLa cantidad debe ser al menos 1."
-error_invalid_price: "&cEl precio debe ser un valor positivo."
-error_invalid_duration: "&cLa duración debe ser un valor positivo en minutos."
+error_invalid_crear_usage: "&cUso: /subasta crear [PrecioCompraDirecta] [PrecioPuja] [Duración]" # Updated usage message
+error_invalid_quantity: "&cLa cantidad debe ser al menos 1." # May no longer be needed if quantity is from item in hand
+error_invalid_price: "&cEl precio debe ser un valor positivo." # Generic, might be replaced by more specific bid/buyout messages
+error_invalid_duration: "&cLa duración debe ser un valor positivo en minutos." # Old message, will be replaced by format/value
 error_cannot_cancel_others_auction: "&cNo puedes cancelar una subasta que no te pertenece."
 error_console_command_ingame_only: "&cEste comando solo puede usarse en el juego."
+debug_bid_action: "&eAcción de puja para la subasta &b#%id% &edisparada." # Placeholder for left-click bid
+
+# Nuevos mensajes para /subasta crear con argumentos
+error_invalid_buyout_price: "&cEl precio de compra directa '%value%' no es válido. Debe ser un número positivo, o 0/-1 para desactivar."
+error_invalid_bid_price: "&cEl precio de puja '%value%' no es válido. Debe ser un número positivo."
+error_invalid_duration_format: "&cEl formato de duración '%value%' no es válido. Ejemplos: 5m, 1h, 3d, 0s (para GUI)."
+error_invalid_duration_value: "&cLa duración debe ser un valor positivo (o 0 para abrir GUI de duración)."

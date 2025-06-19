@@ -39,7 +39,7 @@ public class CommandManager implements CommandExecutor, TabCompleter {
                 sender.sendMessage(messageManager.getMessage("error_console_command_ingame_only"));
                 return true;
             }
-            guiManager.openMainAuctionGui((Player) sender, 1);
+            guiManager.openNewMainAuctionGui((Player) sender, 0); // Call new GUI, 0-indexed
             return true;
         }
 
@@ -54,7 +54,7 @@ public class CommandManager implements CommandExecutor, TabCompleter {
                     } else {
                         sender.sendMessage(messageManager.getMessage("error_console_command_ingame_only"));
                     }
-                } else if (args.length == 4) { // /subasta crear <cantidad> <precio> <duracion_minutos>
+                } else if (args.length == 4) { // /subasta crear [precioCompraDirecta] [precioPuja] [duración]
                     if (!(sender instanceof Player)) {
                         sender.sendMessage(messageManager.getMessage("error_console_command_ingame_only"));
                         return true;
@@ -67,67 +67,74 @@ public class CommandManager implements CommandExecutor, TabCompleter {
                         return true;
                     }
 
-                    int cantidad;
-                    double precio;
-                    int duracionMinutes;
+                    double precioCompraDirecta;
+                    double precioPuja;
+                    String duracionStr = args[3];
+                    long durationMillis;
 
                     try {
-                        cantidad = Integer.parseInt(args[1]);
+                        precioCompraDirecta = Double.parseDouble(args[1]);
+                        if (precioCompraDirecta < 0 && precioCompraDirecta != -1) { // Allow 0 or -1 specifically
+                             messageManager.sendMessage(player, "error_invalid_buyout_price", "%value%", args[1]);
+                             return true;
+                        }
+                         if (precioCompraDirecta == 0) precioCompraDirecta = -1; // Treat 0 as "no buyout"
+
                     } catch (NumberFormatException e) {
-                        messageManager.sendMessage(player, "error_invalid_number_format", "%value%", args[1]);
+                        messageManager.sendMessage(player, "error_invalid_buyout_price", "%value%", args[1]);
                         return true;
                     }
 
                     try {
-                        precio = Double.parseDouble(args[2]);
+                        precioPuja = Double.parseDouble(args[2]);
+                        if (precioPuja <= 0) {
+                            messageManager.sendMessage(player, "error_invalid_bid_price", "%value%", args[2]);
+                            return true;
+                        }
                     } catch (NumberFormatException e) {
-                        messageManager.sendMessage(player, "error_invalid_number_format", "%value%", args[2]);
+                        messageManager.sendMessage(player, "error_invalid_bid_price", "%value%", args[2]);
                         return true;
                     }
 
-                    try {
-                        duracionMinutes = Integer.parseInt(args[3]);
-                    } catch (NumberFormatException e) {
-                        messageManager.sendMessage(player, "error_invalid_number_format", "%value%", args[3]);
+                    // Validate buyout price against bid price if buyout is set
+                    if (precioCompraDirecta > 0 && precioCompraDirecta <= precioPuja) {
+                        messageManager.sendMessage(player, "buy_now_must_be_greater"); // Assumes this message key exists
                         return true;
                     }
 
-                    if (cantidad <= 0) {
-                        messageManager.sendMessage(player, "error_invalid_quantity");
+                    durationMillis = parseDurationArgument(duracionStr);
+                    if (durationMillis == -1) { // Indicates parsing failure
+                        messageManager.sendMessage(player, "error_invalid_duration_format", "%value%", duracionStr);
                         return true;
                     }
-                    if (itemInHand.getAmount() < cantidad) {
-                        messageManager.sendMessage(player, "not_enough_items_in_hand", "%item%", itemInHand.getType().toString(), "%amount%", String.valueOf(cantidad)); // Assuming this message exists or create a new one
+                    if (durationMillis == 0) { // User might have typed "0s" or similar, intending to use GUI.
+                         // For command version, 0 duration is invalid. Min duration is handled by AuctionManager.
+                         // Or, if "0" is meant to open GUI, handle that:
+                         // guiManager.openCreateAuctionGui(player); return true;
+                         // For now, treat as invalid if it parses to 0 or less (after helper method).
+                         // The helper parseDurationArgument should return >0 for valid durations.
+                          messageManager.sendMessage(player, "error_invalid_duration_value"); // Or more specific, like min duration from config
+                          return true;
+                    }
+                     if (durationMillis < plugin.getConfigManager().getMinDurationSeconds() * 1000L) {
+                        messageManager.sendMessage(player, "duration_too_short", "%duration%", formatDurationMillis(plugin.getConfigManager().getMinDurationSeconds() * 1000L));
                         return true;
                     }
-                    if (precio <= 0) {
-                        messageManager.sendMessage(player, "error_invalid_price");
-                        return true;
-                    }
-                    if (duracionMinutes <= 0) {
-                        messageManager.sendMessage(player, "error_invalid_duration");
+                    long maxPlayerDurationMillis = (player.hasPermission(plugin.getConfigManager().getVipPermission()) ? plugin.getConfigManager().getVipExtendedDurationSeconds() : plugin.getConfigManager().getMaxDurationSeconds()) * 1000L;
+                    if (durationMillis > maxPlayerDurationMillis) {
+                        messageManager.sendMessage(player, "duration_too_long", "%duration%", formatDurationMillis(maxPlayerDurationMillis));
                         return true;
                     }
 
-                    ItemStack itemToAuction = itemInHand.clone();
-                    itemToAuction.setAmount(cantidad);
 
-                    long durationMillis = (long) duracionMinutes * 60 * 1000;
+                    ItemStack itemToAuction = itemInHand.clone(); // Quantity is taken from the full stack in hand
 
-                    // Using -1 for buyNowPrice as it's not specified in this command version
-                    boolean success = auctionManager.createAuction(player, itemToAuction, durationMillis, precio, -1);
+                    boolean success = auctionManager.createAuction(player, itemToAuction, durationMillis, precioPuja, precioCompraDirecta);
 
                     if (success) {
-                        // MessageManager already sends success from AuctionManager
-                        // Optional: send a specific message for command creation success
-                        // messageManager.sendMessage(player, "command_auction_created_successfully",
-                        //    "%item%", itemToAuction.getType().toString(),
-                        //    "%cantidad%", String.valueOf(cantidad),
-                        //    "%precio%", String.format("%.2f", precio),
-                        //    "%currency%", plugin.getConfigManager().getCurrencySymbol(), // Need to get this
-                        //    "%duration%", args[3] + " minutos");
+                        // Success message is handled by AuctionManager's createAuction method
                     }
-                    // No explicit else needed as AuctionManager.createAuction sends failure messages
+                    // Failure messages also handled by AuctionManager
                 } else {
                     messageManager.sendMessage(sender, "error_invalid_crear_usage");
                 }
@@ -265,6 +272,54 @@ public class CommandManager implements CommandExecutor, TabCompleter {
         sender.sendMessage(messageManager.getMessage("admin_help_line_remove", "%label%", commandLabel));
         // Potentially add a footer similar to the main help if desired
         sender.sendMessage(messageManager.getMessage("help_footer")); // Using the same footer for consistency
+    }
+
+    private long parseDurationArgument(String durationStr) {
+        if (durationStr == null || durationStr.trim().isEmpty()) {
+            return -1; // Invalid format
+        }
+        durationStr = durationStr.trim().toLowerCase();
+        long value;
+        char unit;
+
+        try {
+            if (durationStr.matches("^\\d+$")) { // Only numbers, assume minutes as per subtask for <duracion>
+                 value = Long.parseLong(durationStr);
+                 unit = 'm'; // Default to minutes if only number is provided
+            } else {
+                java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("(\\d+)([smhd])").matcher(durationStr);
+                if (matcher.matches()) {
+                    value = Long.parseLong(matcher.group(1));
+                    unit = matcher.group(2).charAt(0);
+                } else {
+                    return -1; // Invalid format
+                }
+            }
+        } catch (NumberFormatException e) {
+            return -1; // Invalid number part
+        }
+
+
+        switch (unit) {
+            case 's': return value * 1000; // seconds to millis
+            case 'm': return value * 60 * 1000; // minutes to millis
+            case 'h': return value * 60 * 60 * 1000; // hours to millis
+            case 'd': return value * 24 * 60 * 60 * 1000; // days to millis
+            default: return -1; // Unknown unit
+        }
+    }
+
+    private String formatDurationMillis(long millis) {
+        // This is a simplified formatter, ideally use a shared one or from ConfigManager/InventoryUtil if available and suitable
+        if (millis < 0) return "N/A";
+        long seconds = millis / 1000;
+        if (seconds < 60) return seconds + "s";
+        long minutes = seconds / 60;
+        if (minutes < 60) return minutes + "m";
+        long hours = minutes / 60;
+        if (hours < 24) return hours + "h";
+        long days = hours / 24;
+        return days + "d";
     }
 
 
