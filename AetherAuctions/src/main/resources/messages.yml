@@ -6,7 +6,8 @@ reload_success: "&aConfiguración recargada exitosamente."
 player_only_command: "&cEste comando solo puede ser usado por jugadores."
 no_permission: "&cNo tienes permiso para ejecutar este comando."
 invalid_command_usage: "&c¡Uso incorrecto! Prueba: %usage%"
-invalid_auction_id: "&cEl ID de subasta '%id%' no es válido o no existe."
+invalid_auction_id: "&cEl ID de subasta '%id%' no es válido o no existe." # This is generic, new one is more specific
+auction_not_found: "&cNo se encontró ninguna subasta con ese ID." # New specific message
 auction_id_must_be_number: "&cEl ID de la subasta debe ser un número."
 
 # Creación de Subasta
@@ -70,6 +71,7 @@ item_returned_to_inventory: "&aHas cancelado la subasta #%id% por '%item%'. El �
 auction_cancelled_item_returned: "&aHas cancelado la subasta #%id% por '%item%'. El ítem ha sido devuelto a tu inventario." # Added as per subtask
 item_sent_to_claim: "&eEl ítem '%item%' de la subasta cancelada no pudo ser devuelto a tu inventario y ha sido enviado a /subasta reclamar."
 bid_refunded_on_cancel: "&eLa subasta #%id% fue cancelada. Tu puja de %bid% %currency% ha sido devuelta."
+auction_not_active_cancel: "&cEsa subasta ya no está activa."
 
 
 # GUI Principal
