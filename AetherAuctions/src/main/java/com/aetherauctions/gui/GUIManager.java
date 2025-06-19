@@ -99,9 +99,11 @@ public class GUIManager {
             gui.setItem(45, InventoryUtil.createGuiItem(Material.GRAY_STAINED_GLASS_PANE, " "));
         }
         gui.setItem(46, InventoryUtil.createGuiItem(Material.OAK_SIGN, messageManager.getMessage("button_search_items"), false, messageManager.getMessage("lore_search_items_coming_soon")));
-        gui.setItem(47, InventoryUtil.createGuiItem(Material.HOPPER, messageManager.getMessage("button_filters"), false, messageManager.getMessage("lore_filters_coming_soon")));
+        // Slot 47 is now empty (or can be a glass pane)
+        gui.setItem(47, InventoryUtil.createGuiItem(Material.GRAY_STAINED_GLASS_PANE, " "));
         gui.setItem(48, InventoryUtil.createGuiItem(Material.ANVIL, messageManager.getMessage("button_create_auction")));
-        gui.setItem(49, InventoryUtil.createGuiItem(Material.SUNFLOWER, messageManager.getMessage("button_refresh")));
+        // Slot 49 is now the Close button
+        gui.setItem(49, InventoryUtil.createGuiItem(Material.BARRIER, messageManager.getMessage("button_close_gui"))); // Assuming "button_close_gui" key
         gui.setItem(50, InventoryUtil.createGuiItem(Material.CHEST, messageManager.getMessage("button_my_auctions")));
         gui.setItem(51, InventoryUtil.createGuiItem(Material.BOOK, messageManager.getMessage("button_history")));
         gui.setItem(52, InventoryUtil.createGuiItem(Material.GRAY_STAINED_GLASS_PANE, " "));
@@ -389,5 +391,57 @@ public class GUIManager {
         playerAuctionDuration.remove(playerUUID);
         playerAuctionStartPrice.remove(playerUUID);
         playerAuctionBuyNowPrice.remove(playerUUID);
+    }
+
+    public void refreshOpenAuctionGuis(AuctionItem affectedAuction, boolean forOwnerOnly, Player actionTaker) {
+        String mainGuiBaseTitle = messageManager.stripColors(messageManager.getRaw("main_gui_title").split("\\(")[0]).trim();
+        String myAuctionsBaseTitle = messageManager.stripColors(messageManager.getRaw("my_auctions_gui_title").split("\\(")[0]).trim();
+        String infoGuiBaseTitle = messageManager.stripColors(messageManager.getRaw("auction_info_gui_title")); // No page numbers
+
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            if (player.getOpenInventory() == null || player.getOpenInventory().getTopInventory() == null) {
+                continue;
+            }
+            String openInventoryTitle = messageManager.stripColors(player.getOpenInventory().getTitle());
+
+            if (openInventoryTitle.startsWith(mainGuiBaseTitle)) {
+                if (!forOwnerOnly || player.equals(actionTaker)) { // Refresh main for everyone unless specifically for owner
+                    openMainAuctionGui(player, getPlayerCurrentPage(player.getUniqueId()));
+                }
+            } else if (openInventoryTitle.startsWith(myAuctionsBaseTitle)) {
+                if (affectedAuction != null && player.getUniqueId().toString().equals(affectedAuction.getSellerUUID())) {
+                    openMyAuctionsGui(player, getPlayerCurrentPage(player.getUniqueId()));
+                } else if (!forOwnerOnly && actionTaker.equals(player)) { // e.g. player created an auction, refresh their "my auctions"
+                     openMyAuctionsGui(player, getPlayerCurrentPage(player.getUniqueId()));
+                }
+            } else if (openInventoryTitle.equals(infoGuiBaseTitle)) {
+                // Check if the info GUI is for the affected auction
+                // This requires parsing the ID from the GUI content (e.g., from a lore line on an item)
+                // For simplicity, if an auction is affected, and a player has *any* info GUI open,
+                // we could close it or refresh their main GUI. A more targeted refresh is complex.
+                // Let's try to refresh if the item ID matches.
+                Inventory openInv = player.getOpenInventory().getTopInventory();
+                ItemStack itemInSlot4 = openInv.getItem(4); // Expected slot for auction item in info GUI
+                if (itemInSlot4 != null && itemInSlot4.hasItemMeta() && itemInSlot4.getItemMeta().hasLore()) {
+                    List<String> lore = itemInSlot4.getItemMeta().getLore();
+                    String idStringLore = lore.stream().filter(s -> messageManager.stripColors(s).startsWith("ID:")).findFirst().orElse(null);
+                    if (idStringLore != null) {
+                        try {
+                            int openAuctionId = Integer.parseInt(messageManager.stripColors(idStringLore.substring(idStringLore.indexOf(":") + 1)));
+                            if (affectedAuction != null && openAuctionId == affectedAuction.getId()) {
+                                if (affectedAuction.getStatus() == AuctionStatus.ACTIVE) {
+                                    openAuctionInfoGui(player, affectedAuction); // Refresh with new data
+                                } else {
+                                    player.closeInventory(); // Auction no longer active, close info
+                                    messageManager.sendMessage(player, "auction_ended_info_closed");
+                                }
+                            }
+                        } catch (NumberFormatException e) {
+                            // Not a valid auction ID in lore, do nothing
+                        }
+                    }
+                }
+            }
+        }
     }
 }

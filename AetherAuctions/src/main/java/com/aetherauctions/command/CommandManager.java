@@ -9,6 +9,8 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack; // Added import
+import org.bukkit.Material; // Added import
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -45,12 +47,89 @@ public class CommandManager implements CommandExecutor, TabCompleter {
 
         switch (subCommand) {
             case "crear":
-                if (sender instanceof Player) {
-                    // Permission check can be added here if desired, e.g., aetherauctions.create
-                    guiManager.clearCreateAuctionData(((Player) sender).getUniqueId()); // Clear previous temp data
-                    guiManager.openCreateAuctionGui((Player) sender);
+                if (args.length == 1) { // /subasta crear -> open GUI
+                    if (sender instanceof Player) {
+                        guiManager.clearCreateAuctionData(((Player) sender).getUniqueId());
+                        guiManager.openCreateAuctionGui((Player) sender);
+                    } else {
+                        messageManager.sendMessage(sender, "player_only_command");
+                    }
+                } else if (args.length == 4) { // /subasta crear <cantidad> <precio> <duracion_minutos>
+                    if (!(sender instanceof Player)) {
+                        messageManager.sendMessage(sender, "player_only_command");
+                        return true;
+                    }
+                    Player player = (Player) sender;
+                    ItemStack itemInHand = player.getInventory().getItemInMainHand();
+
+                    if (itemInHand == null || itemInHand.getType() == Material.AIR) {
+                        messageManager.sendMessage(player, "error_must_hold_item_command");
+                        return true;
+                    }
+
+                    int cantidad;
+                    double precio;
+                    int duracionMinutes;
+
+                    try {
+                        cantidad = Integer.parseInt(args[1]);
+                    } catch (NumberFormatException e) {
+                        messageManager.sendMessage(player, "error_invalid_number_format", "%value%", args[1]);
+                        return true;
+                    }
+
+                    try {
+                        precio = Double.parseDouble(args[2]);
+                    } catch (NumberFormatException e) {
+                        messageManager.sendMessage(player, "error_invalid_number_format", "%value%", args[2]);
+                        return true;
+                    }
+
+                    try {
+                        duracionMinutes = Integer.parseInt(args[3]);
+                    } catch (NumberFormatException e) {
+                        messageManager.sendMessage(player, "error_invalid_number_format", "%value%", args[3]);
+                        return true;
+                    }
+
+                    if (cantidad <= 0) {
+                        messageManager.sendMessage(player, "error_invalid_quantity");
+                        return true;
+                    }
+                    if (itemInHand.getAmount() < cantidad) {
+                        messageManager.sendMessage(player, "not_enough_items_in_hand", "%item%", itemInHand.getType().toString(), "%amount%", String.valueOf(cantidad)); // Assuming this message exists or create a new one
+                        return true;
+                    }
+                    if (precio <= 0) {
+                        messageManager.sendMessage(player, "error_invalid_price");
+                        return true;
+                    }
+                    if (duracionMinutes <= 0) {
+                        messageManager.sendMessage(player, "error_invalid_duration");
+                        return true;
+                    }
+
+                    ItemStack itemToAuction = itemInHand.clone();
+                    itemToAuction.setAmount(cantidad);
+
+                    long durationMillis = (long) duracionMinutes * 60 * 1000;
+
+                    // Using -1 for buyNowPrice as it's not specified in this command version
+                    boolean success = auctionManager.createAuction(player, itemToAuction, durationMillis, precio, -1);
+
+                    if (success) {
+                        // MessageManager already sends success from AuctionManager
+                        // Optional: send a specific message for command creation success
+                        // messageManager.sendMessage(player, "command_auction_created_successfully",
+                        //    "%item%", itemToAuction.getType().toString(),
+                        //    "%cantidad%", String.valueOf(cantidad),
+                        //    "%precio%", String.format("%.2f", precio),
+                        //    "%currency%", plugin.getConfigManager().getCurrencySymbol(), // Need to get this
+                        //    "%duration%", args[3] + " minutos");
+                    }
+                    // No explicit else needed as AuctionManager.createAuction sends failure messages
                 } else {
-                    messageManager.sendMessage(sender, "player_only_command");
+                    messageManager.sendMessage(sender, "error_invalid_crear_usage");
                 }
                 break;
             case "mis":
@@ -160,22 +239,28 @@ public class CommandManager implements CommandExecutor, TabCompleter {
     }
 
     private void sendHelpMessage(CommandSender sender, String commandLabel) {
-        // These could also be moved to messages.yml as a multi-line string or list
-        sender.sendMessage(messageManager.getPrefix() + "--- Ayuda de AetherAuctions ---");
-        sender.sendMessage(messageManager.getPrefixedRaw(" &/e/" + commandLabel + " &7- Abre la GUI principal."));
-        sender.sendMessage(messageManager.getPrefixedRaw(" &/e/" + commandLabel + " crear &7- Abre la GUI para crear una subasta."));
-        sender.sendMessage(messageManager.getPrefixedRaw(" &/e/" + commandLabel + " mis &7- Ve tus subastas activas."));
-        sender.sendMessage(messageManager.getPrefixedRaw(" &/e/" + commandLabel + " historial &7- Ve tu historial de subastas."));
-        sender.sendMessage(messageManager.getPrefixedRaw(" &/e/" + commandLabel + " cancelar <id> &7- Cancela una de tus subastas."));
+        sender.sendMessage(messageManager.getMessage("help_header"));
+        sender.sendMessage(messageManager.getMessage("help_title")); // Plugin name is part of this message now
+        sender.sendMessage(messageManager.getMessage("help_line_main", "%label%", commandLabel));
+        sender.sendMessage(messageManager.getMessage("help_line_crear", "%label%", commandLabel));
+        // sender.sendMessage(messageManager.getMessage("help_line_crear_console_hint", "%label%", commandLabel)); // Optional hint
+        sender.sendMessage(messageManager.getMessage("help_line_mis", "%label%", commandLabel));
+        sender.sendMessage(messageManager.getMessage("help_line_historial", "%label%", commandLabel));
+        sender.sendMessage(messageManager.getMessage("help_line_cancelar", "%label%", commandLabel));
+        sender.sendMessage(messageManager.getMessage("help_line_ayuda", "%label%", commandLabel));
         if (sender.hasPermission("aetherauctions.admin")) {
-            sender.sendMessage(messageManager.getPrefixedRaw(" &/c/" + commandLabel + " admin &7- Muestra ayuda de administración."));
+            sender.sendMessage(messageManager.getMessage("help_line_admin_command", "%label%", commandLabel));
         }
+        sender.sendMessage(messageManager.getMessage("help_footer"));
     }
 
     private void sendAdminHelpMessage(CommandSender sender, String commandLabel) {
-        sender.sendMessage(messageManager.getRaw("admin_help_header")); // Assumes admin_help_header includes prefix or is styled
-        sender.sendMessage(messageManager.getMessage("admin_help_reload").replace("/auc", "/" + commandLabel));
-        sender.sendMessage(messageManager.getMessage("admin_help_remove").replace("/auc", "/" + commandLabel));
+        // Assuming admin_help_header in messages.yml contains the full styled header
+        sender.sendMessage(messageManager.getMessage("admin_help_header"));
+        sender.sendMessage(messageManager.getMessage("admin_help_line_reload", "%label%", commandLabel));
+        sender.sendMessage(messageManager.getMessage("admin_help_line_remove", "%label%", commandLabel));
+        // Potentially add a footer similar to the main help if desired
+        sender.sendMessage(messageManager.getMessage("help_footer")); // Using the same footer for consistency
     }
 
 

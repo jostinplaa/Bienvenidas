@@ -165,6 +165,7 @@ public class AuctionManager {
                 if (listingFee > 0) {
                     messageManager.sendMessage(seller, "auction_create_fee_charged", "%amount%", String.format("%.2f", listingFee), "%currency%", configManager.getCurrencySymbol());
                 }
+                plugin.getGuiManager().refreshOpenAuctionGuis(newAuction, false, seller);
                 return true;
             } else {
                 seller.getInventory().addItem(item.clone()); // Refund item
@@ -266,6 +267,7 @@ public class AuctionManager {
                     "%item%", auction.getItemStack().getType().toString(),
                     "%currency%", configManager.getCurrencySymbol());
             }
+            plugin.getGuiManager().refreshOpenAuctionGuis(auction, false, bidder);
             return true;
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "SQL error updating bid for auction " + auction.getId(), e);
@@ -359,6 +361,7 @@ public class AuctionManager {
             if (seller.isOnline()) {
                  messageManager.sendMessage(seller.getPlayer(), "your_item_bought_out", "%item%", itemDisplayName, "%id%", String.valueOf(auction.getId()), "%buyer%", buyer.getName(), "%price%", String.format("%.2f", auction.getBuyNowPrice()), "%received%", String.format("%.2f", amountToSeller), "%currency%", configManager.getCurrencySymbol());
             }
+            plugin.getGuiManager().refreshOpenAuctionGuis(auction, false, buyer);
             return true;
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Error SQL al actualizar estado de subasta (BuyNow) " + auction.getId(), e);
@@ -435,6 +438,7 @@ public class AuctionManager {
             if (isAdmin && !auction.getSellerUUID().equals(player.getUniqueId().toString())) {
                  messageManager.sendMessage(player, "auction_cancelled_admin", "%id%", String.valueOf(auctionId));
             }
+            plugin.getGuiManager().refreshOpenAuctionGuis(auction, true, player); // True for owner only + action taker
             return true;
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Error SQL al cancelar la subasta " + auctionId, e);
@@ -521,6 +525,15 @@ public class AuctionManager {
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Error SQL al actualizar estado de subasta finalizada " + auction.getId(), e);
         }
+        // Determine actionTaker for expiry. If it's a bid win, winner is actionTaker. If no bids, seller is.
+        // For simplicity, passing null if no clear single "taker", GUIManager will refresh broadly.
+        Player actionTaker = null;
+        if (auction.getHighestBidderUUID() != null) {
+            actionTaker = Bukkit.getPlayer(UUID.fromString(auction.getHighestBidderUUID()));
+        } else if (auction.getSellerUUID() != null){
+            actionTaker = Bukkit.getPlayer(UUID.fromString(auction.getSellerUUID()));
+        }
+        plugin.getGuiManager().refreshOpenAuctionGuis(auction, false, actionTaker);
     }
 
     public void startExpiredAuctionsTask() {

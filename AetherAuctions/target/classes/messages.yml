@@ -3,7 +3,7 @@ prefix: "&e&lAetherAuctions &8» " # Se puede sobreescribir config.general.plugi
 
 # Comandos Generales
 reload_success: "&aConfiguración recargada exitosamente."
-player_only_command: "&cEste comando solo puede ser ejecutado por un jugador."
+player_only_command: "&cEste comando solo puede ser usado por jugadores."
 no_permission: "&cNo tienes permiso para ejecutar este comando."
 invalid_command_usage: "&c¡Uso incorrecto! Prueba: %usage%"
 invalid_auction_id: "&cEl ID de subasta '%id%' no es válido o no existe."
@@ -140,3 +140,30 @@ admin_help_header: "&6--- Ayuda Admin AetherAuctions ---"
 admin_help_reload: "&e/auc admin reload - Recarga la configuración."
 admin_help_remove: "&e/auc admin eliminar <id> - Elimina una subasta."
 # ... más mensajes de admin
+
+# Mensajes de Ayuda
+help_header: "&8&m----------------------------------"
+help_title: "&bAetherAuctions &7- Comandos de Ayuda"
+help_footer: "&8&m----------------------------------"
+help_line_format: "&a%command% &7- %description%" # General format for help lines
+
+help_line_main: "&a/%label% &7- Abre la casa de subastas."
+help_line_crear: "&a/%label% crear &7- Abre la GUI para crear una subasta."
+help_line_crear_console_hint: "&c(Desde consola, usa /%label% crear <jugador> ... para especificar el vendedor si es necesario en el futuro)" # Placeholder, not fully implemented
+help_line_mis: "&a/%label% mis &7- Muestra tus subastas activas."
+help_line_historial: "&a/%label% historial &7- Muestra tu historial de subastas."
+help_line_cancelar: "&a/%label% cancelar <id> &7- Cancela una de tus subastas activas."
+help_line_ayuda: "&a/%label% ayuda &7- Muestra este mensaje de ayuda."
+help_line_admin_command: "&c/%label% admin &7- Muestra los comandos de administración."
+
+admin_help_line_reload: "&c/%label% admin reload &7- Recarga la configuración del plugin."
+admin_help_line_remove: "&c/%label% admin eliminar <id> &7- Elimina forzosamente una subasta."
+
+# Crear Subasta por Comando
+command_auction_created_successfully: "&aHas creado una subasta para %item% x%cantidad% por %precio% %currency% durante %duration%."
+error_must_hold_item_command: "&cDebes tener un ítem en la mano para crear una subasta con este comando."
+error_invalid_number_format: "&cError: '%value%' no es un número válido."
+error_invalid_crear_usage: "&cIncorrecto. Uso: /subasta crear [cantidad precio duracion_minutos]"
+error_invalid_quantity: "&cLa cantidad debe ser al menos 1."
+error_invalid_price: "&cEl precio debe ser un valor positivo."
+error_invalid_duration: "&cLa duración debe ser un valor positivo en minutos."
