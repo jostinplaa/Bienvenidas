@@ -65,118 +65,27 @@ public class GUIManager {
         plugin.getLogger().info("Attempted to open DEPRECATED main auction GUI for " + player.getName());
     }
 
-    public String getNewMainAuctionGuiTitlePrefix() {
-        return messageManager.getMessage("new_main_gui_title_prefix");
-    }
+    // Removed getNewMainAuctionGuiTitlePrefix, getNewMainAuctionGuiFullTitle, getAuctionDetailsGuiTitle as they were for the deleted GUIs
 
-    public String getNewMainAuctionGuiFullTitle(Player player, int page, int totalPages) {
-         String prefix = messageManager.getMessage("new_main_gui_title_prefix");
-         if (totalPages > 1) {
-             return prefix + " &7(Pág. " + (page + 1) + "/" + totalPages + ")";
-         }
-         return prefix;
-    }
+    /**
+     * Opens the main auction house GUI. This is the OLD version.
+     *
+     * @param player The player to open the GUI for.
+     * @param page The page number to open.
+     * @deprecated Use {@link com.aetherauctions.gui.rework.NewGUIManager#openNewMainAuctionGUI(Player, int)} instead.
+     */
+    // Method openNewMainAuctionGui removed.
 
-    public String getAuctionDetailsGuiTitle() {
-        return messageManager.getMessage("auction_details_gui_title");
-    }
+    /**
+     * Opens the auction information/details GUI. This is the OLD version.
+     *
+     * @param player The player to open the GUI for.
+     * @param auctionItem The auction item to display details for.
+     * @deprecated Use {@link com.aetherauctions.gui.rework.NewGUIManager#openAuctionDetailsGUI(Player, AuctionItem, int)} instead.
+     */
+    // Method openAuctionInfoGui removed.
 
-    public void openNewMainAuctionGui(Player player, int page) {
-        List<AuctionItem> activeAuctions = new ArrayList<>(auctionManager.getActiveAuctionsMap().values().stream()
-                .filter(auc -> auc.getStatus() == AuctionStatus.ACTIVE)
-                .sorted((a1, a2) -> Long.compare(a1.getStartTime() + a1.getDuration(), a2.getStartTime() + a2.getDuration()))
-                .collect(Collectors.toList()));
-        int itemsPerPage = 45;
-        int totalItems = activeAuctions.size();
-        int totalPages = Math.max(1, (int) Math.ceil((double) totalItems / itemsPerPage));
-        page = Math.max(0, Math.min(page, totalPages - 1));
-        openInventoriesPage.put(player.getUniqueId(), page);
-        String title = getNewMainAuctionGuiFullTitle(player, page, totalPages);
-        Inventory gui = Bukkit.createInventory(null, 54, title);
-        int startIndex = page * itemsPerPage;
-        int endIndex = Math.min(startIndex + itemsPerPage, totalItems);
-        for (int i = startIndex; i < endIndex; i++) {
-            AuctionItem auction = activeAuctions.get(i);
-            ItemStack displayItem = auction.getItemStack().clone();
-            ItemMeta meta = displayItem.getItemMeta();
-            if (meta == null) meta = Bukkit.getItemFactory().getItemMeta(displayItem.getType());
-            String originalItemName = displayItem.hasItemMeta() && displayItem.getItemMeta().hasDisplayName()
-                                    ? displayItem.getItemMeta().getDisplayName()
-                                    : auction.getItemStack().getType().name().replace("_", " ");
-            meta.setDisplayName(messageManager.getMessage("item_default_name_format", "%item_name%", originalItemName));
-            List<String> lore = new ArrayList<>();
-            lore.add(messageManager.getMessage("lore_auction_id", "%id%", String.valueOf(auction.getId())));
-            lore.add(messageManager.getMessage("lore_seller", "%player_name%", auction.getSellerName()));
-            if (configManager.isBuyNowAllowed() && auction.getBuyNowPrice() > 0) {
-                lore.add(messageManager.getMessage("lore_buyout_price", "%price%", String.format("%.2f", auction.getBuyNowPrice()), "%currency%", configManager.getCurrencySymbol()));
-            }
-            lore.add(messageManager.getMessage("lore_minimum_bid", "%price%", String.format("%.2f", auction.getCurrentBid()), "%currency%", configManager.getCurrencySymbol()));
-            lore.add(messageManager.getMessage("lore_time_remaining", "%time%", formatDuration(auction.getStartTime() + auction.getDuration() - System.currentTimeMillis())));
-            lore.add(" ");
-            lore.add(messageManager.getMessage("lore_instruction_bid"));
-            lore.add(messageManager.getMessage("lore_instruction_details"));
-            meta.setLore(lore);
-            displayItem.setItemMeta(meta);
-            gui.setItem(i - startIndex, displayItem);
-        }
-        ItemStack placeholder = InventoryUtil.createGuiItem(Material.GRAY_STAINED_GLASS_PANE, " ");
-        for (int i = 45; i < 54; i++) gui.setItem(i, placeholder);
-        if (page > 0) gui.setItem(48, InventoryUtil.createGuiItem(Material.ARROW, messageManager.getMessage("button_previous_page")));
-        gui.setItem(49, InventoryUtil.createGuiItem(Material.BARRIER, messageManager.getMessage("button_close_gui")));
-        if (page < totalPages - 1) gui.setItem(50, InventoryUtil.createGuiItem(Material.ARROW, messageManager.getMessage("button_next_page")));
-        player.openInventory(gui);
-    }
-
-    public void openAuctionInfoGui(Player player, AuctionItem auctionItem) {
-        // openInventoriesPage.remove(player.getUniqueId()); // Removed to preserve main GUI page history
-        playerViewingAuctionId.put(player.getUniqueId(), auctionItem.getId());
-
-        String title = getAuctionDetailsGuiTitle();
-        Inventory gui = Bukkit.createInventory(null, 36, title);
-
-        ItemStack displayItem = auctionItem.getItemStack().clone();
-        ItemMeta displayMeta = displayItem.getItemMeta();
-        if (displayMeta != null) {
-            String originalItemName = displayMeta.hasDisplayName() ? displayMeta.getDisplayName() : displayItem.getType().name().replace("_", " ");
-            displayMeta.setDisplayName(messageManager.getMessage("item_default_name_format", "%item_name%", originalItemName));
-            displayItem.setItemMeta(displayMeta);
-        }
-        gui.setItem(4, displayItem);
-
-        gui.setItem(19, InventoryUtil.createGuiItem(Material.PAPER, messageManager.getMessage("details_auction_id", "%id%", String.valueOf(auctionItem.getId()))));
-        gui.setItem(20, InventoryUtil.createGuiItem(Material.PLAYER_HEAD, messageManager.getMessage("details_seller", "%name%", auctionItem.getSellerName())));
-        gui.setItem(21, InventoryUtil.createGuiItem(Material.GOLD_NUGGET, messageManager.getMessage("details_current_bid", "%price%", plugin.getEconomy().format(auctionItem.getCurrentBid()))));
-        if (auctionItem.getBuyNowPrice() > 0 && auctionItem.getStatus() == AuctionStatus.ACTIVE) {
-            gui.setItem(22, InventoryUtil.createGuiItem(Material.GOLD_INGOT, messageManager.getMessage("details_buyout_price", "%price%", plugin.getEconomy().format(auctionItem.getBuyNowPrice()))));
-        } else {
-            gui.setItem(22, InventoryUtil.createGuiItem(Material.GRAY_STAINED_GLASS_PANE, " "));
-        }
-        gui.setItem(23, InventoryUtil.createGuiItem(Material.CLOCK, messageManager.getMessage("details_time_remaining", "%time%", formatDuration(auctionItem.getStartTime() + auctionItem.getDuration() - System.currentTimeMillis()))));
-
-        gui.setItem(30, InventoryUtil.createGuiItem(Material.GREEN_WOOL, messageManager.getMessage("button_bid")));
-        if (auctionItem.getBuyNowPrice() > 0 && auctionItem.getStatus() == AuctionStatus.ACTIVE) {
-            gui.setItem(31, InventoryUtil.createGuiItem(Material.EMERALD_BLOCK, messageManager.getMessage("button_buy_now")));
-        } else {
-            gui.setItem(31, InventoryUtil.createGuiItem(Material.GRAY_STAINED_GLASS_PANE, " "));
-        }
-        gui.setItem(32, InventoryUtil.createGuiItem(Material.RED_WOOL, messageManager.getMessage("button_back_to_main_auctions")));
-
-        ItemStack placeholder = InventoryUtil.createGuiItem(Material.BLACK_STAINED_GLASS_PANE, " ");
-        for (int i = 0; i < gui.getSize(); i++) {
-            if (gui.getItem(i) == null) {
-                gui.setItem(i, placeholder);
-            }
-        }
-        player.openInventory(gui);
-    }
-
-    public Integer getPlayerViewingAuctionId(UUID playerUUID) {
-        return playerViewingAuctionId.get(playerUUID);
-    }
-
-    public void removePlayerViewingAuctionId(UUID playerUUID) {
-        playerViewingAuctionId.remove(playerUUID);
-    }
+    // Removed playerViewingAuctionId map and its getter/remover methods.
 
     public void openCreateAuctionGui(Player player) {
         openInventoriesPage.remove(player.getUniqueId());
@@ -384,11 +293,14 @@ public class GUIManager {
     }
 
     public void refreshOpenAuctionGuis(AuctionItem affectedAuction, boolean forOwnerOnly, Player actionTaker) {
-        String oldMainGuiBaseTitle = messageManager.stripColors(messageManager.getRaw("main_gui_title").split("\\(")[0]).trim();
-        String newMainGuiActualTitlePrefix = getNewMainAuctionGuiTitlePrefix();
+        // String oldMainGuiBaseTitle = messageManager.stripColors(messageManager.getRaw("main_gui_title").split("\\(")[0]).trim(); // For old main GUI
+        // String newMainGuiActualTitlePrefix = getNewMainAuctionGuiTitlePrefix(); // Method removed
         String myAuctionsBaseTitle = messageManager.stripColors(messageManager.getRaw("my_auctions_gui_title").split("\\(")[0]).trim();
-        String infoGuiBaseTitle = messageManager.stripColors(messageManager.getRaw("auction_info_gui_title"));  // Old info GUI title
-        String auctionDetailsGuiTitle = getAuctionDetailsGuiTitle(); // New details GUI title
+        // String infoGuiBaseTitle = messageManager.stripColors(messageManager.getRaw("auction_info_gui_title"));  // For old info GUI
+        // String auctionDetailsGuiTitle = getAuctionDetailsGuiTitle(); // Method removed
+
+        // Note: The NewGUIManager and its GUIs are expected to handle their own refresh logic if necessary,
+        // or players might need to reopen them. This refresh method will now only focus on GUIs still managed by this GUIManager.
 
         for (Player player : Bukkit.getOnlinePlayers()) {
             if (player.getOpenInventory() == null || player.getOpenInventory().getTopInventory() == null) {
@@ -396,49 +308,18 @@ public class GUIManager {
             }
             String openInventoryTitle = messageManager.stripColors(player.getOpenInventory().getTitle());
 
-            if (openInventoryTitle.startsWith(newMainGuiActualTitlePrefix)) {
-                if (!forOwnerOnly || (actionTaker != null && player.getUniqueId().equals(actionTaker.getUniqueId())) || (affectedAuction != null && player.getUniqueId().toString().equals(affectedAuction.getSellerUUID())) ) {
-                    openNewMainAuctionGui(player, getPlayerCurrentPage(player.getUniqueId()));
-                }
-            } else if (openInventoryTitle.startsWith(oldMainGuiBaseTitle)) {
-                 if (!forOwnerOnly || (actionTaker != null && player.getUniqueId().equals(actionTaker.getUniqueId())) || (affectedAuction != null && player.getUniqueId().toString().equals(affectedAuction.getSellerUUID())) ) {
-                    openNewMainAuctionGui(player, 0);
-                }
-            }
+            // Logic for refreshing old main auction GUI and old details GUI has been removed.
+            // New GUIs (NewMainAuctionGUI, AuctionDetailsGUI) are not handled by this refresh method.
 
-            else if (openInventoryTitle.startsWith(myAuctionsBaseTitle)) {
+            if (openInventoryTitle.startsWith(myAuctionsBaseTitle)) {
                 if (affectedAuction != null && player.getUniqueId().toString().equals(affectedAuction.getSellerUUID())) {
                     openMyAuctionsGui(player, getPlayerCurrentPage(player.getUniqueId()));
                 } else if (!forOwnerOnly && actionTaker != null && actionTaker.equals(player)) {
                      openMyAuctionsGui(player, getPlayerCurrentPage(player.getUniqueId()));
                 }
-            } else if (openInventoryTitle.equals(infoGuiBaseTitle) || openInventoryTitle.equals(auctionDetailsGuiTitle)) { // Check both old and new info titles
-                Inventory openInv = player.getOpenInventory().getTopInventory();
-                ItemStack itemInSlot = openInv.getItem(4);
-                if (itemInSlot != null && itemInSlot.hasItemMeta() && itemInSlot.getItemMeta().hasLore()) {
-                    List<String> lore = itemInSlot.getItemMeta().getLore();
-                    String idStringLore = lore.stream().filter(s -> messageManager.stripColors(s).startsWith("ID de Subasta:")).findFirst().orElse(null);
-                    if (idStringLore == null) {
-                         idStringLore = lore.stream().filter(s -> messageManager.stripColors(s).startsWith(messageManager.stripColors(messageManager.getRaw("lore_auction_id").split(":")[0] + ":"))).findFirst().orElse(null);
-                    }
-
-                    if (idStringLore != null) {
-                        try {
-                            int openAuctionId = Integer.parseInt(messageManager.stripColors(idStringLore.substring(idStringLore.indexOf(":") + 1).trim()));
-                            if (affectedAuction != null && openAuctionId == affectedAuction.getId()) {
-                                if (affectedAuction.getStatus() == AuctionStatus.ACTIVE) {
-                                    openAuctionInfoGui(player, affectedAuction);
-                                } else {
-                                    player.closeInventory();
-                                    messageManager.sendMessage(player, "auction_ended_info_closed");
-                                }
-                            }
-                        } catch (NumberFormatException e) {
-                            // Not a valid auction ID in lore
-                        }
-                    }
-                }
             }
+            // Any other GUIs managed by this GUIManager that need refreshing would go here.
+            // For example, if CreateAuctionGui needed refresh based on some external event.
         }
     }
 

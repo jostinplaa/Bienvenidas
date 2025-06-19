@@ -3,7 +3,9 @@ package com.aetherauctions.listeners;
 import com.aetherauctions.AetherAuctions;
 import com.aetherauctions.auction.AuctionItem;
 import com.aetherauctions.auction.AuctionManager;
+import com.aetherauctions.auction.AuctionStatus; // Import AuctionStatus
 import com.aetherauctions.gui.GUIManager;
+import com.aetherauctions.gui.rework.NewGUIManager; // Import NewGUIManager
 import com.aetherauctions.config.MessageManager; // Assuming this path is correct
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -18,14 +20,16 @@ public class PlayerChatListener implements Listener {
 
     private final AetherAuctions plugin;
     private final AuctionManager auctionManager;
-    private final GUIManager guiManager;
+    private final GUIManager guiManager; // Old GUI Manager, for other input states
+    private final NewGUIManager newGuiManager; // New GUI Manager
     private final MessageManager messageManager;
 
     public PlayerChatListener(AetherAuctions plugin) {
         this.plugin = plugin;
-        this.auctionManager = plugin.getAuctionManager(); // Get from main plugin class
-        this.guiManager = plugin.getGuiManager();       // Get from main plugin class
-        this.messageManager = plugin.getMessageManager(); // Get from main plugin class
+        this.auctionManager = plugin.getAuctionManager();
+        this.guiManager = plugin.getGuiManager();
+        this.newGuiManager = plugin.getNewGuiManager(); // Initialize NewGUIManager
+        this.messageManager = plugin.getMessageManager();
     }
 
     @EventHandler(priority = EventPriority.LOWEST) // Process before other chat plugins, and cancel if needed
@@ -33,67 +37,93 @@ public class PlayerChatListener implements Listener {
         Player player = event.getPlayer();
         UUID playerId = player.getUniqueId();
 
-        // Check if this player is expected to provide bid input
-        if (guiManager.isPlayerPendingBid(playerId)) {
+        // Check if this player is expected to provide bid input via NewGUIManager
+        if (newGuiManager.isPlayerPendingBid(playerId)) {
             event.setCancelled(true); // Cancel the chat event so the message doesn't appear publicly
 
-            Integer auctionId = guiManager.getAndRemovePlayerPendingBid(playerId); // Retrieve and clear pending state
+            Integer auctionId = newGuiManager.getAndRemovePlayerPendingBidAuctionId(playerId);
             if (auctionId == null) {
-                // Should not happen if state was managed correctly, but as a safeguard:
-                messageManager.sendMessage(player, "internal_error"); // Or a more specific "no_pending_bid_auction"
+                plugin.getLogger().warning("Player " + player.getName() + " was pending bid input, but no auction ID was found.");
+                messageManager.sendMessage(player, "internal_error");
                 return;
             }
 
-            String message = event.getMessage();
+            String bidAmountString = event.getMessage();
             double bidAmount;
             try {
-                bidAmount = Double.parseDouble(message);
+                bidAmount = Double.parseDouble(bidAmountString);
             } catch (NumberFormatException e) {
-                messageManager.sendMessage(player, "error_invalid_bid_input_nan", "%input%", message);
-                // Optionally, re-open auction details GUI or main GUI
-                // For now, just informing and player has to re-initiate bid.
-                AuctionItem auctionItem = auctionManager.getAuction(auctionId);
-                if (auctionItem == null) {
-                    try { auctionItem = plugin.getDatabaseManager().getAuction(auctionId); } catch (Exception dbEx) {}
-                }
-                if (auctionItem != null) {
-                    // Run synchronously as it involves opening GUI
-                    AuctionItem finalAuctionItem = auctionItem; // effectively final for lambda
-                    Bukkit.getScheduler().runTask(plugin, () -> guiManager.openAuctionInfoGui(player, finalAuctionItem));
-                } else {
-                     Bukkit.getScheduler().runTask(plugin, () -> guiManager.openNewMainAuctionGui(player, 0));
-                }
+                messageManager.sendMessage(player, "error_invalid_bid_input_nan", "%input%", bidAmountString);
+                // No need to re-open GUI here, player can re-initiate from details GUI if they wish or type /auc again
                 return;
             }
 
-            // Perform bidding logic synchronously as it involves economy and potentially GUI updates
-            AuctionItem finalAuctionItemForLambda = auctionManager.getAuction(auctionId); // Re-fetch for fresh state
-             if (finalAuctionItemForLambda == null) {
-                 try { finalAuctionItemForLambda = plugin.getDatabaseManager().getAuction(auctionId); } catch (Exception dbEx) {}
-             }
-            final AuctionItem auctionToBidOn = finalAuctionItemForLambda;
-
-
+            // Run validation and bidding logic synchronously
             Bukkit.getScheduler().runTask(plugin, () -> {
-                if (auctionToBidOn == null) {
+                AuctionItem auctionItem = auctionManager.getAuction(auctionId);
+
+                if (auctionItem == null || auctionItem.getStatus() != AuctionStatus.ACTIVE) {
                     messageManager.sendMessage(player, "auction_ended_no_longer_exists");
-                    guiManager.openNewMainAuctionGui(player, 0);
+                    // Optionally open main GUI: newGuiManager.openNewMainAuctionGUI(player, 0);
                     return;
                 }
-                boolean bidSuccess = auctionManager.placeBid(player, auctionToBidOn, bidAmount);
 
-                // Re-open auction info GUI regardless of success to show updated state or error context
-                // AuctionManager.placeBid handles sending success/failure messages
-                // If bid was successful, AuctionManager also calls GUI refresh which will update this player's GUI too.
-                // If not, we manually reopen to show the state (e.g. if bid was too low).
-                if (!bidSuccess) {
-                    guiManager.openAuctionInfoGui(player, auctionToBidOn);
+                if (auctionItem.getSellerUUID().equals(player.getUniqueId().toString())) {
+                    messageManager.sendMessage(player, "cannot_bid_on_own_auction");
+                    return;
                 }
+
+                // Buy now check
+                if (auctionItem.getBuyNowPrice() > 0 && plugin.getConfigManager().isBuyNowAllowed() && bidAmount >= auctionItem.getBuyNowPrice()) {
+                    messageManager.sendMessage(player, "bid_equals_buy_now");
+                    auctionManager.buyNow(player, auctionId, true); // true indicates triggered by bid matching/exceeding buy now
+                    return;
+                }
+
+                // Standard bid validation
+                double minIncrement = plugin.getConfigManager().getMinBidIncrementAmount();
+                double currentEffectiveBid = (auctionItem.getHighestBidderUUID() == null) ? auctionItem.getStartPrice() : auctionItem.getCurrentBid();
+                double requiredBid = (auctionItem.getHighestBidderUUID() == null) ? auctionItem.getStartPrice() : currentEffectiveBid + minIncrement;
+
+                // Adjust requiredBid if it's the first bid and startPrice is effectively the current bid
+                if (auctionItem.getHighestBidderUUID() == null && bidAmount < auctionItem.getStartPrice()) {
+                     messageManager.sendMessage(player, "bid_too_low_initial", "%min_bid%", String.format("%,.2f", auctionItem.getStartPrice()), "%currency%", plugin.getConfigManager().getCurrencySymbol());
+                     return;
+                } else if (auctionItem.getHighestBidderUUID() != null && bidAmount < requiredBid) {
+                     messageManager.sendMessage(player, "bid_too_low_increment", "%min_bid%", String.format("%,.2f", requiredBid), "%currency%", plugin.getConfigManager().getCurrencySymbol(), "%increment%", String.format("%,.2f", minIncrement));
+                     return;
+                }
+
+
+                // If all validations pass
+                auctionManager.placeBid(player, auctionItem, bidAmount);
+                // AuctionManager.placeBid will send feedback messages and handle economy
+                // No need to re-open GUI here, AuctionManager's refresh logic should handle updates if any GUI is open.
             });
         }
-        // Handle other input states like AWAITING_DURATION, AWAITING_START_PRICE etc. from previous implementations
-        // This part is copied from existing PlayerChatListener logic for other inputs.
-        else if (plugin.getPlayerInputState().getOrDefault(playerId, AetherAuctions.PlayerInputState.NONE) != AetherAuctions.PlayerInputState.NONE) {
+        // Handle other input states from the old GUIManager (e.g., for creating auctions via chat prompts)
+        else if (guiManager.isPlayerPendingBid(playerId)) { // This is the old pending bid, keep it for now if old GUI is still partially used
+            event.setCancelled(true);
+            Integer oldAuctionId = guiManager.getAndRemovePlayerPendingBid(playerId);
+            if (oldAuctionId == null) { return; }
+            String oldMessage = event.getMessage();
+            double oldBidAmount;
+            try { oldBidAmount = Double.parseDouble(oldMessage); }
+            catch (NumberFormatException e) {
+                messageManager.sendMessage(player, "error_invalid_bid_input_nan", "%input%", oldMessage);
+                return;
+            }
+            AuctionItem oldAuctionToBidOn = auctionManager.getAuction(oldAuctionId);
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                if (oldAuctionToBidOn == null) {
+                    messageManager.sendMessage(player, "auction_ended_no_longer_exists");
+                    return;
+                }
+                auctionManager.placeBid(player, oldAuctionToBidOn, oldBidAmount);
+            });
+
+        } else if (plugin.getPlayerInputState().getOrDefault(playerId, AetherAuctions.PlayerInputState.NONE) != AetherAuctions.PlayerInputState.NONE) {
+             // This part handles inputs for the old create auction GUI (duration, start price, buy now price)
             AetherAuctions.PlayerInputState state = plugin.getPlayerInputState().get(playerId);
             event.setCancelled(true);
             String chatMessage = event.getMessage();

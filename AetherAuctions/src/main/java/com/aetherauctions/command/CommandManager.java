@@ -4,6 +4,7 @@ import com.aetherauctions.AetherAuctions;
 import com.aetherauctions.auction.AuctionManager;
 import com.aetherauctions.config.MessageManager; // Import MessageManager
 import com.aetherauctions.gui.GUIManager;
+import com.aetherauctions.gui.rework.NewGUIManager; // Import NewGUIManager
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -22,13 +23,15 @@ public class CommandManager implements CommandExecutor, TabCompleter {
 
     private final AetherAuctions plugin;
     private final AuctionManager auctionManager;
-    private final GUIManager guiManager;
+    private final GUIManager guiManager; // Old GUI Manager, might be phased out or used for other GUIs
+    private final NewGUIManager newGuiManager; // New GUI Manager
     private final MessageManager messageManager; // Add MessageManager
 
     public CommandManager(AetherAuctions plugin, AuctionManager auctionManager, GUIManager guiManager) {
         this.plugin = plugin;
         this.auctionManager = auctionManager;
-        this.guiManager = guiManager;
+        this.guiManager = guiManager; // Keep for now
+        this.newGuiManager = plugin.getNewGuiManager(); // Initialize NewGUIManager
         this.messageManager = plugin.getMessageManager(); // Get MessageManager from plugin
     }
 
@@ -39,7 +42,7 @@ public class CommandManager implements CommandExecutor, TabCompleter {
                 sender.sendMessage(messageManager.getMessage("error_console_command_ingame_only"));
                 return true;
             }
-            guiManager.openNewMainAuctionGui((Player) sender, 0); // Call new GUI, 0-indexed
+            newGuiManager.openNewMainAuctionGUI((Player) sender, 0); // Use NewGUIManager
             return true;
         }
 

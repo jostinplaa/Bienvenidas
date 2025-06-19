@@ -291,7 +291,7 @@ public class AuctionManager {
         return buyNow(buyer, auctionId, false);
     }
 
-    private boolean buyNow(Player buyer, int auctionId, boolean bidTriggered) {
+    public boolean buyNow(Player buyer, int auctionId, boolean bidTriggered) { // Changed to public
         AuctionItem auction = activeAuctions.get(auctionId);
         if (auction == null) {
              try { auction = databaseManager.getAuction(auctionId); }

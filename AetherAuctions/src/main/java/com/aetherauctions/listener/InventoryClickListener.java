@@ -43,32 +43,26 @@ public class InventoryClickListener implements Listener {
         String inventoryTitle = event.getView().getTitle();
         ItemStack clickedItem = event.getCurrentItem();
 
-        String oldMainGuiBaseTitle = messageManager.stripColors(messageManager.getRaw("main_gui_title").split("\\(")[0]).trim();
-        String newMainGuiActualTitlePrefix = guiManager.getNewMainAuctionGuiTitlePrefix();
+        // Titles for GUIs still managed by this listener
         String createGuiTitle = messageManager.stripColors(messageManager.getRaw("auction_create_gui_title"));
-        String auctionDetailsGuiTitle = guiManager.getAuctionDetailsGuiTitle(); // Using getter
         String myAuctionsBaseTitle = messageManager.stripColors(messageManager.getRaw("my_auctions_gui_title").split("\\(")[0]).trim();
         String historyBaseTitle = messageManager.stripColors(messageManager.getRaw("auction_history_gui_title").split("\\(")[0]).trim();
+        // String oldMainGuiBaseTitle = messageManager.stripColors(messageManager.getRaw("main_gui_title").split("\\(")[0]).trim(); // Kept for reference, but logic using it will be removed
 
-        boolean isNewMainGui = inventoryTitle.startsWith(newMainGuiActualTitlePrefix);
         boolean isCreateGui = inventoryTitle.equals(createGuiTitle);
-        boolean isAuctionDetailsGui = inventoryTitle.equals(auctionDetailsGuiTitle);
         boolean isMyAuctionsGui = inventoryTitle.startsWith(myAuctionsBaseTitle);
         boolean isHistoryGui = inventoryTitle.startsWith(historyBaseTitle);
-        boolean isDeprecatedMainGui = inventoryTitle.startsWith(oldMainGuiBaseTitle) && !isNewMainGui;
+        // boolean isDeprecatedMainGui = inventoryTitle.startsWith(oldMainGuiBaseTitle); // Logic for this will be removed
 
-        boolean isPluginGui = isNewMainGui || isCreateGui || isAuctionDetailsGui || isMyAuctionsGui || isHistoryGui || isDeprecatedMainGui;
+        // Simplified check: if it's one of the GUIs this listener still handles.
+        // The NewGUIInventoryListener handles the new GUIs.
+        boolean isPluginGui = isCreateGui || isMyAuctionsGui || isHistoryGui;
 
         if (!isPluginGui) {
             return;
         }
 
-        if (isDeprecatedMainGui) {
-            event.setCancelled(true);
-            player.closeInventory();
-            guiManager.openNewMainAuctionGui(player, 0);
-            return;
-        }
+        // Removed block for isDeprecatedMainGui
 
         if (event.getClickedInventory().equals(event.getView().getTopInventory())) {
             event.setCancelled(true);
@@ -88,49 +82,10 @@ public class InventoryClickListener implements Listener {
             clickedItemName = messageManager.stripColors(clickedItem.getItemMeta().getDisplayName());
         }
 
-        if (isNewMainGui) {
-            int slot = event.getSlot();
-            int currentPage = guiManager.getPlayerCurrentPage(player.getUniqueId());
+        // Removed block for isNewMainGui
 
-            if (slot == 49 && clickedItemName.equals(messageManager.stripColors(messageManager.getRaw("button_close_gui")))) {
-                player.closeInventory();
-            } else if (slot == 48 && clickedItem != null && clickedItem.getType() == Material.ARROW) {
-                if (currentPage > 0) {
-                    guiManager.openNewMainAuctionGui(player, currentPage - 1);
-                }
-            } else if (slot == 50 && clickedItem != null && clickedItem.getType() == Material.ARROW) {
-                guiManager.openNewMainAuctionGui(player, currentPage + 1);
-            } else if (slot < 45 && clickedItem != null && clickedItem.getType() != Material.AIR) {
-                 List<String> lore = clickedItem.getItemMeta().getLore();
-                 if (lore != null) {
-                    String idStringLore = lore.stream().filter(s -> messageManager.stripColors(s).startsWith(messageManager.stripColors(messageManager.getRaw("lore_auction_id").split(":")[0] + ":"))).findFirst().orElse(null);
-                    if (idStringLore != null) {
-                        try {
-                            int auctionId = Integer.parseInt(messageManager.stripColors(idStringLore.substring(idStringLore.indexOf(":") + 1).trim()));
-                            AuctionItem auction = auctionManager.getAuction(auctionId);
-                            if (auction == null) {
-                               try { auction = plugin.getDatabaseManager().getAuction(auctionId); }
-                               catch (Exception dbExc) {plugin.getLogger().warning("Failed to get auction " + auctionId + " from DB: " + dbExc.getMessage());}
-                            }
-
-                            if (auction != null) {
-                                if (event.isLeftClick()) {
-                                    messageManager.sendMessage(player, "debug_bid_action", "%id%", String.valueOf(auction.getId()));
-                                } else if (event.isRightClick()) {
-                                    guiManager.openAuctionInfoGui(player, auction);
-                                }
-                            } else {
-                                messageManager.sendMessage(player, "invalid_auction_id", "%id%", String.valueOf(auctionId));
-                            }
-                        } catch (Exception e) {
-                            messageManager.sendMessage(player, "internal_error");
-                            plugin.getLogger().severe("Error parsing auction ID from new main GUI lore: " + idStringLore + " for player " + player.getName() + " Error: " + e.getMessage());
-                        }
-                    }
-                 }
-            }
-        } else if (isCreateGui) {
-            if (event.getSlot() == 13) {
+        if (isCreateGui) { // Adjusted else-if to if
+            if (event.getSlot() == 13) { // Slot for placing item in Create GUI
                 ItemStack itemOnCursor = event.getCursor();
                 ItemStack currentItemInSlot = guiManager.getItemToAuction(player.getUniqueId());
 
@@ -148,56 +103,14 @@ public class InventoryClickListener implements Listener {
                 guiManager.openCreateAuctionGui(player);
                 return;
             }
-            if(clickedItem != null && clickedItem.getType() != Material.AIR) {
+            if(clickedItem != null && clickedItem.getType() != Material.AIR) { // Ensure not clicking an empty part of the item slot if logic changes
                  handleCreateAuctionGuiButtonClick(player, clickedItemName);
             }
-        } else if (isAuctionDetailsGui && clickedItem != null) {
-            Integer auctionId = guiManager.getPlayerViewingAuctionId(player.getUniqueId());
-
-            if (auctionId == null && !clickedItemName.equals(messageManager.stripColors(messageManager.getRaw("button_back_to_main_auctions")))) {
-                messageManager.sendMessage(player, "internal_error");
-                player.closeInventory();
-                return;
-            }
-
-            if (clickedItemName.equals(messageManager.stripColors(messageManager.getRaw("button_back_to_main_auctions")))) {
-                if (auctionId != null) guiManager.removePlayerViewingAuctionId(player.getUniqueId());
-                guiManager.openNewMainAuctionGui(player, guiManager.getPlayerCurrentPage(player.getUniqueId()));
-            } else if (clickedItemName.equals(messageManager.stripColors(messageManager.getRaw("button_bid")))) {
-                if (auctionId != null) {
-                    guiManager.setPlayerPendingBid(player.getUniqueId(), auctionId);
-                    player.closeInventory();
-                    messageManager.sendMessage(player, "prompt_enter_bid_amount");
-                }
-            } else if (event.getSlot() == 31 && clickedItemName.equals(messageManager.stripColors(messageManager.getRaw("button_buy_now")))) {
-                if (auctionId != null) {
-                    AuctionItem auctionItem = auctionManager.getAuction(auctionId);
-                     if (auctionItem == null) { // Try fetching from DB if not in cache
-                        try { auctionItem = plugin.getDatabaseManager().getAuction(auctionId); }
-                        catch (Exception e) { plugin.getLogger().warning("DB error fetching auction " + auctionId + " for buynow: " + e.getMessage());}
-                    }
-
-                    if (auctionItem != null && auctionItem.getStatus() == com.aetherauctions.auction.AuctionStatus.ACTIVE && auctionItem.getBuyNowPrice() > 0) {
-                        boolean success = auctionManager.buyNow(player, auctionId); // auctionManager.buyNow takes auctionId
-                        // buyNow method internally handles messages and refreshes GUI if successful
-                        player.closeInventory(); // Close regardless of success, messages from buyNow will guide user
-                        if (success) {
-                             guiManager.removePlayerViewingAuctionId(player.getUniqueId()); // Clear context on successful buy
-                        }
-                    } else {
-                        messageManager.sendMessage(player, "error_auction_not_buyable_details_gui");
-                        player.closeInventory(); // Close and let them re-open from main if needed
-                        guiManager.removePlayerViewingAuctionId(player.getUniqueId());
-                        guiManager.openNewMainAuctionGui(player, 0); // Send back to main auction view
-                    }
-                } else {
-                     messageManager.sendMessage(player, "internal_error"); // Should have auctionId if in this GUI
-                     player.closeInventory();
-                }
-            }
-        } else if (isMyAuctionsGui && clickedItem != null) {
+        }
+        // Removed block for isAuctionDetailsGui
+        else if (isMyAuctionsGui && clickedItem != null) {
             int currentPage = guiManager.getPlayerCurrentPage(player.getUniqueId());
-             if (event.getSlot() < 45 && clickedItem.hasItemMeta() && clickedItem.getItemMeta().hasLore()) {
+             if (event.getSlot() < 45 && clickedItem.hasItemMeta() && clickedItem.getItemMeta().hasLore()) { // Item click
                 List<String> lore = clickedItem.getItemMeta().getLore();
                 String idStringLore = lore.stream().filter(s -> messageManager.stripColors(s).startsWith(messageManager.stripColors(messageManager.getRaw("lore_auction_id").split(":")[0] + ":"))).findFirst().orElse(null);
                 if (idStringLore != null) {
@@ -231,30 +144,9 @@ public class InventoryClickListener implements Listener {
         }
     }
 
-    @EventHandler
-    public void onInventoryClose(InventoryCloseEvent event) {
-        if (!(event.getPlayer() instanceof Player)) return;
-        Player player = (Player) event.getPlayer();
-        // If a player was viewing an auction's details, clear that context
-        if (guiManager.getPlayerViewingAuctionId(player.getUniqueId()) != null) {
-            // Check if the GUI title matches the details GUI to be certain
-            String closedGuiTitle = event.getView().getTitle();
-            String auctionDetailsGuiTitle = guiManager.getAuctionDetailsGuiTitle();
-            if(closedGuiTitle.equals(auctionDetailsGuiTitle)){
-                 // Only remove if they are not in a chat input process for THIS auction.
-                 // If they are in a bid process, the pending bid map will handle it.
-                 // This is mainly for when they close it manually without action.
-                if(!guiManager.isPlayerPendingBid(player.getUniqueId()) && // Not pending a general bid
-                   plugin.getPlayerInputState().getOrDefault(player.getUniqueId(), AetherAuctions.PlayerInputState.NONE) != AetherAuctions.PlayerInputState.AWAITING_BID_AMOUNT) { // Not pending a bid from old system
-                   guiManager.removePlayerViewingAuctionId(player.getUniqueId());
-                }
-            }
-        }
-    }
+    // Removed onInventoryClose as it was tied to the old AuctionDetailsGUI state (playerViewingAuctionId)
 
-    private void handleMainGuiButtonClick(Player player, String clickedItemName, int currentPage) {
-         plugin.getLogger().info("Deprecated main GUI button click: " + clickedItemName + " by " + player.getName());
-    }
+    // Removed handleMainGuiButtonClick as it's no longer relevant
 
     private void handleCreateAuctionGuiButtonClick(Player player, String clickedItemName) {
         if (clickedItemName.equals(messageManager.stripColors(messageManager.getRaw("button_set_duration")))) {
@@ -291,17 +183,14 @@ public class InventoryClickListener implements Listener {
             boolean success = auctionManager.createAuction(player, itemToAuction, duration, startPrice, buyNowPrice == null ? -1 : buyNowPrice);
             if (success) {
                 guiManager.clearCreateAuctionData(player.getUniqueId());
-                guiManager.openNewMainAuctionGui(player, 0);
+                plugin.getNewGuiManager().openNewMainAuctionGUI(player, 0); // Use NewGUIManager
             } else {
                 guiManager.openCreateAuctionGui(player);
             }
         }
     }
 
-    private void handleAuctionInfoGuiButtonClick(Player player, String clickedItemName, int auctionIdFromLore) {
-        // This method is largely superseded by direct handling in the isAuctionDetailsGui block
-        // Kept for structure, but specific button actions are now in the main onInventoryClick
-    }
+    // Removed handleAuctionInfoGuiButtonClick as it's no longer relevant
 
     private void handleMyAuctionsGuiButtonClick(Player player, String clickedItemName, int currentPage) {
         if (clickedItemName.equals(messageManager.stripColors(messageManager.getRaw("button_previous_page")))) {
@@ -311,7 +200,7 @@ public class InventoryClickListener implements Listener {
         } else if (clickedItemName.equals(messageManager.stripColors(messageManager.getRaw("button_refresh")))) {
             guiManager.openMyAuctionsGui(player, currentPage);
         } else if (clickedItemName.equals(messageManager.stripColors(messageManager.getRaw("button_back_to_main_auctions")))) {
-             guiManager.openNewMainAuctionGui(player, 0);
+             plugin.getNewGuiManager().openNewMainAuctionGUI(player, 0); // Use NewGUIManager
         }
     }
 
@@ -323,7 +212,7 @@ public class InventoryClickListener implements Listener {
         } else if (clickedItemName.equals(messageManager.stripColors(messageManager.getRaw("button_refresh")))) {
             guiManager.openAuctionHistoryGui(player, currentPage);
         } else if (clickedItemName.equals(messageManager.stripColors(messageManager.getRaw("button_back_to_main_auctions")))) {
-             guiManager.openNewMainAuctionGui(player, 0);
+             plugin.getNewGuiManager().openNewMainAuctionGUI(player, 0); // Use NewGUIManager
         }
     }
 }

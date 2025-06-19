@@ -190,13 +190,13 @@ lore_instruction_details: "&eClic Derecho: &fVer Detalles"
 time_ended: "&cFinalizada"
 
 # Auction Details GUI
-auction_details_gui_title: "&1Detalles de Subasta"
-details_auction_id: "&7ID: &b%id%"
-details_seller: "&7Vendedor: &6%name%"
-details_current_bid: "&7Puja Actual: &e%price%"
-details_buyout_price: "&7Compra Directa: &a%price%"
-details_time_remaining: "&7Tiempo: &c%time%"
-button_bid: "&aPujar"
+auction_details_gui_title: "&1Detalles de Subasta" # Used as new_gui_details_title in AuctionDetailsGUI.java
+details_auction_id: "&7ID: &b%id%" # Used as new_gui_details_item_info_id
+details_seller: "&7Vendedor: &6%name%" # Used as new_gui_details_item_info_seller
+details_current_bid: "&7Puja Actual: &e%price% %currency%" # Used as new_gui_details_item_info_current_bid
+details_buyout_price: "&7Compra Directa: &a%price% %currency%" # Used as new_gui_details_item_info_buy_now
+details_time_remaining: "&7Tiempo: &c%time%" # Used as new_gui_details_item_info_time
+button_bid: "&aPujar" # This is an old key, new_gui_button_bid_name is used
 
 # Chat Prompts & Bid Input
 prompt_enter_bid_amount: "&ePor favor, escribe la cantidad que deseas pujar:"
@@ -252,3 +252,15 @@ button_cancel: "&cCancelar"
 cannot_cancel_auction_not_active: "&cNo puedes cancelar esta subasta porque ya no está activa." # Added based on InventoryClickListener usage
 internal_error_my_auctions: "&cOcurrió un error al cargar tus subastas." # Added based on GUIManager usage
 internal_error_history: "&cOcurrió un error al cargar el historial de subastas." # Added based on GUIManager usage
+
+# New GUI Rework Messages
+new_gui_main_item_lore_seller: "&7Vendedor: &6%seller%"
+new_gui_main_item_lore_current_bid: "&7Puja Actual: &e%price% %currency%"
+new_gui_main_item_lore_buy_now: "&7Compra Directa: &a%price% %currency%"
+new_gui_main_item_lore_time_remaining: "&7Tiempo: &c%time%"
+new_gui_main_item_lore_id: "&8ID: #%id%"
+new_gui_main_item_lore_instruction_details: "&bClic Derecho: &fVer Detalles"
+new_gui_button_buy_now_name: "&6Comprar Ahora"
+new_gui_button_back_name: "&cVolver Atrás"
+new_gui_decorative_pane_name: "&r "
+new_gui_chat_prompt_bid_amount: "&eEscribe la cantidad de tu puja en el chat:"
