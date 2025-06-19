@@ -183,6 +183,21 @@ time_ended: "&cFinalizada"
 # time_format_minutes: "%minutes%m"
 # time_format_seconds: "%seconds%s"
 
+# Auction Details GUI
+auction_details_gui_title: "&1Detalles de Subasta"
+details_auction_id: "&7ID: &b%id%"
+details_seller: "&7Vendedor: &6%name%"
+details_current_bid: "&7Puja Actual: &e%price%"
+details_buyout_price: "&7Compra Directa: &a%price%"
+details_time_remaining: "&7Tiempo: &c%time%"
+button_bid: "&aPujar"
+# button_buy_now is already defined in GUI Info de Ítem, ensure it's: "&aComprar Ahora"
+# button_back_to_main_auctions is already defined, ensure it's: "&bVolver a Subastas"
+
+# Chat Prompts & Bid Input
+prompt_enter_bid_amount: "&ePor favor, escribe la cantidad que deseas pujar:"
+error_invalid_bid_input_nan: "&c'%input%' no es un número válido para una puja."
+
 
 # Crear Subasta por Comando
 command_auction_created_successfully: "&aHas creado una subasta para %item% x%cantidad% por %precio% %currency% durante %duration%."

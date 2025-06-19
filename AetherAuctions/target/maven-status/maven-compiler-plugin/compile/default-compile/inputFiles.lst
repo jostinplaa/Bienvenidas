@@ -3,8 +3,8 @@
 /app/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionItem.java
 /app/AetherAuctions/src/main/java/com/aetherauctions/listener/PlayerQuitListener.java
 /app/AetherAuctions/src/main/java/com/aetherauctions/util/InventoryUtil.java
+/app/AetherAuctions/src/main/java/com/aetherauctions/listeners/PlayerChatListener.java
 /app/AetherAuctions/src/main/java/com/aetherauctions/config/ConfigManager.java
-/app/AetherAuctions/src/main/java/com/aetherauctions/listener/PlayerChatListener.java
 /app/AetherAuctions/src/main/java/com/aetherauctions/gui/GUIManager.java
 /app/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionStatus.java
 /app/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java

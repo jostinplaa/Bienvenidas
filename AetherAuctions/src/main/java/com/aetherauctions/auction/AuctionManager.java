@@ -239,10 +239,11 @@ public class AuctionManager {
             OfflinePlayer previousBidder = Bukkit.getOfflinePlayer(UUID.fromString(oldHighestBidderUUID));
             econ.depositPlayer(previousBidder, oldCurrentBid);
             if (previousBidder.isOnline()) {
+                String itemDisplayName = auction.getItemStack().hasItemMeta() && auction.getItemStack().getItemMeta().hasDisplayName() ? auction.getItemStack().getItemMeta().getDisplayName() : auction.getItemStack().getType().toString();
                  messageManager.sendMessage(previousBidder.getPlayer(), "outbid_notification",
                     "%new_bidder%", bidder.getName(),
                     "%id%", String.valueOf(auction.getId()),
-                    "%item%", auction.getItemStack().getType().toString(), // Consider using display name
+                    "%item%", itemDisplayName,
                     "%old_bid%", String.format("%.2f", oldCurrentBid),
                     "%currency%", configManager.getCurrencySymbol());
             }
@@ -255,16 +256,17 @@ public class AuctionManager {
         try {
             databaseManager.saveAuction(auction);
             activeAuctions.put(auction.getId(), auction);
+            String itemDisplayName = auction.getItemStack().hasItemMeta() && auction.getItemStack().getItemMeta().hasDisplayName() ? auction.getItemStack().getItemMeta().getDisplayName() : auction.getItemStack().getType().toString();
 
-            messageManager.sendMessage(bidder, "bid_placed_success", "%bid%", String.format("%.2f", bidAmount), "%currency%", configManager.getCurrencySymbol(), "%id%", String.valueOf(auction.getId()), "%item%", auction.getItemStack().getType().toString());
+            messageManager.sendMessage(bidder, "bid_placed_success", "%bid%", String.format("%.2f", bidAmount), "%currency%", configManager.getCurrencySymbol(), "%id%", String.valueOf(auction.getId()), "%item%", itemDisplayName);
 
             Player sellerPlayer = Bukkit.getPlayer(UUID.fromString(auction.getSellerUUID()));
             if (sellerPlayer != null && sellerPlayer.isOnline()) {
-                messageManager.sendMessage(sellerPlayer, "new_bid_on_your_auction", // Assuming this new key exists
+                messageManager.sendMessage(sellerPlayer, "new_bid_on_your_auction",
                     "%bid%", String.format("%.2f", bidAmount),
                     "%bidder%", bidder.getName(),
                     "%id%", String.valueOf(auction.getId()),
-                    "%item%", auction.getItemStack().getType().toString(),
+                    "%item%", itemDisplayName,
                     "%currency%", configManager.getCurrencySymbol());
             }
             plugin.getGuiManager().refreshOpenAuctionGuis(auction, false, bidder);

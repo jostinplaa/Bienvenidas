@@ -8,7 +8,7 @@ import com.aetherauctions.config.MessageManager; // Import MessageManager
 import com.aetherauctions.database.DatabaseManager;
 import com.aetherauctions.gui.GUIManager;
 import com.aetherauctions.listener.InventoryClickListener;
-import com.aetherauctions.listener.PlayerChatListener;
+import com.aetherauctions.listeners.PlayerChatListener; // Changed to plural 'listeners'
 import com.aetherauctions.listener.PlayerQuitListener; // Import PlayerQuitListener
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.plugin.RegisteredServiceProvider;
@@ -89,7 +89,7 @@ public class AetherAuctions extends JavaPlugin {
 
         // Register Listeners
         getServer().getPluginManager().registerEvents(new InventoryClickListener(this, guiManager, auctionManager), this);
-        getServer().getPluginManager().registerEvents(new PlayerChatListener(this, guiManager, auctionManager), this);
+        getServer().getPluginManager().registerEvents(new PlayerChatListener(this), this); // Corrected constructor call
         getServer().getPluginManager().registerEvents(new PlayerQuitListener(this), this); // Register PlayerQuitListener
 
         getLogger().info("AetherAuctions se ha habilitado correctamente!");
