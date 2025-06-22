@@ -56,44 +56,41 @@ public class AuctionDetailsGUI implements InventoryHolder { // Implement Invento
             inventory.setItem(i, decorativePane);
         }
 
-        // Show Auctioned Item (Visual)
-        inventory.setItem(13, auctionItem.getItemStack().clone()); // Central slot in a 4-row inventory
+        // Show Auctioned Item (Visual) with all details in its lore
+        ItemStack centralDisplayItem = auctionItem.getItemStack().clone();
+        org.bukkit.inventory.meta.ItemMeta meta = centralDisplayItem.getItemMeta();
+        if (meta != null) {
+            // Set Display Name (using a new message key or existing one if suitable)
+            String originalItemName = meta.hasDisplayName() ? meta.getDisplayName() : centralDisplayItem.getType().name().replace("_", " ");
+            meta.setDisplayName(messageManager.getMessage("new_gui_main_item_lore_name", "&f%item_name%").replace("%item_name%", originalItemName)); // Re-using main GUI name format
 
-        // Show Detailed Information
-        // Slot 19: ID
-        inventory.setItem(19, InventoryUtil.createGuiItem(Material.PAPER,
-                messageManager.getMessage("details_auction_id", "&7ID: &b%id%") // Changed to specific key
-                        .replace("%id%", String.valueOf(auctionItem.getId()))));
+            List<String> lore = new ArrayList<>();
+            lore.add(" "); // Initial spacer
+            lore.add(messageManager.getMessage("details_auction_id", "&7ID: &b%id%")
+                    .replace("%id%", String.valueOf(auctionItem.getId())));
+            lore.add(messageManager.getMessage("details_seller", "&7Vendedor: &6%seller%")
+                    .replace("%seller%", auctionItem.getSellerName())
+                    .replace("%name%", auctionItem.getSellerName())); // %name% is used in details_seller
+            lore.add(messageManager.getMessage("details_current_bid", "&7Puja Actual: &e%price% %currency%")
+                    .replace("%price%", String.format("%,.2f", auctionItem.getCurrentBid()))
+                    .replace("%currency%", configManager.getCurrencySymbol()));
 
-        // Slot 20: Seller
-        inventory.setItem(20, InventoryUtil.createGuiItem(Material.PLAYER_HEAD,
-                messageManager.getMessage("details_seller", "&7Vendedor: &6%seller%") // Changed to specific key
-                        .replace("%seller%", auctionItem.getSellerName()) // Assuming %seller% and %name% are interchangeable
-                        .replace("%name%", auctionItem.getSellerName())));
+            if (auctionItem.getBuyNowPrice() > 0 && configManager.isBuyNowAllowed()) {
+                lore.add(messageManager.getMessage("details_buyout_price", "&7Compra Directa: &a%price% %currency%")
+                        .replace("%price%", String.format("%,.2f", auctionItem.getBuyNowPrice()))
+                        .replace("%currency%", configManager.getCurrencySymbol()));
+            } else {
+                lore.add(messageManager.getMessage("item_lore_buy_now_not_available", "&7Compra Directa: &cNo disponible")); // Re-using existing key
+            }
+            lore.add(messageManager.getMessage("details_time_remaining", "&7Tiempo: &c%time%")
+                    .replace("%time%", InventoryUtil.formatTime((auctionItem.getStartTime() + auctionItem.getDuration()) - System.currentTimeMillis())));
 
-
-        // Slot 21: Current Bid
-        inventory.setItem(21, InventoryUtil.createGuiItem(Material.GOLD_NUGGET,
-                messageManager.getMessage("details_current_bid", "&7Puja Actual: &e%price% %currency%") // Changed to specific key
-                        .replace("%price%", String.format("%,.2f", auctionItem.getCurrentBid()))
-                        .replace("%currency%", configManager.getCurrencySymbol())));
-
-        // Slot 22: Buy Now
-        if (auctionItem.getBuyNowPrice() > 0 && configManager.isBuyNowAllowed()) {
-            inventory.setItem(22, InventoryUtil.createGuiItem(Material.EMERALD,
-                    messageManager.getMessage("details_buyout_price", "&7Compra Directa: &a%price% %currency%") // Changed to specific key
-                            .replace("%price%", String.format("%,.2f", auctionItem.getBuyNowPrice()))
-                            .replace("%currency%", configManager.getCurrencySymbol())));
-        } else {
-            // Optional: could place a specific item indicating "Not Available"
-            // For now, the decorativePane remains.
+            meta.setLore(lore);
+            centralDisplayItem.setItemMeta(meta);
         }
+        inventory.setItem(13, centralDisplayItem); // Central slot in a 4-row inventory
 
-        // Slot 23: Time Remaining
-        inventory.setItem(23, InventoryUtil.createGuiItem(Material.CLOCK,
-                messageManager.getMessage("details_time_remaining", "&7Tiempo: &c%time%") // Changed to specific key
-                        .replace("%time%", InventoryUtil.formatTime((auctionItem.getStartTime() + auctionItem.getDuration()) - System.currentTimeMillis()))));
-
+        // Slots 19-23 are now decorative panes by default from the initial loop.
 
         // Add Action Buttons
         // Slot 30: Bid Button (Adjusted slot for better spacing if needed)

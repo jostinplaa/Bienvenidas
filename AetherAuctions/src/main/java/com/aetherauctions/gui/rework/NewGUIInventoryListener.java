@@ -62,6 +62,7 @@ public class NewGUIInventoryListener implements Listener {
             NewMainAuctionGUI mainGui = (NewMainAuctionGUI) holder;
             ItemStack clickedItem = event.getCurrentItem();
             int slot = event.getRawSlot(); // Use raw slot for top inventory consistency
+            plugin.getLogger().info("[NewMainAuctionGUI] Clicked slot: " + slot + ", ClickType: " + event.getClick().name()); // Logging
 
             // Check if click is in top inventory
             if (slot >= topInventory.getSize()) {
@@ -90,9 +91,14 @@ public class NewGUIInventoryListener implements Listener {
                     }
                 }
             } else if (slot >= MAIN_AUCTION_ITEMS_START_SLOT && slot <= MAIN_AUCTION_ITEMS_END_SLOT) {
+                // This is an auction item slot
                 if (event.isRightClick()) {
+                    plugin.getLogger().info("[NewMainAuctionGUI] Right-click detected on slot: " + slot); // Logging
                     AuctionItem auctionItem = mainGui.getAuctionItemAtSlot(slot);
+                    plugin.getLogger().info("[NewMainAuctionGUI] AuctionItem: " + (auctionItem != null ? String.valueOf(auctionItem.getId()) : "null")); // Logging
+
                     if (auctionItem != null) {
+                        plugin.getLogger().info("[NewMainAuctionGUI] Opening details for auction ID: " + auctionItem.getId() + " from page: " + mainGui.getCurrentPage()); // Logging
                         newGuiManager.openAuctionDetailsGUI(player, auctionItem, mainGui.getCurrentPage());
                     }
                 }
