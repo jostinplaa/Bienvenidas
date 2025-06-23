@@ -70,7 +70,7 @@ public class NewMainAuctionGUI implements InventoryHolder { // Implement Invento
             if (itemMeta != null) {
                 // Original item name as fallback if message key is not found or if desired
                 String itemName = itemMeta.hasDisplayName() ? itemMeta.getDisplayName() : auction.getItemStack().getType().name();
-                itemMeta.setDisplayName(messageManager.getMessage("new_gui_main_item_lore_name", "&f%item_name%").replace("%item_name%", itemName));
+                itemMeta.setDisplayName(messageManager.getMessage("item_default_name_format", "&r%item_name%").replace("%item_name%", itemName)); // Use item_default_name_format
 
                 List<String> lore = new ArrayList<>();
                 lore.add(messageManager.getMessage("new_gui_main_item_lore_seller", "&7Vendedor: &6%seller%")

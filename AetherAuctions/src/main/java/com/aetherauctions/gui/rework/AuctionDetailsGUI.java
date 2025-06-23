@@ -62,7 +62,7 @@ public class AuctionDetailsGUI implements InventoryHolder { // Implement Invento
         if (meta != null) {
             // Set Display Name (using a new message key or existing one if suitable)
             String originalItemName = meta.hasDisplayName() ? meta.getDisplayName() : centralDisplayItem.getType().name().replace("_", " ");
-            meta.setDisplayName(messageManager.getMessage("new_gui_main_item_lore_name", "&f%item_name%").replace("%item_name%", originalItemName)); // Re-using main GUI name format
+            meta.setDisplayName(messageManager.getMessage("item_default_name_format", "&r%item_name%").replace("%item_name%", originalItemName)); // Use item_default_name_format
 
             List<String> lore = new ArrayList<>();
             lore.add(" "); // Initial spacer
@@ -95,7 +95,7 @@ public class AuctionDetailsGUI implements InventoryHolder { // Implement Invento
         // Add Action Buttons
         // Slot 30: Bid Button (Adjusted slot for better spacing if needed)
         inventory.setItem(30, InventoryUtil.createGuiItem(Material.GREEN_WOOL, // Or LIME_WOOL
-                messageManager.getMessage("new_gui_button_bid_name", "&aPujar")));
+                messageManager.getMessage("button_bid", "&aPujar"))); // Use standard button_bid
 
         // Slot 31: Buy Now Button
         if (auctionItem.getBuyNowPrice() > 0 && configManager.isBuyNowAllowed() && auctionItem.getStatus() == AuctionStatus.ACTIVE) {

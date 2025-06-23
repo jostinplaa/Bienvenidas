@@ -60,64 +60,106 @@ public class MessageManager {
     }
 
     public String getMessage(String key, Map<String, String> placeholders) {
-        String message = messagesConfig.getString(key);
-        if (message == null) {
-            plugin.getLogger().warning("Missing message key in messages.yml: " + key);
-            return ChatColor.RED + "Error: Mensaje no encontrado (" + key + ")";
+        String rawMessage = messagesConfig.getString(key);
+        String coloredMessage;
+
+        if (rawMessage == null) {
+            plugin.getLogger().warning("[MessageManager] Clave de mensaje no encontrada en messages.yml: '" + key + "'. Usando valor por defecto.");
+            // Return a default error message that is visible in-game
+            return ChatColor.RED + "Error: Msg key missing (" + key + ")";
         }
+
+        coloredMessage = ChatColor.translateAlternateColorCodes('&', rawMessage);
 
         if (placeholders != null) {
             for (Map.Entry<String, String> entry : placeholders.entrySet()) {
-                message = message.replace(entry.getKey(), String.valueOf(entry.getValue())); // Ensure value is string
+                coloredMessage = coloredMessage.replace(entry.getKey(), String.valueOf(entry.getValue())); // Ensure value is string, and use coloredMessage
+            }
+        }
+        return coloredMessage;
+    }
+
+    // Convenience method for simple placeholder pairs
+    public String getMessage(String key, String... placeholderPairs) {
+        String rawMessage = messagesConfig.getString(key);
+
+        if (rawMessage == null) {
+            plugin.getLogger().warning("[MessageManager] Clave de mensaje no encontrada en messages.yml: '" + key + "'. Usando valor por defecto.");
+            return ChatColor.RED + "Error: Msg key missing (" + key + ")";
+        }
+
+        if (placeholderPairs.length % 2 != 0) {
+            plugin.getLogger().severe("[MessageManager] Error de placeholders para la clave '" + key + "'. Se proporcionó un número impar de argumentos para los placeholders. Placeholders: " + Arrays.toString(placeholderPairs));
+            return ChatColor.translateAlternateColorCodes('&', rawMessage); // Return raw message (colored) without placeholder replacement
+        }
+
+        String message = rawMessage; // Work with the raw message for replacements
+        Map<String, String> placeholdersMap = new HashMap<>();
+        for (int i = 0; i < placeholderPairs.length; i += 2) {
+            placeholdersMap.put(placeholderPairs[i], placeholderPairs[i + 1]);
+        }
+
+        if (!placeholdersMap.isEmpty()) {
+            for (Map.Entry<String, String> entry : placeholdersMap.entrySet()) {
+                message = message.replace(entry.getKey(), String.valueOf(entry.getValue()));
             }
         }
         return ChatColor.translateAlternateColorCodes('&', message);
     }
 
-    // Convenience method for simple placeholder pairs
-    public String getMessage(String key, String... placeholderPairs) {
-        if (placeholderPairs.length % 2 != 0) {
-            plugin.getLogger().warning("Invalid placeholder pairs for message key: " + key + ". Must be even.");
-            return getMessage(key, (Map<String,String>)null); // Call with null map
-        }
-        Map<String, String> placeholders = new HashMap<>();
-        for (int i = 0; i < placeholderPairs.length; i += 2) {
-            placeholders.put(placeholderPairs[i], placeholderPairs[i + 1]);
-        }
-        return getMessage(key, placeholders);
-    }
-
 
     public void sendMessage(CommandSender sender, String key, Map<String, String> placeholders) {
-        String message = getMessage(key, placeholders);
+        // This method will now benefit from the improved getMessage(key, placeholdersMap)
+        String messageWithAppliedPlaceholders = getMessage(key, placeholders);
+
+        // Check if the original message (before placeholder replacement but after potential error message from getMessage)
+        // is an error message from getMessage itself. If so, don't add prefix.
+        if (messageWithAppliedPlaceholders.startsWith(ChatColor.RED + "Error: Msg key missing")) {
+            sender.sendMessage(messageWithAppliedPlaceholders);
+            return;
+        }
+
         // Check if the message *already* contains a prefix similar to the global one, or if it's a "no prefix" message
         // This is a simple check; more sophisticated checks might be needed if message formats vary greatly.
-        String rawMessageForKey = messagesConfig.getString(key, "");
-        boolean messageHasOwnPrefix = ChatColor.stripColor(rawMessageForKey).trim().startsWith(ChatColor.stripColor(this.prefix).trim());
+        String rawMessageFromConfig = messagesConfig.getString(key, ""); // Get original config string for prefix check
+        boolean messageHasOwnPrefix = ChatColor.stripColor(rawMessageFromConfig).trim().startsWith(ChatColor.stripColor(this.prefix).trim());
 
         if (!messageHasOwnPrefix && !key.startsWith("bare.") && !key.endsWith("_bare")) { // Convention for no-prefix messages
-            sender.sendMessage(this.prefix + message);
+            sender.sendMessage(this.prefix + messageWithAppliedPlaceholders);
         } else {
-            sender.sendMessage(message);
+            sender.sendMessage(messageWithAppliedPlaceholders);
         }
     }
 
     // Convenience method for simple placeholder pairs
     public void sendMessage(CommandSender sender, String key, String... placeholderPairs) {
-         if (placeholderPairs.length % 2 != 0) {
-            plugin.getLogger().warning("Invalid placeholder pairs for sending message key: " + key + ". Must be even.");
-            sendMessage(sender, key, (Map<String,String>)null);
+        // This method will now benefit from the improved getMessage(key, placeholderPairs...)
+        String messageWithAppliedPlaceholders = getMessage(key, placeholderPairs);
+
+        // Check if the original message (before placeholder replacement but after potential error message from getMessage)
+        // is an error message from getMessage itself. If so, don't add prefix.
+         if (messageWithAppliedPlaceholders.startsWith(ChatColor.RED + "Error: Msg key missing")) {
+            sender.sendMessage(messageWithAppliedPlaceholders);
             return;
         }
-        Map<String, String> placeholders = new HashMap<>();
-        for (int i = 0; i < placeholderPairs.length; i += 2) {
-            placeholders.put(placeholderPairs[i], placeholderPairs[i + 1]);
+
+        String rawMessageFromConfig = messagesConfig.getString(key, ""); // Get original config string for prefix check
+        boolean messageHasOwnPrefix = ChatColor.stripColor(rawMessageFromConfig).trim().startsWith(ChatColor.stripColor(this.prefix).trim());
+
+        if (!messageHasOwnPrefix && !key.startsWith("bare.") && !key.endsWith("_bare")) { // Convention for no-prefix messages
+            sender.sendMessage(this.prefix + messageWithAppliedPlaceholders);
+        } else {
+            sender.sendMessage(messageWithAppliedPlaceholders);
         }
-        sendMessage(sender, key, placeholders);
     }
 
     public String getRaw(String key) {
-        return messagesConfig.getString(key, ChatColor.RED + "Missing: " + key);
+        String message = messagesConfig.getString(key);
+        if (message == null) {
+            plugin.getLogger().warning("[MessageManager] Clave de mensaje (raw) no encontrada: '" + key + "'. Devolviendo la clave.");
+            return key; // Return the key itself if not found, making it obvious in GUIs/code
+        }
+        return message;
     }
 
     public String getPrefixedRaw(String key) {
