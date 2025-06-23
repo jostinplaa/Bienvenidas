@@ -53,8 +53,8 @@ public class NewMainAuctionGUI implements InventoryHolder { // Implement Invento
         this.totalPages = Math.max(1, (int) Math.ceil((double) activeAuctions.size() / 36.0)); // Initialize totalPages
         this.currentPage = Math.max(0, Math.min(this.currentPage, this.totalPages - 1));
 
-        String title = messageManager.getMessage("new_main_gui_title_prefix", "&1Subastas Activas") +
-                       " &7(Pág. " + (this.currentPage + 1) + "/" + this.totalPages + ")";
+        String titlePrefix = messageManager.getMessage("new_main_gui_title_prefix");
+        String title = titlePrefix + " &7(Pág. " + (this.currentPage + 1) + "/" + this.totalPages + ")";
 
         inventory = Bukkit.createInventory(this, 54, title); // Use 'this' as InventoryHolder
         slotToAuctionItemMap.clear(); // Clear map before rebuilding
@@ -68,29 +68,30 @@ public class NewMainAuctionGUI implements InventoryHolder { // Implement Invento
             ItemMeta itemMeta = itemStack.getItemMeta();
 
             if (itemMeta != null) {
-                // Original item name as fallback if message key is not found or if desired
-                String itemName = itemMeta.hasDisplayName() ? itemMeta.getDisplayName() : auction.getItemStack().getType().name();
-                itemMeta.setDisplayName(messageManager.getMessage("item_default_name_format", "&r%item_name%").replace("%item_name%", itemName)); // Use item_default_name_format
+                String originalItemName = itemMeta.hasDisplayName() ? itemMeta.getDisplayName() : auction.getItemStack().getType().name();
+                String displayNameFormat = messageManager.getMessage("item_default_name_format");
+                itemMeta.setDisplayName(displayNameFormat.replace("%item_name%", originalItemName));
 
                 List<String> lore = new ArrayList<>();
-                lore.add(messageManager.getMessage("new_gui_main_item_lore_seller", "&7Vendedor: &6%seller%")
-                        .replace("%seller%", auction.getSellerName()));
-                lore.add(messageManager.getMessage("new_gui_main_item_lore_current_bid", "&7Puja Actual: &e%price% %currency%")
-                        .replace("%price%", String.format("%,.2f", auction.getCurrentBid()))
-                        .replace("%currency%", configManager.getCurrencySymbol()));
+                String sellerFormat = messageManager.getMessage("new_gui_main_item_lore_seller");
+                lore.add(sellerFormat.replace("%seller%", auction.getSellerName()));
+
+                String currentBidFormat = messageManager.getMessage("new_gui_main_item_lore_current_bid");
+                lore.add(currentBidFormat.replace("%price%", String.format("%,.2f", auction.getCurrentBid())).replace("%currency%", configManager.getCurrencySymbol()));
 
                 if (auction.getBuyNowPrice() > 0 && configManager.isBuyNowAllowed()) {
-                    lore.add(messageManager.getMessage("new_gui_main_item_lore_buy_now", "&7Compra Directa: &a%price% %currency%")
-                            .replace("%price%", String.format("%,.2f", auction.getBuyNowPrice()))
-                            .replace("%currency%", configManager.getCurrencySymbol()));
+                    String buyNowFormat = messageManager.getMessage("new_gui_main_item_lore_buy_now");
+                    lore.add(buyNowFormat.replace("%price%", String.format("%,.2f", auction.getBuyNowPrice())).replace("%currency%", configManager.getCurrencySymbol()));
                 }
 
-                lore.add(messageManager.getMessage("new_gui_main_item_lore_time_remaining", "&7Tiempo: &c%time%")
-                        .replace("%time%", InventoryUtil.formatTime((auction.getStartTime() + auction.getDuration()) - System.currentTimeMillis()))); // Fixed: Calculate remaining time
-                lore.add(messageManager.getMessage("new_gui_main_item_lore_id", "&8ID: #%id%")
-                        .replace("%id%", String.valueOf(auction.getId())));
+                String timeFormat = messageManager.getMessage("new_gui_main_item_lore_time_remaining");
+                lore.add(timeFormat.replace("%time%", InventoryUtil.formatTime((auction.getStartTime() + auction.getDuration()) - System.currentTimeMillis())));
+
+                String idFormat = messageManager.getMessage("new_gui_main_item_lore_id");
+                lore.add(idFormat.replace("%id%", String.valueOf(auction.getId())));
+
                 lore.add(" "); // Spacer
-                lore.add(messageManager.getMessage("new_gui_main_item_lore_instruction_details", "&bClic Derecho: &fVer Detalles"));
+                lore.add(messageManager.getMessage("new_gui_main_item_lore_instruction_details"));
 
                 itemMeta.setLore(lore);
                 itemStack.setItemMeta(itemMeta);
@@ -106,7 +107,7 @@ public class NewMainAuctionGUI implements InventoryHolder { // Implement Invento
             paneMaterial = Material.GRAY_STAINED_GLASS_PANE; // Fallback
         }
         ItemStack decorativePane = InventoryUtil.createGuiItem(paneMaterial,
-                                                               messageManager.getMessage("new_gui_decorative_pane_name", "&r "));
+                                                               messageManager.getMessage("new_gui_decorative_pane_name"));
 
         // Fill empty auction item slots in the 0-35 range if fewer than 36 items on the page
         int itemsOnPage = endIndex - startIndex;
@@ -120,16 +121,16 @@ public class NewMainAuctionGUI implements InventoryHolder { // Implement Invento
 
 
         // Add Navigation Buttons
-        inventory.setItem(49, InventoryUtil.createGuiItem(Material.BARRIER, messageManager.getMessage("button_close_gui", "&cCerrar")));
+        inventory.setItem(49, InventoryUtil.createGuiItem(Material.BARRIER, messageManager.getMessage("button_close_gui")));
 
         if (this.currentPage > 0) {
-            inventory.setItem(48, InventoryUtil.createGuiItem(Material.ARROW, messageManager.getMessage("button_previous_page", "&aPágina Anterior")));
+            inventory.setItem(48, InventoryUtil.createGuiItem(Material.ARROW, messageManager.getMessage("button_previous_page")));
         } else {
             inventory.setItem(48, decorativePane);
         }
 
         if (this.currentPage < totalPages - 1) {
-            inventory.setItem(50, InventoryUtil.createGuiItem(Material.ARROW, messageManager.getMessage("button_next_page", "&aPágina Siguiente")));
+            inventory.setItem(50, InventoryUtil.createGuiItem(Material.ARROW, messageManager.getMessage("button_next_page")));
         } else {
             inventory.setItem(50, decorativePane);
         }

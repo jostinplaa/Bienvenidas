@@ -40,7 +40,7 @@ public class AuctionDetailsGUI implements InventoryHolder { // Implement Invento
     }
 
     private void buildGUI() {
-        String title = messageManager.getMessage("auction_details_gui_title", "&1Detalles de la Subasta"); // Changed to specific key
+        String title = messageManager.getMessage("auction_details_gui_title");
         inventory = Bukkit.createInventory(this, 36, title); // 4 rows, use 'this' as InventoryHolder
 
         // Add Decorative Panes
@@ -50,7 +50,7 @@ public class AuctionDetailsGUI implements InventoryHolder { // Implement Invento
             paneMaterial = Material.BLACK_STAINED_GLASS_PANE; // Fallback
         }
         ItemStack decorativePane = InventoryUtil.createGuiItem(paneMaterial,
-                messageManager.getMessage("new_gui_decorative_pane_name", "&r "));
+                messageManager.getMessage("new_gui_decorative_pane_name"));
 
         for (int i = 0; i < inventory.getSize(); i++) {
             inventory.setItem(i, decorativePane);
@@ -60,30 +60,32 @@ public class AuctionDetailsGUI implements InventoryHolder { // Implement Invento
         ItemStack centralDisplayItem = auctionItem.getItemStack().clone();
         org.bukkit.inventory.meta.ItemMeta meta = centralDisplayItem.getItemMeta();
         if (meta != null) {
-            // Set Display Name (using a new message key or existing one if suitable)
+            // Set Display Name
             String originalItemName = meta.hasDisplayName() ? meta.getDisplayName() : centralDisplayItem.getType().name().replace("_", " ");
-            meta.setDisplayName(messageManager.getMessage("item_default_name_format", "&r%item_name%").replace("%item_name%", originalItemName)); // Use item_default_name_format
+            String displayNameFormat = messageManager.getMessage("item_default_name_format");
+            meta.setDisplayName(displayNameFormat.replace("%item_name%", originalItemName));
 
             List<String> lore = new ArrayList<>();
             lore.add(" "); // Initial spacer
-            lore.add(messageManager.getMessage("details_auction_id", "&7ID: &b%id%")
-                    .replace("%id%", String.valueOf(auctionItem.getId())));
-            lore.add(messageManager.getMessage("details_seller", "&7Vendedor: &6%seller%")
-                    .replace("%seller%", auctionItem.getSellerName())
-                    .replace("%name%", auctionItem.getSellerName())); // %name% is used in details_seller
-            lore.add(messageManager.getMessage("details_current_bid", "&7Puja Actual: &e%price% %currency%")
-                    .replace("%price%", String.format("%,.2f", auctionItem.getCurrentBid()))
-                    .replace("%currency%", configManager.getCurrencySymbol()));
+
+            String idFormat = messageManager.getMessage("details_auction_id");
+            lore.add(idFormat.replace("%id%", String.valueOf(auctionItem.getId())));
+
+            String sellerFormat = messageManager.getMessage("details_seller");
+            lore.add(sellerFormat.replace("%seller%", auctionItem.getSellerName())); // Assumes %seller% is the placeholder in messages.yml
+
+            String currentBidFormat = messageManager.getMessage("details_current_bid");
+            lore.add(currentBidFormat.replace("%price%", String.format("%,.2f", auctionItem.getCurrentBid())).replace("%currency%", configManager.getCurrencySymbol()));
 
             if (auctionItem.getBuyNowPrice() > 0 && configManager.isBuyNowAllowed()) {
-                lore.add(messageManager.getMessage("details_buyout_price", "&7Compra Directa: &a%price% %currency%")
-                        .replace("%price%", String.format("%,.2f", auctionItem.getBuyNowPrice()))
-                        .replace("%currency%", configManager.getCurrencySymbol()));
+                String buyNowFormat = messageManager.getMessage("details_buyout_price");
+                lore.add(buyNowFormat.replace("%price%", String.format("%,.2f", auctionItem.getBuyNowPrice())).replace("%currency%", configManager.getCurrencySymbol()));
             } else {
-                lore.add(messageManager.getMessage("item_lore_buy_now_not_available", "&7Compra Directa: &cNo disponible")); // Re-using existing key
+                lore.add(messageManager.getMessage("item_lore_buy_now_not_available"));
             }
-            lore.add(messageManager.getMessage("details_time_remaining", "&7Tiempo: &c%time%")
-                    .replace("%time%", InventoryUtil.formatTime((auctionItem.getStartTime() + auctionItem.getDuration()) - System.currentTimeMillis())));
+
+            String timeFormat = messageManager.getMessage("details_time_remaining");
+            lore.add(timeFormat.replace("%time%", InventoryUtil.formatTime((auctionItem.getStartTime() + auctionItem.getDuration()) - System.currentTimeMillis())));
 
             meta.setLore(lore);
             centralDisplayItem.setItemMeta(meta);
@@ -93,21 +95,21 @@ public class AuctionDetailsGUI implements InventoryHolder { // Implement Invento
         // Slots 19-23 are now decorative panes by default from the initial loop.
 
         // Add Action Buttons
-        // Slot 30: Bid Button (Adjusted slot for better spacing if needed)
+        // Slot 30: Bid Button
         inventory.setItem(30, InventoryUtil.createGuiItem(Material.GREEN_WOOL, // Or LIME_WOOL
-                messageManager.getMessage("button_bid", "&aPujar"))); // Use standard button_bid
+                messageManager.getMessage("button_bid")));
 
         // Slot 31: Buy Now Button
         if (auctionItem.getBuyNowPrice() > 0 && configManager.isBuyNowAllowed() && auctionItem.getStatus() == AuctionStatus.ACTIVE) {
             inventory.setItem(31, InventoryUtil.createGuiItem(Material.EMERALD_BLOCK,
-                    messageManager.getMessage("new_gui_button_buy_now_name", "&6Comprar Ahora")));
+                    messageManager.getMessage("new_gui_button_buy_now_name")));
         } else {
             // Decorative pane remains, or an item indicating unavailability
         }
 
         // Slot 32: Back Button
         inventory.setItem(32, InventoryUtil.createGuiItem(Material.RED_WOOL, // Or RED_STAINED_GLASS_PANE
-                messageManager.getMessage("new_gui_button_back_name", "&cVolver Atrás")));
+                messageManager.getMessage("new_gui_button_back_name")));
     }
 
     public void open() {
