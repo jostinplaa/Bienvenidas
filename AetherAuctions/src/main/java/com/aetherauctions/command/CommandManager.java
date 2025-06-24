@@ -78,7 +78,8 @@ public class CommandManager implements CommandExecutor, TabCompleter {
                 if (testAuction == null) {
                     messageManager.sendMessage(player, "new_gui_debug_no_active_auctions_for_test");
                 } else {
-                    plugin.getLogger().info("[CommandManager DEBUG] Forzando apertura de AuctionDetailsGUI para jugador: " + player.getName() + ", Subasta ID: " + testAuction.getId());
+                    plugin.getLogger().info("[CommandManager DEBUG] AuctionItem encontrado: ID " + testAuction.getId() + ". Vendedor: " + testAuction.getSellerName());
+                    plugin.getLogger().info("[CommandManager DEBUG] Intentando llamar a newGuiManager.openAuctionDetailsGUI para jugador: " + player.getName() + ", Subasta ID: " + testAuction.getId());
                     newGuiManager.openAuctionDetailsGUI(player, testAuction, 0); // Open with page 0 as default
                     messageManager.sendMessage(player, "new_gui_debug_details_gui_opened", "%id%", String.valueOf(testAuction.getId()));
                 }

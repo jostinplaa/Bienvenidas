@@ -38,6 +38,10 @@ public class AuctionDetailsGUI implements InventoryHolder { // Implement Invento
     public AuctionDetailsGUI(AetherAuctions plugin, Player player, AuctionItem auctionItem, int previousPage) {
         this.plugin = plugin;
         this.player = player;
+        // auctionItem is assigned to this.auctionItem a few lines below.
+        // Logging this.auctionItem here might show null if passed auctionItem is null, or the previous value if this object is reused (not typical for GUIs).
+        // The log in NewGUIManager before calling this constructor is more reliable for the passed auctionItem's state.
+        this.plugin.getLogger().info("[AuctionDetailsGUI CONSTRUCTOR] Iniciado para jugador: " + player.getName() + ", Subasta ID a ser asignada: " + (auctionItem != null ? auctionItem.getId() : "PASSED_NULL_AUCTION_ITEM"));
         this.auctionItem = auctionItem;
         this.previousPage = previousPage;
         this.configManager = plugin.getConfigManager();
@@ -46,8 +50,11 @@ public class AuctionDetailsGUI implements InventoryHolder { // Implement Invento
     }
 
     private void buildGUI() {
+        plugin.getLogger().info("[AuctionDetailsGUI buildGUI] Iniciado para jugador: " + player.getName() + ", Subasta ID: " + auctionItem.getId());
         String title = messageManager.getMessage("auction_details_gui_title");
+        plugin.getLogger().info("[AuctionDetailsGUI buildGUI] Preparando para crear inventario. Título: " + title);
         inventory = Bukkit.createInventory(this, 36, title); // 4 rows, use 'this' as InventoryHolder
+        plugin.getLogger().info("[AuctionDetailsGUI buildGUI] Inventario creado: " + (inventory != null ? "Éxito" : "FALLO - NULL"));
 
         // Add Decorative Panes
         // Accessing config directly for non-standard path, ensure 'plugin' field is available and initialized.
@@ -119,6 +126,7 @@ public class AuctionDetailsGUI implements InventoryHolder { // Implement Invento
     }
 
     public void open() {
+        plugin.getLogger().info("[AuctionDetailsGUI open] Intentando player.openInventory() para jugador: " + player.getName() + ". Inventario es null? " + (inventory == null));
         player.openInventory(inventory);
     }
 
