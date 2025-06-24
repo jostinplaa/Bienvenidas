@@ -24,6 +24,13 @@ import java.util.stream.Collectors;
 
 public class NewMainAuctionGUI implements InventoryHolder { // Implement InventoryHolder
 
+    // Slot constants for NewMainAuctionGUI
+    public static final int AUCTION_ITEMS_START_SLOT = 0;
+    public static final int AUCTION_ITEMS_END_SLOT = 35; // Represents 36 slots (0-35) for items
+    public static final int PREVIOUS_PAGE_BUTTON_SLOT = 48;
+    public static final int CLOSE_BUTTON_SLOT = 49;
+    public static final int NEXT_PAGE_BUTTON_SLOT = 50;
+
     private final AetherAuctions plugin;
     private final AuctionManager auctionManager;
     private final ConfigManager configManager;

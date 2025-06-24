@@ -1,7 +1,9 @@
 package com.aetherauctions.command;
 
 import com.aetherauctions.AetherAuctions;
+import com.aetherauctions.auction.AuctionItem; // Import AuctionItem
 import com.aetherauctions.auction.AuctionManager;
+import com.aetherauctions.auction.AuctionStatus; // Import AuctionStatus
 import com.aetherauctions.config.MessageManager; // Import MessageManager
 import com.aetherauctions.gui.GUIManager;
 import com.aetherauctions.gui.rework.NewGUIManager; // Import NewGUIManager
@@ -47,6 +49,42 @@ public class CommandManager implements CommandExecutor, TabCompleter {
         }
 
         String subCommand = args[0].toLowerCase();
+
+        // Temporary debug command for AuctionDetailsGUI
+        if (subCommand.equalsIgnoreCase("guidetalles")) {
+            if (!(sender instanceof Player)) {
+                messageManager.sendMessage(sender, "player_only_command");
+                return true;
+            }
+            Player player = (Player) sender;
+
+            // Optional permission check
+            // if (!player.hasPermission("aetherauctions.admin.debug")) {
+            //     messageManager.sendMessage(player, "no_permission");
+            //     return true;
+            // }
+
+            AuctionItem testAuction = null;
+            if (auctionManager.getActiveAuctionsMap().isEmpty()) {
+                messageManager.sendMessage(player, "new_gui_debug_no_active_auctions_for_test");
+            } else {
+                for (AuctionItem item : auctionManager.getActiveAuctionsMap().values()) {
+                    if (item.getStatus() == AuctionStatus.ACTIVE) {
+                        testAuction = item;
+                        break;
+                    }
+                }
+
+                if (testAuction == null) {
+                    messageManager.sendMessage(player, "new_gui_debug_no_active_auctions_for_test");
+                } else {
+                    plugin.getLogger().info("[CommandManager DEBUG] Forzando apertura de AuctionDetailsGUI para jugador: " + player.getName() + ", Subasta ID: " + testAuction.getId());
+                    newGuiManager.openAuctionDetailsGUI(player, testAuction, 0); // Open with page 0 as default
+                    messageManager.sendMessage(player, "new_gui_debug_details_gui_opened", "%id%", String.valueOf(testAuction.getId()));
+                }
+            }
+            return true;
+        }
 
         switch (subCommand) {
             case "crear":
@@ -332,9 +370,9 @@ public class CommandManager implements CommandExecutor, TabCompleter {
         String currentArg = args[args.length - 1].toLowerCase();
 
         if (args.length == 1) {
-            List<String> subCommands = Arrays.asList("crear", "mis", "historial", "cancelar");
+            List<String> subCommands = new ArrayList<>(Arrays.asList("crear", "mis", "historial", "cancelar", "guidetalles")); // Added guidetalles
             if (sender.hasPermission("aetherauctions.admin")) {
-                subCommands = new ArrayList<>(subCommands); // Convert to modifiable list
+                // subCommands = new ArrayList<>(subCommands); // Already an ArrayList
                 subCommands.add("admin");
             }
             for (String subCmd : subCommands) {

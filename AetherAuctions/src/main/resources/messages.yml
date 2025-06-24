@@ -174,3 +174,7 @@ internal_error_my_auctions: "&cOcurrió un error al cargar tus subastas."
 internal_error_history: "&cOcurrió un error al cargar el historial de subastas."
 
 # --- Fin de claves existentes ---
+
+# --- Mensajes para Comandos de Debug (Nuevas GUIs) ---
+new_gui_debug_no_active_auctions_for_test: "&cNo hay subastas activas disponibles para probar la GUI de detalles."
+new_gui_debug_details_gui_opened: "&aAbriendo GUI de detalles para la subasta de prueba ID: %id%."

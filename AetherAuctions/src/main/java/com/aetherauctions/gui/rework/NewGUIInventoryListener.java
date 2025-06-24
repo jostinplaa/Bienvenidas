@@ -21,19 +21,7 @@ public class NewGUIInventoryListener implements Listener {
     private final AuctionManager auctionManager;
     private final MessageManager messageManager;
 
-    // Define constants for slots to avoid magic numbers
-    // For NewMainAuctionGUI (54 slots)
-    private static final int MAIN_SLOT_PREVIOUS_PAGE = 48;
-    private static final int MAIN_SLOT_CLOSE = 49;
-    private static final int MAIN_SLOT_NEXT_PAGE = 50;
-    private static final int MAIN_AUCTION_ITEMS_START_SLOT = 0;
-    private static final int MAIN_AUCTION_ITEMS_END_SLOT = 35;
-
-    // For AuctionDetailsGUI (36 slots)
-    private static final int DETAILS_SLOT_BID = 30; // Example, adjust if needed
-    private static final int DETAILS_SLOT_BUY_NOW = 31; // Example
-    private static final int DETAILS_SLOT_BACK = 32; // Example
-
+    // Constants are now defined in their respective GUI classes (NewMainAuctionGUI, AuctionDetailsGUI)
 
     public NewGUIInventoryListener(AetherAuctions plugin) {
         this.plugin = plugin;
@@ -59,95 +47,138 @@ public class NewGUIInventoryListener implements Listener {
 
         if (holder instanceof NewMainAuctionGUI) {
             event.setCancelled(true);
+            event.setCancelled(true); // Cancel event first
             NewMainAuctionGUI mainGui = (NewMainAuctionGUI) holder;
-            ItemStack clickedItem = event.getCurrentItem();
-            int slot = event.getRawSlot(); // Use raw slot for top inventory consistency
-            plugin.getLogger().info("[NewMainAuctionGUI] Clicked slot: " + slot + ", ClickType: " + event.getClick().name()); // Logging
+            // Player player = (Player) event.getWhoClicked(); // Already defined above
+            ItemStack clickedItemRaw = event.getCurrentItem(); // Renombrado para claridad
+            int slot = event.getRawSlot(); // Use raw slot
 
-            // Check if click is in top inventory
-            if (slot >= topInventory.getSize()) {
-                 // Click was in player's inventory
-                return;
+            plugin.getLogger().info("[ReworkListener] Detected click in NewMainAuctionGUI. Slot: " + slot + ", ClickType: " + event.getClick().name());
+
+            if (clickedItemRaw == null || clickedItemRaw.getType() == Material.AIR) {
+                plugin.getLogger().info("[ReworkListener] Clicked item is null or AIR. Aborting further processing for this slot.");
+                return; // No procesar si no hay ítem
             }
 
-            if (clickedItem == null || clickedItem.getType() == Material.AIR) {
-                return;
-            }
+            // Procesamiento para slots de ítems de subasta
+            if (slot >= NewMainAuctionGUI.AUCTION_ITEMS_START_SLOT && slot <= NewMainAuctionGUI.AUCTION_ITEMS_END_SLOT) {
+                plugin.getLogger().info("[ReworkListener] Slot " + slot + " is an auction item slot.");
 
-            if (slot == MAIN_SLOT_CLOSE) {
-                player.closeInventory();
-            } else if (slot == MAIN_SLOT_PREVIOUS_PAGE) {
-                if (mainGui.getCurrentPage() > 0) {
-                    // Check if the item is actually an arrow, not a decorative pane
-                    if (clickedItem.getType() == Material.ARROW) {
-                        newGuiManager.openNewMainAuctionGUI(player, mainGui.getCurrentPage() - 1);
-                    }
-                }
-            } else if (slot == MAIN_SLOT_NEXT_PAGE) {
-                 // Check if the item is actually an arrow
-                if (clickedItem.getType() == Material.ARROW) {
-                    if (mainGui.getCurrentPage() < mainGui.getTotalPages() - 1) {
-                        newGuiManager.openNewMainAuctionGUI(player, mainGui.getCurrentPage() + 1);
-                    }
-                }
-            } else if (slot >= MAIN_AUCTION_ITEMS_START_SLOT && slot <= MAIN_AUCTION_ITEMS_END_SLOT) {
-                // This is an auction item slot
                 if (event.isRightClick()) {
-                    plugin.getLogger().info("[NewMainAuctionGUI] Right-click detected on slot: " + slot); // Logging
+                    plugin.getLogger().info("[ReworkListener] Right-click detected on slot " + slot + ".");
                     AuctionItem auctionItem = mainGui.getAuctionItemAtSlot(slot);
-                    plugin.getLogger().info("[NewMainAuctionGUI] AuctionItem: " + (auctionItem != null ? String.valueOf(auctionItem.getId()) : "null")); // Logging
 
                     if (auctionItem != null) {
-                        plugin.getLogger().info("[NewMainAuctionGUI] Opening details for auction ID: " + auctionItem.getId() + " from page: " + mainGui.getCurrentPage()); // Logging
+                        plugin.getLogger().info("[ReworkListener] AuctionItem found for slot " + slot + ". ID: " + auctionItem.getId());
+                        // Log solicitado por el usuario, justo antes de la acción:
+                        plugin.getLogger().info("[DEBUG] Se intentó abrir la GUI de detalles para la subasta ID: " + auctionItem.getId());
                         newGuiManager.openAuctionDetailsGUI(player, auctionItem, mainGui.getCurrentPage());
+                    } else {
+                        plugin.getLogger().warning("[ReworkListener] Right-click on auction slot " + slot + " but getAuctionItemAtSlot returned NULL. No action taken.");
                     }
+                } else {
+                    plugin.getLogger().info("[ReworkListener] Click on auction slot " + slot + " was not a right-click. Type: " + event.getClick().name() + ". No action taken for details GUI.");
                 }
             }
-
+            // Procesamiento para botones de navegación (Cerrar, Anterior, Siguiente)
+            else if (slot == NewMainAuctionGUI.CLOSE_BUTTON_SLOT) {
+                plugin.getLogger().info("[ReworkListener] Close button clicked.");
+                player.closeInventory();
+            } else if (slot == NewMainAuctionGUI.PREVIOUS_PAGE_BUTTON_SLOT) {
+                 if(clickedItemRaw.getType() == Material.ARROW) {
+                    plugin.getLogger().info("[ReworkListener] Previous page button clicked.");
+                     if (mainGui.getCurrentPage() > 0) { // Check moved inside to ensure it's an arrow first
+                        newGuiManager.openNewMainAuctionGUI(player, mainGui.getCurrentPage() - 1);
+                     } else {
+                        plugin.getLogger().info("[ReworkListener] Previous page button clicked, but already on first page or item is not an arrow.");
+                     }
+                 } else {
+                    plugin.getLogger().info("[ReworkListener] Click on previous page slot, but item is not an arrow: " + clickedItemRaw.getType());
+                 }
+            } else if (slot == NewMainAuctionGUI.NEXT_PAGE_BUTTON_SLOT) {
+                if(clickedItemRaw.getType() == Material.ARROW) {
+                    plugin.getLogger().info("[ReworkListener] Next page button clicked.");
+                    if (mainGui.getCurrentPage() < mainGui.getTotalPages() - 1) { // Check moved inside
+                        newGuiManager.openNewMainAuctionGUI(player, mainGui.getCurrentPage() + 1);
+                    } else {
+                         plugin.getLogger().info("[ReworkListener] Next page button clicked, but already on last page or item is not an arrow.");
+                    }
+                } else {
+                    plugin.getLogger().info("[ReworkListener] Click on next page slot, but item is not an arrow: " + clickedItemRaw.getType());
+                }
+            } else {
+                plugin.getLogger().info("[ReworkListener] Click on unhandled slot in NewMainAuctionGUI: " + slot);
+            }
         } else if (holder instanceof AuctionDetailsGUI) {
             event.setCancelled(true);
             AuctionDetailsGUI detailsGui = (AuctionDetailsGUI) holder;
-            AuctionItem auctionItem = detailsGui.getAuctionItem();
-            ItemStack clickedItem = event.getCurrentItem();
+            // Player player = (Player) event.getWhoClicked(); // Already defined
+            ItemStack clickedItemRaw = event.getCurrentItem();
             int slot = event.getRawSlot(); // Use raw slot
 
+            plugin.getLogger().info("[ReworkListener] Detected click in AuctionDetailsGUI. Slot: " + slot + ", ClickType: " + event.getClick().name());
+
             if (slot >= topInventory.getSize()) {
-                // Click was in player's inventory
-               return;
-           }
-
-            if (clickedItem == null || clickedItem.getType() == Material.AIR) {
+                plugin.getLogger().info("[ReworkListener] Click was in player's inventory for AuctionDetailsGUI.");
                 return;
             }
 
-            // Ensure auction item is still valid for actions
-            if (auctionItem == null || auctionItem.getStatus() != AuctionStatus.ACTIVE) {
-                // Optionally send a message that the auction is no longer active
-                messageManager.sendMessage(player, "auction_ended_info_closed"); // Or a more generic message
-                newGuiManager.openNewMainAuctionGUI(player, detailsGui.getPreviousPage()); // Go back
+            if (clickedItemRaw == null || clickedItemRaw.getType() == Material.AIR) {
+                plugin.getLogger().info("[ReworkListener] Clicked item in AuctionDetailsGUI is null or AIR.");
                 return;
             }
 
+            AuctionItem auctionItem = detailsGui.getAuctionItem();
 
-            if (slot == DETAILS_SLOT_BACK) {
+            if (auctionItem == null) { // Should not happen if GUI opened correctly
+                 plugin.getLogger().severe("[ReworkListener] AuctionItem is NULL in AuctionDetailsGUI for player " + player.getName());
+                 player.closeInventory();
+                 messageManager.sendMessage(player, "internal_error");
+                 return;
+            }
+
+            // Ensure auction item is still valid for actions, even if it was when GUI opened
+            if (auctionItem.getStatus() != AuctionStatus.ACTIVE) {
+                plugin.getLogger().info("[ReworkListener] Auction " + auctionItem.getId() + " is no longer active. Status: " + auctionItem.getStatus());
+                messageManager.sendMessage(player, "auction_ended_info_closed");
                 newGuiManager.openNewMainAuctionGUI(player, detailsGui.getPreviousPage());
-            } else if (slot == DETAILS_SLOT_BUY_NOW) {
-                // Double check buy now conditions, though AuctionManager will also do it
-                if (auctionItem.getBuyNowPrice() > 0 && plugin.getConfigManager().isBuyNowAllowed() && clickedItem.getType() == Material.EMERALD_BLOCK) {
-                    boolean success = auctionManager.buyNow(player, auctionItem.getId());
-                    if (success) {
-                        player.closeInventory(); // Close on successful buy
+                return;
+            }
+
+            if (slot == AuctionDetailsGUI.BACK_BUTTON_SLOT) {
+                plugin.getLogger().info("[ReworkListener] Back button clicked in AuctionDetailsGUI. Returning to page " + detailsGui.getPreviousPage());
+                newGuiManager.openNewMainAuctionGUI(player, detailsGui.getPreviousPage());
+            } else if (slot == AuctionDetailsGUI.BUY_NOW_BUTTON_SLOT) {
+                if (clickedItemRaw.getType() == Material.EMERALD_BLOCK) { // Check if it's the actual button
+                    plugin.getLogger().info("[ReworkListener] Buy Now button clicked in AuctionDetailsGUI for auction ID: " + auctionItem.getId());
+                    // Double check buy now conditions, though AuctionManager will also do it
+                    if (auctionItem.getBuyNowPrice() > 0 && plugin.getConfigManager().isBuyNowAllowed()) {
+                        boolean success = auctionManager.buyNow(player, auctionItem.getId());
+                        if (success) {
+                            player.closeInventory();
+                        }
+                        // AuctionManager handles feedback messages
+                    } else {
+                        plugin.getLogger().warning("[ReworkListener] Buy Now attempt on non-buyable item in details GUI. Auction ID: " + auctionItem.getId());
+                        messageManager.sendMessage(player, "error_auction_not_buyable_details_gui");
                     }
-                    // AuctionManager handles feedback messages
                 } else {
-                     messageManager.sendMessage(player, "error_auction_not_buyable_details_gui");
+                     plugin.getLogger().info("[ReworkListener] Click on Buy Now slot in AuctionDetailsGUI, but item is " + clickedItemRaw.getType());
                 }
-            } else if (slot == DETAILS_SLOT_BID) {
-                 if (clickedItem.getType() == Material.GREEN_WOOL) { // Or LIME_WOOL
+            } else if (slot == AuctionDetailsGUI.BID_BUTTON_SLOT) {
+                 if (clickedItemRaw.getType() == Material.GREEN_WOOL) {
+                    plugin.getLogger().info("[ReworkListener] Bid button clicked in AuctionDetailsGUI for auction ID: " + auctionItem.getId());
                     player.closeInventory();
                     newGuiManager.setPlayerPendingBid(player.getUniqueId(), auctionItem.getId());
                     messageManager.sendMessage(player, "new_gui_chat_prompt_bid_amount");
+                 } else {
+                    plugin.getLogger().info("[ReworkListener] Click on Bid slot in AuctionDetailsGUI, but item is " + clickedItemRaw.getType());
                  }
+            } else if (slot == AuctionDetailsGUI.ITEM_DISPLAY_SLOT) {
+                 plugin.getLogger().info("[ReworkListener] Click on central display item in AuctionDetailsGUI. No action.");
+            }
+            else {
+                 plugin.getLogger().info("[ReworkListener] Click on unhandled slot in AuctionDetailsGUI: " + slot);
             }
         }
     }

@@ -21,6 +21,12 @@ import java.util.List;
 
 public class AuctionDetailsGUI implements InventoryHolder { // Implement InventoryHolder
 
+    // Slot constants for AuctionDetailsGUI
+    public static final int ITEM_DISPLAY_SLOT = 13; // Central display for the auction item itself
+    public static final int BID_BUTTON_SLOT = 30;
+    public static final int BUY_NOW_BUTTON_SLOT = 31;
+    public static final int BACK_BUTTON_SLOT = 32;
+
     private final AetherAuctions plugin;
     private final ConfigManager configManager;
     private final MessageManager messageManager;

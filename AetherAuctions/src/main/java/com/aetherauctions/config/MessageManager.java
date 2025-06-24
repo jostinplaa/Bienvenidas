@@ -81,7 +81,7 @@ public class MessageManager {
 
     // Convenience method for simple placeholder pairs
     public String getMessage(String key, String... placeholderPairs) {
-        plugin.getLogger().info("[MessageManager] getMessage for key: '" + key + "', pairs: " + Arrays.toString(placeholderPairs)); // Logging
+        // plugin.getLogger().info("[MessageManager] getMessage for key: '" + key + "', pairs: " + Arrays.toString(placeholderPairs)); // Logging - Commented out
         String rawMessage = messagesConfig.getString(key);
 
         if (rawMessage == null) {
