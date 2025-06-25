@@ -5,7 +5,7 @@ import com.aetherauctions.auction.AuctionManager;
 import com.aetherauctions.model.Auction;
 import com.aetherauctions.auction.AuctionStatus;
 import com.aetherauctions.config.MessageManager;
-import com.aetherauctions.listener.InventoryClickListener;
+import com.aetherauctions.listener.InventoryClickListener; // Ensure this is the correct listener path
 
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -55,12 +55,13 @@ public class PlayerChatListener implements Listener {
                         msgManager.sendMessage(player, "auction_bid_error_not_active");
                         return;
                     }
-                    // AuctionManager.placeBid handles all other validations and messages
+
+                    // AuctionManager.placeBid will handle all internal validations and messaging
                     if (!auctionManager.placeBid(player, finalAuctionId, bidAmount)) {
-                        // Optionally re-open details GUI if bid fails
+                        // Optional: Could re-open GUI on failure if desired, but AuctionManager should send feedback.
                         // Auction failedAuction = auctionManager.getAuctionById(finalAuctionId);
-                        // if (failedAuction != null) {
-                        //     com.aetherauctions.gui.GUIManager.openAuctionInfoGui(player, failedAuction, inventoryClickListener.getPlayerReturnPageMap().getOrDefault(playerId, 0));
+                        // if (failedAuction != null && inventoryClickListener != null) {
+                        //    com.aetherauctions.gui.GUIManager.openAuctionInfoGui(player, failedAuction, inventoryClickListener.getPlayerReturnPageMap().getOrDefault(playerId, 0));
                         // }
                     }
                 });
@@ -68,8 +69,7 @@ public class PlayerChatListener implements Listener {
                 msgManager.sendMessage(player, "chat_bid_error_invalid_number", "%input%", message);
             }
         }
-        // The old block for plugin.getPlayerInputStateMap() has been removed as it pertains to a deprecated GUI flow.
+        // No other chat input states are handled by this listener anymore.
+        // Old GUIManager states (AWAITING_DURATION, etc.) were removed.
     }
-
-    // Helper methods parseDurationString and formatDurationMillis are removed as they were part of the old input state handling.
 }

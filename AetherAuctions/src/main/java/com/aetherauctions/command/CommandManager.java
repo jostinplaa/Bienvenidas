@@ -200,8 +200,8 @@ public class CommandManager implements CommandExecutor, TabCompleter {
                 if (!sender.hasPermission("aetherauctions.admin.reload")) {
                     msgManager.sendMessage(sender, "no_permission"); return;
                 }
-                plugin.getCfgManager().loadConfig();
-                plugin.getMsgManager().loadMessages();
+                this.cfgManager.loadConfig();
+                this.msgManager.loadMessages();
                 msgManager.sendMessage(sender, "admin_reload_success");
                 break;
             case "ver":
