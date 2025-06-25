@@ -247,7 +247,10 @@ public class CommandManager implements CommandExecutor, TabCompleter {
                 }
                 if (toDelete != null) {
                     if (auctionManager.adminDeleteAuction(toDelete, sender)) {
-                       msgManager.sendMessage(sender, "admin_borrar_success", "%id%", idToDeleteStr);
+                       msgManager.sendMessage(sender, "admin_borrar_success",
+                           "%id%", idToDeleteStr,
+                           "%item_name%", InventoryUtil.formatMaterialName(toDelete.getItemStack().getType())
+                       );
                     } else {
                        msgManager.sendMessage(sender, "admin_borrar_failed", "%id%", idToDeleteStr);
                     }

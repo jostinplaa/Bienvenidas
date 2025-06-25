@@ -160,7 +160,7 @@ command_admin_ver_hb: "&7Pujador Máximo: &6%name% (%uuid%)"
 command_admin_ver_buynow: "&7Precio Compra Dir.: &a%price%"
 command_admin_ver_time: "&7Tiempo Restante/Finalizado: &c%time%"
 command_admin_ver_invalid_id_format: "&cEl formato del ID de subasta es inválido." # Si se usa parseo de UUID directo
-admin_borrar_success: "&aSubasta '%id%' borrada exitosamente por un administrador."
+admin_borrar_success: "&aSubasta #%id% (%item_name%) borrada exitosamente por un administrador."
 admin_borrar_failed: "&cNo se pudo borrar la subasta '%id%'."
 # command_admin_borrar_invalid_id_format: "&cEl formato del ID de subasta es inválido." # Reusar command_admin_ver_invalid_id_format
 

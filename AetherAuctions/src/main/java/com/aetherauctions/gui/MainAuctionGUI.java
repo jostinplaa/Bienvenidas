@@ -71,9 +71,15 @@ public class MainAuctionGUI {
 
                 List<String> lore = new ArrayList<>();
                 lore.add(msgManager.getMessage("main_gui_lore_seller", "%seller%", auction.getSellerName()));
-                lore.add(msgManager.getMessage("main_gui_lore_price", "%price%", String.format("%.2f %s", auction.getCurrentBid(), cfgManager.getCurrencySymbol())));
+                lore.add(msgManager.getMessage("main_gui_lore_price",
+                    "%price%", String.format("%.2f", auction.getCurrentBid()),
+                    "%currency%", cfgManager.getCurrencySymbol()
+                ));
                 if (auction.hasBuyNow() && cfgManager.isBuyNowAllowed()) {
-                    lore.add(msgManager.getMessage("main_gui_lore_buy_now", "%buy_now_price%", String.format("%.2f %s", auction.getBuyNowPrice(), cfgManager.getCurrencySymbol())));
+                    lore.add(msgManager.getMessage("main_gui_lore_buy_now",
+                        "%buy_now_price%", String.format("%.2f", auction.getBuyNowPrice()),
+                        "%currency%", cfgManager.getCurrencySymbol()
+                    ));
                 } else {
                     lore.add(msgManager.getMessage("main_gui_lore_buy_now_not_available"));
                 }
