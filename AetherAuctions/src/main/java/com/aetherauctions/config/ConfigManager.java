@@ -184,4 +184,14 @@ public class ConfigManager {
 
     public String getDatabaseType() { return databaseType; }
     public String getSqliteFileName() { return sqliteFileName; }
+
+    public Material getDetailsDecorativePaneMaterial() {
+        String materialName = config.getString("gui.details_decorative_pane_material", "BLACK_STAINED_GLASS_PANE");
+        try {
+            return Material.valueOf(materialName.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            plugin.getLogger().warning("Material inválido para 'gui.details_decorative_pane_material': " + materialName + ". Usando BLACK_STAINED_GLASS_PANE.");
+            return Material.BLACK_STAINED_GLASS_PANE;
+        }
+    }
 }

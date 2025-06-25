@@ -178,3 +178,20 @@ internal_error_history: "&cOcurrió un error al cargar el historial de subastas.
 # --- Mensajes para Comandos de Debug (Nuevas GUIs) ---
 new_gui_debug_no_active_auctions_for_test: "&cNo hay subastas activas disponibles para probar la GUI de detalles."
 new_gui_debug_details_gui_opened: "&aAbriendo GUI de detalles para la subasta de prueba ID: %id%."
+
+# --- Claves para la nueva AuctionDetailsGUI Estática ---
+# auction_details_gui_title: "&9Detalles de la Subasta" # Ya existe, verificar valor
+# button_bid: "&aPujar" # Ya existe
+# button_buy_now: "&6Comprar Ahora" # Ya existe
+button_back: "&cVolver Atrás" # Nuevo o verificar si "new_gui_button_back_name" debe ser este
+auction_lore_buy_now_not_available: "&cNo disponible" # Nuevo para el lore del ítem
+auction_lore:
+  - "&7ID: &f%id%"
+  - "&7Vendedor: &f%seller%"
+  - "&7Puja Actual: &a%price%"
+  - "&7Compra Ahora: &a%buy_now%"
+  - "&7Tiempo restante: &f%time%"
+  - "&eUsa los botones para pujar o comprar."
+auction_not_loaded_error: "&cNo se pudo cargar la información de la subasta seleccionada." # Nuevo
+# item_default_name_format: "&r%item_name%" # Ya existe
+# new_gui_decorative_pane_name: "&r " # Ya existe

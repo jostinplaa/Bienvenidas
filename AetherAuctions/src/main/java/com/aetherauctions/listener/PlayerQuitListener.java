@@ -30,10 +30,10 @@ public class PlayerQuitListener implements Listener {
             plugin.getGuiManager().clearCreateAuctionData(playerUUID);
         }
 
-        // Clear states from NewGUIManager
-        if (plugin.getNewGuiManager() != null) {
-            plugin.getNewGuiManager().removePlayerPageState(playerUUID);
-        }
+        // Clear states from NewGUIManager // References to NewGUIManager removed
+        // if (plugin.getNewGuiManager() != null) {
+            // plugin.getNewGuiManager().removePlayerPageState(playerUUID);
+        // }
 
         // Log if needed, e.g., if player was in a specific auction process
         // plugin.getLogger().info("Cleared pending input states for disconnected player: " + player.getName());

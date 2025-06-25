@@ -7,7 +7,7 @@ import com.aetherauctions.config.ConfigManager; // Import ConfigManager
 import com.aetherauctions.config.MessageManager; // Import MessageManager
 import com.aetherauctions.database.DatabaseManager;
 import com.aetherauctions.gui.GUIManager;
-import com.aetherauctions.gui.rework.NewGUIManager; // Import NewGUIManager
+// import com.aetherauctions.gui.rework.NewGUIManager; // NewGUIManager is being removed
 import com.aetherauctions.gui.rework.NewGUIInventoryListener; // Import NewGUIInventoryListener
 import com.aetherauctions.listener.InventoryClickListener;
 import com.aetherauctions.listeners.PlayerChatListener; // Changed to plural 'listeners'
@@ -30,7 +30,8 @@ public class AetherAuctions extends JavaPlugin {
     private DatabaseManager databaseManager;
     private AuctionManager auctionManager;
     private GUIManager guiManager;
-    private NewGUIManager newGuiManager; // Add NewGUIManager field
+    // private NewGUIManager newGuiManager; // Field removed
+    private NewGUIInventoryListener newGuiInventoryListener; // Add NewGUIInventoryListener field
     private CommandManager commandManager;
     private ConfigManager configManager; // Add ConfigManager
     private MessageManager messageManager; // Add MessageManager
@@ -81,8 +82,8 @@ public class AetherAuctions extends JavaPlugin {
         auctionManager.startExpiredAuctionsTask();
         getLogger().info("AuctionManager y GUIManager inicializados.");
 
-        newGuiManager = new NewGUIManager(this); // Initialize NewGUIManager
-        getLogger().info("NewGUIManager inicializado.");
+        // newGuiManager = new NewGUIManager(this); // Initialization removed
+        // getLogger().info("NewGUIManager inicializado."); // Log removed
 
         commandManager = new CommandManager(this, auctionManager, guiManager); // CommandManager uses MessageManager
         if (this.getCommand("subasta") != null) {
@@ -94,8 +95,9 @@ public class AetherAuctions extends JavaPlugin {
         }
 
         // Register Listeners
+        newGuiInventoryListener = new NewGUIInventoryListener(this); // Initialize NewGUIInventoryListener
         getServer().getPluginManager().registerEvents(new InventoryClickListener(this, guiManager, auctionManager), this); // Old listener
-        getServer().getPluginManager().registerEvents(new NewGUIInventoryListener(this), this); // New GUI Listener
+        getServer().getPluginManager().registerEvents(newGuiInventoryListener, this); // Register NewGUIInventoryListener instance
         getServer().getPluginManager().registerEvents(new PlayerChatListener(this), this); // Corrected constructor call
         getServer().getPluginManager().registerEvents(new PlayerQuitListener(this), this); // Register PlayerQuitListener
 
@@ -112,9 +114,9 @@ public class AetherAuctions extends JavaPlugin {
         }
         playerInputState.clear();
         playerTargetAuction.clear();
-        if (newGuiManager != null) {
-            newGuiManager.clearAllPlayerStates(); // Clear states in NewGUIManager
-        }
+        // if (newGuiManager != null) { // Call removed
+            // newGuiManager.clearAllPlayerStates();
+        // }
         getLogger().info("AetherAuctions se ha deshabilitado.");
     }
 
@@ -156,8 +158,12 @@ public class AetherAuctions extends JavaPlugin {
         return guiManager;
     }
 
-    public NewGUIManager getNewGuiManager() { // Getter for NewGUIManager
-        return newGuiManager;
+    // public NewGUIManager getNewGuiManager() { // Getter removed
+    //    return newGuiManager;
+    // }
+
+    public NewGUIInventoryListener getNewGuiInventoryListener() { // Getter for NewGUIInventoryListener
+        return newGuiInventoryListener;
     }
 
     public ConfigManager getConfigManager() { // Getter for ConfigManager

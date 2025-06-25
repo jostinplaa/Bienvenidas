@@ -616,4 +616,16 @@ public class AuctionManager {
                 .filter(auc -> auc.getSellerUUID().equals(playerUUID))
                 .collect(Collectors.toList());
     }
+
+    public AuctionItem getFirstAuction() {
+        if (activeAuctions == null || activeAuctions.isEmpty()) {
+            return null;
+        }
+        for (AuctionItem item : activeAuctions.values()) {
+            if (item != null && item.getStatus() == AuctionStatus.ACTIVE) {
+                return item; // Devuelve la primera subasta activa que encuentra
+            }
+        }
+        return null; // No se encontró ninguna subasta activa
+    }
 }

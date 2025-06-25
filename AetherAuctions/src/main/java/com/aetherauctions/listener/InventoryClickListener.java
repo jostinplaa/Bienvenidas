@@ -5,6 +5,7 @@ import com.aetherauctions.auction.AuctionItem;
 import com.aetherauctions.auction.AuctionManager;
 import com.aetherauctions.config.MessageManager;
 import com.aetherauctions.gui.GUIManager;
+import com.aetherauctions.gui.rework.NewMainAuctionGUI; // Import NewMainAuctionGUI
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -183,7 +184,7 @@ public class InventoryClickListener implements Listener {
             boolean success = auctionManager.createAuction(player, itemToAuction, duration, startPrice, buyNowPrice == null ? -1 : buyNowPrice);
             if (success) {
                 guiManager.clearCreateAuctionData(player.getUniqueId());
-                plugin.getNewGuiManager().openNewMainAuctionGUI(player, 0); // Use NewGUIManager
+                new NewMainAuctionGUI(plugin, player, 0).open(); // Direct instantiation
             } else {
                 guiManager.openCreateAuctionGui(player);
             }
@@ -200,7 +201,7 @@ public class InventoryClickListener implements Listener {
         } else if (clickedItemName.equals(messageManager.stripColors(messageManager.getRaw("button_refresh")))) {
             guiManager.openMyAuctionsGui(player, currentPage);
         } else if (clickedItemName.equals(messageManager.stripColors(messageManager.getRaw("button_back_to_main_auctions")))) {
-             plugin.getNewGuiManager().openNewMainAuctionGUI(player, 0); // Use NewGUIManager
+             new NewMainAuctionGUI(plugin, player, 0).open(); // Direct instantiation
         }
     }
 
@@ -212,7 +213,7 @@ public class InventoryClickListener implements Listener {
         } else if (clickedItemName.equals(messageManager.stripColors(messageManager.getRaw("button_refresh")))) {
             guiManager.openAuctionHistoryGui(player, currentPage);
         } else if (clickedItemName.equals(messageManager.stripColors(messageManager.getRaw("button_back_to_main_auctions")))) {
-             plugin.getNewGuiManager().openNewMainAuctionGUI(player, 0); // Use NewGUIManager
+             new NewMainAuctionGUI(plugin, player, 0).open(); // Direct instantiation
         }
     }
 }

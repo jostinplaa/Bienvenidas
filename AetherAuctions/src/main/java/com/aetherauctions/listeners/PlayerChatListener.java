@@ -5,7 +5,7 @@ import com.aetherauctions.auction.AuctionItem;
 import com.aetherauctions.auction.AuctionManager;
 import com.aetherauctions.auction.AuctionStatus; // Import AuctionStatus
 import com.aetherauctions.gui.GUIManager;
-import com.aetherauctions.gui.rework.NewGUIManager; // Import NewGUIManager
+// import com.aetherauctions.gui.rework.NewGUIManager; // Import Removed
 import com.aetherauctions.config.MessageManager; // Assuming this path is correct
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -21,14 +21,14 @@ public class PlayerChatListener implements Listener {
     private final AetherAuctions plugin;
     private final AuctionManager auctionManager;
     private final GUIManager guiManager; // Old GUI Manager, for other input states
-    private final NewGUIManager newGuiManager; // New GUI Manager
+    private final com.aetherauctions.gui.rework.NewGUIInventoryListener newGuiInventoryListener; // Changed to actual listener
     private final MessageManager messageManager;
 
     public PlayerChatListener(AetherAuctions plugin) {
         this.plugin = plugin;
         this.auctionManager = plugin.getAuctionManager();
         this.guiManager = plugin.getGuiManager();
-        this.newGuiManager = plugin.getNewGuiManager(); // Initialize NewGUIManager
+        this.newGuiInventoryListener = plugin.getNewGuiInventoryListener(); // Get instance from plugin
         this.messageManager = plugin.getMessageManager();
     }
 
@@ -37,13 +37,12 @@ public class PlayerChatListener implements Listener {
         Player player = event.getPlayer();
         UUID playerId = player.getUniqueId();
 
-        // Check if this player is expected to provide bid input via NewGUIManager
-        if (newGuiManager.isPlayerPendingBid(playerId)) {
-            event.setCancelled(true); // Cancel the chat event so the message doesn't appear publicly
-
-            Integer auctionId = newGuiManager.getAndRemovePlayerPendingBidAuctionId(playerId);
+        // Check if this player is expected to provide bid input via NewGUIInventoryListener's map
+        if (newGuiInventoryListener.isPlayerPendingBid(playerId)) {
+            event.setCancelled(true);
+            Integer auctionId = newGuiInventoryListener.getAndRemovePlayerPendingBidAuctionId(playerId);
             if (auctionId == null) {
-                plugin.getLogger().warning("Player " + player.getName() + " was pending bid input, but no auction ID was found.");
+                plugin.getLogger().warning("Player " + player.getName() + " was pending bid input (NewGUI), but no auction ID was found.");
                 messageManager.sendMessage(player, "internal_error");
                 return;
             }
@@ -54,38 +53,27 @@ public class PlayerChatListener implements Listener {
                 bidAmount = Double.parseDouble(bidAmountString);
             } catch (NumberFormatException e) {
                 messageManager.sendMessage(player, "error_invalid_bid_input_nan", "%input%", bidAmountString);
-                // No need to re-open GUI here, player can re-initiate from details GUI if they wish or type /auc again
                 return;
             }
 
-            // Run validation and bidding logic synchronously
             Bukkit.getScheduler().runTask(plugin, () -> {
-                AuctionItem auctionItem = auctionManager.getAuction(auctionId);
-
+                AuctionItem auctionItem = auctionManager.getAuction(auctionId); // auctionId would be from newGuiManager path
                 if (auctionItem == null || auctionItem.getStatus() != AuctionStatus.ACTIVE) {
                     messageManager.sendMessage(player, "auction_ended_no_longer_exists");
-                    // Optionally open main GUI: newGuiManager.openNewMainAuctionGUI(player, 0);
                     return;
                 }
-
                 if (auctionItem.getSellerUUID().equals(player.getUniqueId().toString())) {
                     messageManager.sendMessage(player, "cannot_bid_on_own_auction");
                     return;
                 }
-
-                // Buy now check
                 if (auctionItem.getBuyNowPrice() > 0 && plugin.getConfigManager().isBuyNowAllowed() && bidAmount >= auctionItem.getBuyNowPrice()) {
                     messageManager.sendMessage(player, "bid_equals_buy_now");
-                    auctionManager.buyNow(player, auctionId, true); // true indicates triggered by bid matching/exceeding buy now
+                    auctionManager.buyNow(player, auctionId, true);
                     return;
                 }
-
-                // Standard bid validation
                 double minIncrement = plugin.getConfigManager().getMinBidIncrementAmount();
                 double currentEffectiveBid = (auctionItem.getHighestBidderUUID() == null) ? auctionItem.getStartPrice() : auctionItem.getCurrentBid();
                 double requiredBid = (auctionItem.getHighestBidderUUID() == null) ? auctionItem.getStartPrice() : currentEffectiveBid + minIncrement;
-
-                // Adjust requiredBid if it's the first bid and startPrice is effectively the current bid
                 if (auctionItem.getHighestBidderUUID() == null && bidAmount < auctionItem.getStartPrice()) {
                      messageManager.sendMessage(player, "bid_too_low_initial", "%min_bid%", String.format("%,.2f", auctionItem.getStartPrice()), "%currency%", plugin.getConfigManager().getCurrencySymbol());
                      return;
@@ -93,35 +81,66 @@ public class PlayerChatListener implements Listener {
                      messageManager.sendMessage(player, "bid_too_low_increment", "%min_bid%", String.format("%,.2f", requiredBid), "%currency%", plugin.getConfigManager().getCurrencySymbol(), "%increment%", String.format("%,.2f", minIncrement));
                      return;
                 }
-
-
-                // If all validations pass
                 auctionManager.placeBid(player, auctionItem, bidAmount);
-                // AuctionManager.placeBid will send feedback messages and handle economy
-                // No need to re-open GUI here, AuctionManager's refresh logic should handle updates if any GUI is open.
             });
         }
+        */
         // Handle other input states from the old GUIManager (e.g., for creating auctions via chat prompts)
-        else if (guiManager.isPlayerPendingBid(playerId)) { // This is the old pending bid, keep it for now if old GUI is still partially used
+        // This 'if' was previously an 'else if'
+        if (guiManager.isPlayerPendingBid(playerId)) {
             event.setCancelled(true);
             Integer oldAuctionId = guiManager.getAndRemovePlayerPendingBid(playerId);
-            if (oldAuctionId == null) { return; }
-            String oldMessage = event.getMessage();
-            double oldBidAmount;
-            try { oldBidAmount = Double.parseDouble(oldMessage); }
-            catch (NumberFormatException e) {
-                messageManager.sendMessage(player, "error_invalid_bid_input_nan", "%input%", oldMessage);
+            if (oldAuctionId == null) {
+                messageManager.sendMessage(player, "internal_error");
                 return;
             }
-            AuctionItem oldAuctionToBidOn = auctionManager.getAuction(oldAuctionId);
+            // The rest of this block referred to 'auctionId' and 'bidAmount' from the newGuiManager block.
+            // It needs to use oldAuctionId and parse its own bid amount from event.getMessage().
+            String bidAmountString = event.getMessage(); // Make sure this is used for this block
+            double bidAmount; // Make sure this is used for this block
+            try {
+                bidAmount = Double.parseDouble(bidAmountString);
+            } catch (NumberFormatException e) {
+                messageManager.sendMessage(player, "error_invalid_bid_input_nan", "%input%", bidAmountString);
+                return;
+            }
+
+            // The BukkitRunnable for old GUI's bid should use oldAuctionId and the local bidAmount
+            final Integer finalOldAuctionId = oldAuctionId; // effectively final for lambda
+            final double finalBidAmount = bidAmount; // effectively final for lambda
+
             Bukkit.getScheduler().runTask(plugin, () -> {
-                if (oldAuctionToBidOn == null) {
+                AuctionItem auctionItem = auctionManager.getAuction(finalOldAuctionId); // Use finalOldAuctionId
+
+                if (auctionItem == null || auctionItem.getStatus() != AuctionStatus.ACTIVE) {
                     messageManager.sendMessage(player, "auction_ended_no_longer_exists");
                     return;
                 }
-                auctionManager.placeBid(player, oldAuctionToBidOn, oldBidAmount);
-            });
 
+                // Apply necessary checks for the old GUI's bid process as well
+                if (auctionItem.getSellerUUID().equals(player.getUniqueId().toString())) {
+                    messageManager.sendMessage(player, "cannot_bid_on_own_auction");
+                    return;
+                }
+                if (auctionItem.getBuyNowPrice() > 0 && plugin.getConfigManager().isBuyNowAllowed() && finalBidAmount >= auctionItem.getBuyNowPrice()) {
+                     messageManager.sendMessage(player, "bid_equals_buy_now");
+                     auctionManager.buyNow(player, finalOldAuctionId, true); // Use finalOldAuctionId
+                     return;
+                }
+                double minIncrement = plugin.getConfigManager().getMinBidIncrementAmount();
+                double currentEffectiveBid = (auctionItem.getHighestBidderUUID() == null) ? auctionItem.getStartPrice() : auctionItem.getCurrentBid();
+                double requiredBid = (auctionItem.getHighestBidderUUID() == null) ? auctionItem.getStartPrice() : currentEffectiveBid + minIncrement;
+
+                if (auctionItem.getHighestBidderUUID() == null && finalBidAmount < auctionItem.getStartPrice()) {
+                     messageManager.sendMessage(player, "bid_too_low_initial", "%min_bid%", String.format("%,.2f", auctionItem.getStartPrice()), "%currency%", plugin.getConfigManager().getCurrencySymbol());
+                     return;
+                } else if (auctionItem.getHighestBidderUUID() != null && finalBidAmount < requiredBid) {
+                     messageManager.sendMessage(player, "bid_too_low_increment", "%min_bid%", String.format("%,.2f", requiredBid), "%currency%", plugin.getConfigManager().getCurrencySymbol(), "%increment%", String.format("%,.2f", minIncrement));
+                     return;
+                }
+                // If all validations pass
+                auctionManager.placeBid(player, auctionItem, finalBidAmount); // Use finalBidAmount
+            });
         } else if (plugin.getPlayerInputState().getOrDefault(playerId, AetherAuctions.PlayerInputState.NONE) != AetherAuctions.PlayerInputState.NONE) {
              // This part handles inputs for the old create auction GUI (duration, start price, buy now price)
             AetherAuctions.PlayerInputState state = plugin.getPlayerInputState().get(playerId);
@@ -132,7 +151,7 @@ public class PlayerChatListener implements Listener {
                 try {
                     switch (state) {
                         case AWAITING_DURATION:
-                            long durationMillis = parseDurationString(chatMessage); // Use local or shared helper
+                            long durationMillis = parseDurationString(chatMessage);
                             boolean isVip = player.hasPermission(plugin.getConfigManager().getVipPermission());
                             long maxPlayerDurationSeconds = isVip ? plugin.getConfigManager().getVipExtendedDurationSeconds() : plugin.getConfigManager().getMaxDurationSeconds();
 
@@ -140,7 +159,7 @@ public class PlayerChatListener implements Listener {
                                 guiManager.setAuctionDuration(playerId, durationMillis);
                                 messageManager.sendMessage(player, "duration_set_success", "%duration%", chatMessage);
                             } else {
-                                if(durationMillis <=0 && !chatMessage.equals("0")) messageManager.sendMessage(player, "error_invalid_duration_format", "%value%", chatMessage); // Use the new message key
+                                if(durationMillis <=0 && !chatMessage.equals("0")) messageManager.sendMessage(player, "error_invalid_duration_format", "%value%", chatMessage);
                                 else if (durationMillis < plugin.getConfigManager().getMinDurationSeconds() * 1000L) messageManager.sendMessage(player, "duration_too_short", "%duration%", formatDurationMillis(plugin.getConfigManager().getMinDurationSeconds() * 1000L));
                                 else messageManager.sendMessage(player, "duration_too_long", "%duration%", formatDurationMillis(maxPlayerDurationSeconds * 1000L));
                             }
@@ -150,7 +169,7 @@ public class PlayerChatListener implements Listener {
                         case AWAITING_START_PRICE:
                         case AWAITING_BUY_NOW_PRICE:
                             double price = Double.parseDouble(chatMessage.replace(",", "."));
-                            if (price < 0 && !(state == AetherAuctions.PlayerInputState.AWAITING_BUY_NOW_PRICE && (price == 0 || price == -1))) { // Allow 0 or -1 for buynow to remove it
+                            if (price < 0 && !(state == AetherAuctions.PlayerInputState.AWAITING_BUY_NOW_PRICE && (price == 0 || price == -1))) {
                                 messageManager.sendMessage(player, state == AetherAuctions.PlayerInputState.AWAITING_START_PRICE ? "error_invalid_bid_price" : "error_invalid_buyout_price", "%value%", chatMessage);
                                 guiManager.openCreateAuctionGui(player);
                                 break;
@@ -179,7 +198,6 @@ public class PlayerChatListener implements Listener {
                             }
                             guiManager.openCreateAuctionGui(player);
                             break;
-                        // Note: AWAITING_BID_AMOUNT is now handled by the isPlayerPendingBid block
                     }
                 } catch (NumberFormatException e) {
                     messageManager.sendMessage(player, "error_invalid_number_format", "%value%", chatMessage);
@@ -191,16 +209,14 @@ public class PlayerChatListener implements Listener {
                      e.printStackTrace();
                      messageManager.sendMessage(player, "internal_error");
                 } finally {
-                    if (state != AetherAuctions.PlayerInputState.NONE) { // Only reset if it was a handled state
-                         plugin.getPlayerInputState().remove(playerId); // Reset state only if it was one of these specific input states
+                    if (state != AetherAuctions.PlayerInputState.NONE) {
+                         plugin.getPlayerInputState().remove(playerId);
                     }
                 }
             });
         }
     }
 
-    // Helper method to parse duration strings like "1d", "2h30m", "3600s" into milliseconds
-    // This can be made more robust or moved to a utility class
     private long parseDurationString(String durationString) {
         if (durationString == null || durationString.trim().isEmpty()) return -1;
         durationString = durationString.trim().toLowerCase();
@@ -218,7 +234,7 @@ public class PlayerChatListener implements Listener {
                 case 's': totalMillis += value * 1000; break;
             }
         }
-        if (!found && durationString.matches("\\d+")) { // Only numbers, assume seconds and convert to millis
+        if (!found && durationString.matches("\\d+")) {
             try {
                 return Long.parseLong(durationString) * 1000;
             } catch (NumberFormatException e) { return -1;}
@@ -226,7 +242,6 @@ public class PlayerChatListener implements Listener {
         return found ? totalMillis : -1;
     }
 
-    // Simplified formatter for messages, could be expanded or use GUIManager's one
     private String formatDurationMillis(long millis) {
         if (millis < 0) return "N/A";
         long seconds = millis / 1000;

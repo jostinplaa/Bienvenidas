@@ -177,4 +177,13 @@ public class MessageManager {
         }
         return ChatColor.stripColor(input);
     }
+
+    public List<String> getRawStringList(String key) {
+        List<String> list = messagesConfig.getStringList(key);
+        if (list == null || list.isEmpty()) {
+            plugin.getLogger().warning("[MessageManager] Clave de lista de mensajes (raw) no encontrada o vacía: '" + key + "'. Devolviendo lista vacía.");
+            return new ArrayList<>();
+        }
+        return list;
+    }
 }

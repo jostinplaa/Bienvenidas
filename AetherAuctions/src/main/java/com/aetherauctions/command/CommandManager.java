@@ -6,7 +6,8 @@ import com.aetherauctions.auction.AuctionManager;
 import com.aetherauctions.auction.AuctionStatus; // Import AuctionStatus
 import com.aetherauctions.config.MessageManager; // Import MessageManager
 import com.aetherauctions.gui.GUIManager;
-import com.aetherauctions.gui.rework.NewGUIManager; // Import NewGUIManager
+// import com.aetherauctions.gui.rework.NewGUIManager; // NewGUIManager is being removed
+import org.bukkit.ChatColor; // Import ChatColor
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -25,15 +26,15 @@ public class CommandManager implements CommandExecutor, TabCompleter {
 
     private final AetherAuctions plugin;
     private final AuctionManager auctionManager;
-    private final GUIManager guiManager; // Old GUI Manager, might be phased out or used for other GUIs
-    private final NewGUIManager newGuiManager; // New GUI Manager
+    private final GUIManager guiManager; // Old GUI Manager
+    // private final NewGUIManager newGuiManager; // Field removed
     private final MessageManager messageManager; // Add MessageManager
 
     public CommandManager(AetherAuctions plugin, AuctionManager auctionManager, GUIManager guiManager) {
         this.plugin = plugin;
         this.auctionManager = auctionManager;
         this.guiManager = guiManager; // Keep for now
-        this.newGuiManager = plugin.getNewGuiManager(); // Initialize NewGUIManager
+        // this.newGuiManager = plugin.getNewGuiManager(); // Initialization removed
         this.messageManager = plugin.getMessageManager(); // Get MessageManager from plugin
     }
 
@@ -44,7 +45,8 @@ public class CommandManager implements CommandExecutor, TabCompleter {
                 sender.sendMessage(messageManager.getMessage("error_console_command_ingame_only"));
                 return true;
             }
-            newGuiManager.openNewMainAuctionGUI((Player) sender, 0); // Use NewGUIManager
+            // newGuiManager.openNewMainAuctionGUI((Player) sender, 0); // Temporarily commented out
+            ((Player) sender).sendMessage(ChatColor.YELLOW + "La GUI principal está temporalmente desactivada."); // Placeholder message
             return true;
         }
 
@@ -78,10 +80,11 @@ public class CommandManager implements CommandExecutor, TabCompleter {
                 if (testAuction == null) {
                     messageManager.sendMessage(player, "new_gui_debug_no_active_auctions_for_test");
                 } else {
-                    plugin.getLogger().info("[CommandManager DEBUG] AuctionItem encontrado: ID " + testAuction.getId() + ". Vendedor: " + testAuction.getSellerName());
-                    plugin.getLogger().info("[CommandManager DEBUG] Intentando llamar a newGuiManager.openAuctionDetailsGUI para jugador: " + player.getName() + ", Subasta ID: " + testAuction.getId());
-                    newGuiManager.openAuctionDetailsGUI(player, testAuction, 0); // Open with page 0 as default
-                    messageManager.sendMessage(player, "new_gui_debug_details_gui_opened", "%id%", String.valueOf(testAuction.getId()));
+                    // plugin.getLogger().info("[CommandManager DEBUG] AuctionItem encontrado: ID " + testAuction.getId() + ". Vendedor: " + testAuction.getSellerName()); // Log related to NewGUIManager removed
+                    // plugin.getLogger().info("[CommandManager DEBUG] Intentando llamar a newGuiManager.openAuctionDetailsGUI para jugador: " + player.getName() + ", Subasta ID: " + testAuction.getId()); // Log related to NewGUIManager removed
+                    // newGuiManager.openAuctionDetailsGUI(player, testAuction, 0); // Call to NewGUIManager removed
+                    player.sendMessage(ChatColor.RED + "La funcionalidad de guidetalles está temporalmente desactivada debido a la eliminación de NewGUIManager.");
+                    // messageManager.sendMessage(player, "new_gui_debug_details_gui_opened", "%id%", String.valueOf(testAuction.getId()));
                 }
             }
             return true;
