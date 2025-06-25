@@ -7,19 +7,24 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
+import java.nio.charset.StandardCharsets; // For UTF-8
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.logging.Level;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class MessageManager {
-
     private final AetherAuctions plugin;
-    private FileConfiguration messagesConfig;
-    private String prefix; // Store the prefix separately for convenience
+    private FileConfiguration messagesConfig = null;
+    private File messagesFile = null;
+    private String prefix = "";
+
+    private static final Pattern HEX_PATTERN = Pattern.compile("&#([A-Fa-f0-9]{6})");
 
     public MessageManager(AetherAuctions plugin) {
         this.plugin = plugin;
@@ -27,163 +32,113 @@ public class MessageManager {
     }
 
     public void loadMessages() {
-        File messagesFile = new File(plugin.getDataFolder(), "messages.yml");
+        if (messagesFile == null) {
+            messagesFile = new File(plugin.getDataFolder(), "messages.yml");
+        }
         if (!messagesFile.exists()) {
-            plugin.saveResource("messages.yml", false); // Save default messages.yml from JAR
+            plugin.saveResource("messages.yml", false);
         }
         messagesConfig = YamlConfiguration.loadConfiguration(messagesFile);
 
-        // Attempt to load default messages from JAR if the file is somehow empty or new keys are added
-        try (InputStream defaultConfigStream = plugin.getResource("messages.yml")) {
+        try (InputStream defaultConfigStream = plugin.getResource("messages.yml")){
             if (defaultConfigStream != null) {
-                YamlConfiguration defaultConfig = YamlConfiguration.loadConfiguration(new InputStreamReader(defaultConfigStream, StandardCharsets.UTF_8));
+                 YamlConfiguration defaultConfig = YamlConfiguration.loadConfiguration(new InputStreamReader(defaultConfigStream, StandardCharsets.UTF_8));
                 messagesConfig.setDefaults(defaultConfig);
-                messagesConfig.options().copyDefaults(true); // Copy defaults for any missing keys
-                 // plugin.saveResource("messages.yml", true); // Could overwrite user changes if used carelessly
+                messagesConfig.options().copyDefaults(true);
+                messagesConfig.save(messagesFile);
             }
-        } catch (Exception e) {
-            plugin.getLogger().log(Level.SEVERE, "Could not load default messages from JAR", e);
+        } catch (IOException e) {
+            plugin.getLogger().log(Level.SEVERE, "No se pudo guardar messages.yml con los valores por defecto.", e);
         }
 
-        // Load prefix from messages.yml, fallback to config.yml's prefix or a hardcoded one
-        this.prefix = messagesConfig.getString("prefix", plugin.getConfigManager().getPluginPrefix());
-        if (this.prefix == null || this.prefix.isEmpty()){
-            this.prefix = "&e&lAetherAuctions &8» "; // Ultimate fallback
+        if (plugin.getConfigManager() != null) {
+             this.prefix = plugin.getConfigManager().getPluginPrefix();
+        } else {
+            this.prefix = ChatColor.translateAlternateColorCodes('&', "&6[&eAetherAuctions&6] &r");
+            plugin.getLogger().warning("ConfigManager no estaba disponible al cargar prefijo en MessageManager. Usando prefijo por defecto.");
         }
-        this.prefix = ChatColor.translateAlternateColorCodes('&', this.prefix); // Translate prefix once
-
-        plugin.getLogger().info("Mensajes cargados.");
+        plugin.getLogger().info("Mensajes cargados/recargados.");
     }
 
-    public void reloadMessages() {
-        loadMessages();
+    private String translateHexColorCodes(String message) {
+        Matcher matcher = HEX_PATTERN.matcher(message);
+        StringBuffer buffer = new StringBuffer(message.length() + 4 * 8);
+        while (matcher.find()) {
+            String group = matcher.group(1);
+            matcher.appendReplacement(buffer, ChatColor.COLOR_CHAR + "x"
+                    + ChatColor.COLOR_CHAR + group.charAt(0) + ChatColor.COLOR_CHAR + group.charAt(1)
+                    + ChatColor.COLOR_CHAR + group.charAt(2) + ChatColor.COLOR_CHAR + group.charAt(3)
+                    + ChatColor.COLOR_CHAR + group.charAt(4) + ChatColor.COLOR_CHAR + group.charAt(5)
+            );
+        }
+        return matcher.appendTail(buffer).toString();
     }
 
-    public String getMessage(String key, Map<String, String> placeholders) {
-        String rawMessage = messagesConfig.getString(key);
-        String coloredMessage;
-
+    private String formatMessage(String rawMessage, String... placeholderPairs) {
         if (rawMessage == null) {
-            plugin.getLogger().warning("[MessageManager] Clave de mensaje no encontrada en messages.yml: '" + key + "'. Usando valor por defecto.");
-            // Return a default error message that is visible in-game
-            return ChatColor.RED + "Error: Msg key missing (" + key + ")";
+            return null;
         }
-
-        coloredMessage = ChatColor.translateAlternateColorCodes('&', rawMessage);
-
-        if (placeholders != null) {
-            for (Map.Entry<String, String> entry : placeholders.entrySet()) {
-                coloredMessage = coloredMessage.replace(entry.getKey(), String.valueOf(entry.getValue())); // Ensure value is string, and use coloredMessage
-            }
-        }
-        return coloredMessage;
-    }
-
-    // Convenience method for simple placeholder pairs
-    public String getMessage(String key, String... placeholderPairs) {
-        // plugin.getLogger().info("[MessageManager] getMessage for key: '" + key + "', pairs: " + Arrays.toString(placeholderPairs)); // Logging - Commented out
-        String rawMessage = messagesConfig.getString(key);
-
-        if (rawMessage == null) {
-            plugin.getLogger().warning("[MessageManager] Clave de mensaje no encontrada en messages.yml: '" + key + "'. Usando valor por defecto.");
-            return ChatColor.RED + "Error: Msg key missing (" + key + ")";
-        }
+        String message = translateHexColorCodes(ChatColor.translateAlternateColorCodes('&', rawMessage));
 
         if (placeholderPairs.length % 2 != 0) {
-            plugin.getLogger().severe("[MessageManager] Error de placeholders para la clave '" + key + "'. Se proporcionó un número impar de argumentos para los placeholders. Placeholders: " + Arrays.toString(placeholderPairs));
-            return ChatColor.translateAlternateColorCodes('&', rawMessage); // Return raw message (colored) without placeholder replacement
+            plugin.getLogger().severe("[MessageManager] Error de placeholders para el mensaje: '" + rawMessage +
+                                      "'. Se proporcionó un número impar de argumentos. Placeholders: " + Arrays.toString(placeholderPairs));
+            return message;
         }
 
-        String message = rawMessage; // Work with the raw message for replacements
-        Map<String, String> placeholdersMap = new HashMap<>();
         for (int i = 0; i < placeholderPairs.length; i += 2) {
-            placeholdersMap.put(placeholderPairs[i], placeholderPairs[i + 1]);
-        }
-
-        if (!placeholdersMap.isEmpty()) {
-            for (Map.Entry<String, String> entry : placeholdersMap.entrySet()) {
-                message = message.replace(entry.getKey(), String.valueOf(entry.getValue()));
+            if (placeholderPairs[i] == null || placeholderPairs[i+1] == null) {
+                 plugin.getLogger().warning("[MessageManager] Par de placeholder nulo detectado para mensaje: '" + rawMessage + "'. Placeholder: " + placeholderPairs[i]);
+                 continue;
             }
-        }
-        return ChatColor.translateAlternateColorCodes('&', message);
-    }
-
-
-    public void sendMessage(CommandSender sender, String key, Map<String, String> placeholders) {
-        // This method will now benefit from the improved getMessage(key, placeholdersMap)
-        String messageWithAppliedPlaceholders = getMessage(key, placeholders);
-
-        // Check if the original message (before placeholder replacement but after potential error message from getMessage)
-        // is an error message from getMessage itself. If so, don't add prefix.
-        if (messageWithAppliedPlaceholders.startsWith(ChatColor.RED + "Error: Msg key missing")) {
-            sender.sendMessage(messageWithAppliedPlaceholders);
-            return;
-        }
-
-        // Check if the message *already* contains a prefix similar to the global one, or if it's a "no prefix" message
-        // This is a simple check; more sophisticated checks might be needed if message formats vary greatly.
-        String rawMessageFromConfig = messagesConfig.getString(key, ""); // Get original config string for prefix check
-        boolean messageHasOwnPrefix = ChatColor.stripColor(rawMessageFromConfig).trim().startsWith(ChatColor.stripColor(this.prefix).trim());
-
-        if (!messageHasOwnPrefix && !key.startsWith("bare.") && !key.endsWith("_bare")) { // Convention for no-prefix messages
-            sender.sendMessage(this.prefix + messageWithAppliedPlaceholders);
-        } else {
-            sender.sendMessage(messageWithAppliedPlaceholders);
-        }
-    }
-
-    // Convenience method for simple placeholder pairs
-    public void sendMessage(CommandSender sender, String key, String... placeholderPairs) {
-        // This method will now benefit from the improved getMessage(key, placeholderPairs...)
-        String messageWithAppliedPlaceholders = getMessage(key, placeholderPairs);
-
-        // Check if the original message (before placeholder replacement but after potential error message from getMessage)
-        // is an error message from getMessage itself. If so, don't add prefix.
-         if (messageWithAppliedPlaceholders.startsWith(ChatColor.RED + "Error: Msg key missing")) {
-            sender.sendMessage(messageWithAppliedPlaceholders);
-            return;
-        }
-
-        String rawMessageFromConfig = messagesConfig.getString(key, ""); // Get original config string for prefix check
-        boolean messageHasOwnPrefix = ChatColor.stripColor(rawMessageFromConfig).trim().startsWith(ChatColor.stripColor(this.prefix).trim());
-
-        if (!messageHasOwnPrefix && !key.startsWith("bare.") && !key.endsWith("_bare")) { // Convention for no-prefix messages
-            sender.sendMessage(this.prefix + messageWithAppliedPlaceholders);
-        } else {
-            sender.sendMessage(messageWithAppliedPlaceholders);
-        }
-    }
-
-    public String getRaw(String key) {
-        String message = messagesConfig.getString(key);
-        if (message == null) {
-            plugin.getLogger().warning("[MessageManager] Clave de mensaje (raw) no encontrada: '" + key + "'. Devolviendo la clave.");
-            return key; // Return the key itself if not found, making it obvious in GUIs/code
+            message = message.replace(placeholderPairs[i], placeholderPairs[i + 1]);
         }
         return message;
     }
 
-    public String getPrefixedRaw(String key) {
-        return this.prefix + ChatColor.translateAlternateColorCodes('&', getRaw(key));
-    }
-
-    public String getPrefix() {
-        return prefix;
-    }
-
-    public String stripColors(String input) {
-        if (input == null) {
-            return null;
+    public String getMessage(String key, String... placeholderPairs) {
+        String rawMessage = messagesConfig.getString(key);
+        if (rawMessage == null) {
+            plugin.getLogger().warning("[MessageManager] Clave de mensaje no encontrada en messages.yml: '" + key + "'.");
+            String errorFormat = plugin.getConfigManager().getMessagesMissingKeyFormat(); // Get format from ConfigManager
+            return ChatColor.translateAlternateColorCodes('&', errorFormat.replace("%key%", key));
         }
-        return ChatColor.stripColor(input);
+        return formatMessage(rawMessage, placeholderPairs);
     }
 
-    public List<String> getRawStringList(String key) {
-        List<String> list = messagesConfig.getStringList(key);
-        if (list == null || list.isEmpty()) {
-            plugin.getLogger().warning("[MessageManager] Clave de lista de mensajes (raw) no encontrada o vacía: '" + key + "'. Devolviendo lista vacía.");
-            return new ArrayList<>();
+    public String getPrefixedMessage(String key, String... placeholderPairs) {
+        String message = getMessage(key, placeholderPairs);
+        // Check if the message is the "missing key" error message
+        String missingKeyErrorFormat = ChatColor.translateAlternateColorCodes('&', plugin.getConfigManager().getMessagesMissingKeyFormat().replace("%key%", key));
+        if (message.equals(missingKeyErrorFormat)) {
+            return message; // Don't add prefix to "key missing" errors
         }
-        return list;
+        return this.prefix + message;
+    }
+
+    public void sendMessage(CommandSender sender, String key, String... placeholderPairs) {
+        String message = getPrefixedMessage(key, placeholderPairs);
+        sender.sendMessage(message);
+    }
+
+    public List<String> getStringList(String key, String... placeholderPairs) {
+        List<String> rawList = messagesConfig.getStringList(key);
+        if (rawList == null || rawList.isEmpty()) {
+            plugin.getLogger().warning("[MessageManager] Lista de mensajes no encontrada o vacía para la clave: '" + key + "'.");
+            List<String> errorList = new ArrayList<>();
+            String errorFormat = plugin.getConfigManager().getMessagesMissingKeyFormat();
+            errorList.add(ChatColor.translateAlternateColorCodes('&', errorFormat.replace("%key%", "lista:" + key)));
+            return errorList;
+        }
+
+        List<String> processedList = new ArrayList<>();
+        for (String line : rawList) {
+            processedList.add(formatMessage(line, placeholderPairs));
+        }
+        return processedList;
+    }
+
+    public String getRawMessage(String key, String... placeholderPairs) {
+         return getMessage(key, placeholderPairs);
     }
 }

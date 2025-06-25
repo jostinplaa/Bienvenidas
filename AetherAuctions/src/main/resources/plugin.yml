@@ -1,22 +1,62 @@
 name: AetherAuctions
 version: 1.0.0
-main: com.aetherauctions.AetherAuctions # Clase principal del plugin
-api-version: 1.18
-authors: [YourName] # Se reemplazará o se puede dejar genérico
-description: Sistema de subastas por GUI para servidores de Minecraft.
-depend: [Vault] # Dependencia de Vault
+main: com.aetherauctions.AetherAuctions
+api-version: 1.19
+authors: [AetherAuctionsDev]
+description: Un plugin de subastas avanzado para servidores de Minecraft.
+website: # Tu sitio web si tienes uno
+
+depend: [Vault] # Dependencia de Vault para la economía
+
 commands:
-  subasta:
-    description: Comando principal de AetherAuctions.
-    usage: /<command> [subcomando]
-    aliases: [auc, subastas, auction]
+  subasta: # Definición básica del comando principal
+    description: Accede al sistema de subastas AetherAuctions.
+    usage: /<command> [subcomando] [argumentos]
+    aliases: [auc, auction, ah, sb] # Añadido sb
+
 permissions:
-  aetherauctions.admin:
-    description: Permite acceso a comandos de administración.
-    default: op
-  aetherauctions.vip:
-    description: Permisos VIP para AetherAuctions.
-    default: false
   aetherauctions.user:
-    description: Permisos básicos para usar las subastas.
+    description: Permisos básicos para usar las subastas (abrir GUI principal, ver).
     default: true
+  aetherauctions.command.ayuda:
+    description: Permite usar /subasta ayuda.
+    default: true
+  aetherauctions.command.crear:
+    description: Permite crear subastas usando /subasta crear.
+    default: true
+  aetherauctions.command.cancelar:
+    description: Permite cancelar las propias subastas.
+    default: true
+  aetherauctions.command.mis:
+    description: Permite ver las propias subastas.
+    default: true
+  aetherauctions.command.historial:
+    description: Permite ver el historial de subastas.
+    default: true
+  aetherauctions.admin: # Permiso paraguas para todos los comandos de admin
+    description: Permite acceso a todos los comandos de administración de AetherAuctions.
+    default: op
+    children:
+      aetherauctions.admin.reload: true
+      aetherauctions.admin.ver: true
+      aetherauctions.admin.borrar: true
+      aetherauctions.admin.cancel: true # Para cancelar subastas de otros
+  aetherauctions.admin.reload:
+    description: Permite usar /subasta admin reload.
+    default: op
+  aetherauctions.admin.ver:
+    description: Permite usar /subasta admin ver.
+    default: op
+  aetherauctions.admin.borrar:
+    description: Permite usar /subasta admin borrar.
+    default: op
+  aetherauctions.admin.cancel:
+    description: Permite cancelar cualquier subasta (no solo las propias).
+    default: op
+  # Permisos VIP (si se implementan configuraciones VIP)
+  # aetherauctions.vip.maxauctions_tier1:
+  #   description: Permite un límite mayor de subastas (Tier 1).
+  #   default: false
+  # aetherauctions.vip.no_creation_fee:
+  #   description: Permite crear subastas sin tarifa.
+  #   default: false

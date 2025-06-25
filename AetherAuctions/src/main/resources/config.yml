@@ -1,49 +1,58 @@
 # AetherAuctions Configuration File
 
+# Prefijo general del plugin usado en mensajes (si MessageManager lo usa)
+plugin_prefix: "&6[&eAetherAuctions&6] &r"
+
 general:
-  plugin_prefix: "&e&lAetherAuctions &8» "
-  currency_symbol: "$"
-  date_format: "dd/MM/yyyy HH:mm"
-  max_active_auctions_per_player: 5
-  log_level: INFO
+  currency_symbol: "$" # Símbolo de la moneda
+
+database:
+  # Tipo de base de datos. Por ahora solo soporta "sqlite".
+  # Futuras expansiones podrían incluir "mysql".
+  type: sqlite
+  # Nombre del archivo para la base de datos SQLite (relativo a la carpeta del plugin)
+  # No es necesario si solo se usa un nombre fijo como "auctions.db" hardcodeado en AuctionStorage.
+  # sqlite_file_name: "auctions.db" # Opcional, si AuctionStorage lo usa
 
 auction:
-  default_duration_seconds: 86400 # Fallback if available_durations is empty or unparseable initially
-  min_duration_seconds: 300    # 5 minutes (updated to match new list's minimum)
-  max_duration_seconds: 604800  # 7 days (updated to match new list's maximum)
-  # Define available durations for auctions.
-  # Format: <number><unit>, where unit can be 'm' (minutes), 'h' (hours), 'd' (days).
-  available_durations:
-    - "5m"
-    - "15m"
-    - "30m"
-    - "1h"
-    - "6h"
-    - "12h"
-    - "1d"
-    - "3d"
-    - "7d"
-  creation_fee:
-    enabled: true
-    amount: 100.0
-  commission_on_sale:
-    enabled: true
-    percentage: 5.0
-  min_bid_increment:
-    amount: 10.0
-  buy_now_allowed: true
-  max_start_price: 1000000.0
+  # Duración por defecto de una subasta en horas.
+  default_duration_hours: 24
+  # Máximo número de subastas activas que un jugador puede tener.
+  # Se pueden añadir overrides por permisos más adelante.
+  max_active_auctions_per_player: 5
+  # Incremento mínimo requerido para una nueva puja sobre la puja actual.
+  min_bid_increment: 10.0
+  # Permitir la opción de "Comprar Ahora" en las subastas.
+  allow_buy_now: true
+  # Porcentaje de comisión que se toma de una venta exitosa (0-100).
+  # Ejemplo: 5.0 para una comisión del 5%.
+  commission_fee_percentage: 5.0
+  # Tarifa fija para crear una subasta. Poner a 0 para desactivar.
+  creation_fee: 0.0 # Ejemplo: 100.0 para una tarifa de 100
+  # Intervalo en segundos para la tarea que revisa subastas expiradas.
+  expired_check_interval_seconds: 60
+  # Lista de materiales que no pueden ser subastados (blacklist).
+  # Usar nombres de Material de Bukkit: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Material.html
   item_blacklist:
     - "BEDROCK"
     - "COMMAND_BLOCK"
+    - "STRUCTURE_VOID"
+    - "BARRIER"
 
-vip:
-  permission: "aetherauctions.vip"
-  max_active_auctions: 15
-  extended_duration_seconds: 1209600 # 14 días (can be an option in available_durations too)
-  no_creation_fee: true
+gui:
+  # Material para los paneles decorativos en la GUI principal de subastas.
+  main_decorative_pane_material: "GRAY_STAINED_GLASS_PANE"
+  # Material para los paneles decorativos en la GUI de detalles de subasta.
+  details_decorative_pane_material: "BLACK_STAINED_GLASS_PANE"
+  # Número de subastas a mostrar por página en la GUI principal.
+  items_per_page: 36 # Debe ser un múltiplo de 9 menos las filas de botones, ej. 54-9=45, 36, 27...
 
-database:
-  type: "sqlite"
-  sqlite:
-    file_name: "aetherauctions.db"
+messages:
+  # Formato para cuando una clave no se encuentra en messages.yml
+  missing_key_format: "&cError: Clave '%key%' no encontrada."
+
+# Configuraciones VIP (ejemplo, se pueden expandir)
+# vip_settings:
+#   max_active_auctions: 10
+#   reduced_commission_percentage: 2.5
+#   no_creation_fee: true

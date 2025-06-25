@@ -1,55 +1,18 @@
 package com.aetherauctions.config;
 
 import com.aetherauctions.AetherAuctions;
+import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Player;
+import org.bukkit.ChatColor; // Import ChatColor
 
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.ArrayList; // Added for mutable list
+import java.util.Collections;
 
 public class ConfigManager {
-
     private final AetherAuctions plugin;
     private FileConfiguration config;
-
-    // Helper pattern for duration parsing
-    private static final Pattern DURATION_PATTERN = Pattern.compile("(\\d+)([smhd])");
-
-    // General
-    private String pluginPrefix;
-    private String currencySymbol;
-    private String dateFormat;
-    private int maxActiveAuctionsPerPlayer;
-    private String logLevel;
-
-    // Auction
-    private long defaultDurationSeconds;
-    private long minDurationSeconds;
-    private long maxDurationSeconds;
-    private List<Map<String, Object>> availableDurations; // Stores maps like {"label": "1 Hora", "seconds": 3600}
-    private boolean creationFeeEnabled;
-    private double creationFeeAmount;
-    private boolean commissionOnSaleEnabled;
-    private double commissionOnSalePercentage;
-    private double minBidIncrementAmount;
-    private boolean buyNowAllowed;
-    private double maxStartPrice;
-    private List<String> itemBlacklist;
-
-    // VIP
-    private String vipPermission;
-    private int vipMaxActiveAuctions;
-    private long vipExtendedDurationSeconds;
-    private boolean vipNoCreationFee;
-    private boolean vipExclusiveFilters; // Added
-
-    // Database
-    private String databaseType;
-    private String sqliteFileName;
 
     public ConfigManager(AetherAuctions plugin) {
         this.plugin = plugin;
@@ -57,133 +20,86 @@ public class ConfigManager {
     }
 
     public void loadConfig() {
-        plugin.saveDefaultConfig(); // Creates config.yml if it doesn't exist
-        plugin.reloadConfig();      // Reloads the config from disk
-        config = plugin.getConfig(); // Get the reloaded config
-
-        // General
-        pluginPrefix = config.getString("general.plugin_prefix", "&e&lAetherAuctions &8» ");
-        currencySymbol = config.getString("general.currency_symbol", "$");
-        dateFormat = config.getString("general.date_format", "dd/MM/yyyy HH:mm");
-        maxActiveAuctionsPerPlayer = config.getInt("general.max_active_auctions_per_player", 5);
-        logLevel = config.getString("general.log_level", "INFO").toUpperCase();
-
-        // Auction
-        defaultDurationSeconds = config.getLong("auction.default_duration_seconds", 86400L);
-        minDurationSeconds = config.getLong("auction.min_duration_seconds", 3600L);
-        maxDurationSeconds = config.getLong("auction.max_duration_seconds", 604800L);
-
-        List<String> durationStrings = config.getStringList("auction.available_durations");
-        if (durationStrings == null || durationStrings.isEmpty()) {
-            plugin.getLogger().warning("auction.available_durations no encontrado o vacío en config.yml. Usando valores por defecto.");
-            this.availableDurations = new ArrayList<>(); // Ensure it's mutable for the default
-            this.availableDurations.add(new java.util.HashMap<>(Map.of("label", "1 Día", "seconds", 86400L)));
-        } else {
-            this.availableDurations = durationStrings.stream()
-                .map(this::parseDurationConfigEntry)
-                .filter(map -> map != null && map.containsKey("label") && map.containsKey("seconds"))
-                .collect(Collectors.toList());
-        }
-
-        if (this.availableDurations.isEmpty()) { // Fallback if all parsing fails
-            plugin.getLogger().warning("Todas las entradas de available_durations eran inválidas. Usando valor por defecto: 1 Día:86400");
-            this.availableDurations.add(new java.util.HashMap<>(Map.of("label", "1 Día", "seconds", 86400L)));
-        }
-
-        creationFeeEnabled = config.getBoolean("auction.creation_fee.enabled", true);
-        creationFeeAmount = config.getDouble("auction.creation_fee.amount", 100.0);
-        commissionOnSaleEnabled = config.getBoolean("auction.commission_on_sale.enabled", true);
-        commissionOnSalePercentage = config.getDouble("auction.commission_on_sale.percentage", 5.0);
-        minBidIncrementAmount = config.getDouble("auction.min_bid_increment.amount", 10.0);
-        buyNowAllowed = config.getBoolean("auction.buy_now_allowed", true);
-        maxStartPrice = config.getDouble("auction.max_start_price", 1000000.0);
-        itemBlacklist = config.getStringList("auction.item_blacklist");
-
-        // VIP
-        vipPermission = config.getString("vip.permission", "aetherauctions.vip");
-        vipMaxActiveAuctions = config.getInt("vip.max_active_auctions", 15);
-        vipExtendedDurationSeconds = config.getLong("vip.extended_duration_seconds", 1209600L);
-        vipNoCreationFee = config.getBoolean("vip.no_creation_fee", true);
-        vipExclusiveFilters = config.getBoolean("vip.exclusive_filters", true); // Added, default true as per example
-
-        // Database
-        databaseType = config.getString("database.type", "sqlite");
-        sqliteFileName = config.getString("database.sqlite.file_name", "aetherauctions.db");
-
-        plugin.getLogger().info("Configuración cargada.");
+        plugin.saveDefaultConfig();
+        plugin.reloadConfig();
+        config = plugin.getConfig();
+        plugin.getLogger().info("Configuración cargada/recargada.");
     }
 
-    public void reloadConfig() {
-        loadConfig(); // plugin.reloadConfig() is called within loadConfig()
+    public String getPluginPrefix() {
+        return ChatColor.translateAlternateColorCodes('&', config.getString("plugin_prefix", "&6[&eAetherAuctions&6] &r"));
     }
 
-    // Getters
-    public String getPluginPrefix() { return pluginPrefix; }
-    public String getCurrencySymbol() { return currencySymbol; }
-    public String getDateFormat() { return dateFormat; }
-    public int getMaxActiveAuctionsPerPlayer() { return maxActiveAuctionsPerPlayer; }
-    public String getLogLevel() { return logLevel; }
+    public String getDatabaseType() {
+        return config.getString("database.type", "sqlite");
+    }
 
-    private Map<String, Object> parseDurationConfigEntry(String durationString) {
-        if (durationString == null || durationString.trim().isEmpty()) {
-            return null;
+    public String getCurrencySymbol() {
+        return config.getString("general.currency_symbol", "$");
+    }
+
+    public long getDefaultDurationHours() {
+        return config.getLong("auction.default_duration_hours", 24);
+    }
+
+    public int getMaxActiveAuctionsPerPlayer(Player player) {
+        // TODO: Implementar lógica de permisos para overrides VIP si se añade
+        // if (player.hasPermission("aetherauctions.vip.maxauctions_tier1")) return getVipMaxAuctionsTier1();
+        return config.getInt("auction.max_active_auctions_per_player", 5);
+    }
+
+    public double getMinBidIncrement() {
+        return config.getDouble("auction.min_bid_increment", 10.0);
+    }
+
+    public boolean isBuyNowAllowed() {
+        return config.getBoolean("auction.allow_buy_now", true);
+    }
+
+    public double getCommissionPercentage() {
+        double percentage = config.getDouble("auction.commission_fee_percentage", 5.0);
+        if (percentage < 0) return 0.0;
+        if (percentage > 100) return 100.0;
+        return percentage;
+    }
+
+    public double getAuctionCreationFee(Player player) {
+        // TODO: Implementar lógica de permisos para overrides VIP (ej. sin tarifa)
+        // if (player.hasPermission("aetherauctions.vip.no_creation_fee")) return 0.0;
+        return config.getDouble("auction.creation_fee", 0.0);
+    }
+
+    public long getExpirationCheckIntervalSeconds() {
+        return config.getLong("auction.expired_check_interval_seconds", 60);
+    }
+
+    public List<Material> getItemBlacklist() {
+        List<String> materialNames = config.getStringList("auction.item_blacklist");
+        if (materialNames == null || materialNames.isEmpty()) {
+            return Collections.emptyList();
         }
-        Matcher matcher = DURATION_PATTERN.matcher(durationString.trim().toLowerCase());
-        if (matcher.matches()) {
-            try {
-                long value = Long.parseLong(matcher.group(1));
-                char unit = matcher.group(2).charAt(0);
-                long seconds;
-                switch (unit) {
-                    case 's':
-                        seconds = value;
-                        break;
-                    case 'm':
-                        seconds = value * 60;
-                        break;
-                    case 'h':
-                        seconds = value * 3600;
-                        break;
-                    case 'd':
-                        seconds = value * 86400;
-                        break;
-                    default:
-                        plugin.getLogger().warning("Unidad de duración desconocida '" + unit + "' en la entrada: " + durationString);
+        return materialNames.stream()
+                .map(name -> {
+                    try {
+                        return Material.valueOf(name.toUpperCase());
+                    } catch (IllegalArgumentException e) {
+                        plugin.getLogger().warning("Material inválido en item_blacklist: '" + name + "'. Será ignorado.");
                         return null;
-                }
-                // Using the original string as label for simplicity, can be enhanced
-                return new java.util.HashMap<>(Map.of("label", durationString, "seconds", seconds));
-            } catch (NumberFormatException e) {
-                plugin.getLogger().warning("Número inválido en la entrada de duración: " + durationString);
-                return null;
-            }
-        } else {
-            plugin.getLogger().warning("Formato de duración inválido en la entrada: " + durationString + ". Use formato como '5m', '1h', '3d'.");
-            return null;
-        }
+                    }
+                })
+                .filter(material -> material != null)
+                .collect(Collectors.toList());
     }
 
-    public long getDefaultDurationSeconds() { return defaultDurationSeconds; }
-    public long getMinDurationSeconds() { return minDurationSeconds; }
-    public long getMaxDurationSeconds() { return maxDurationSeconds; }
-    public List<Map<String, Object>> getAvailableDurations() { return Collections.unmodifiableList(availableDurations); }
-    public boolean isCreationFeeEnabled() { return creationFeeEnabled; }
-    public double getCreationFeeAmount() { return creationFeeAmount; }
-    public boolean isCommissionOnSaleEnabled() { return commissionOnSaleEnabled; }
-    public double getCommissionOnSalePercentage() { return commissionOnSalePercentage; }
-    public double getMinBidIncrementAmount() { return minBidIncrementAmount; }
-    public boolean isBuyNowAllowed() { return buyNowAllowed; }
-    public double getMaxStartPrice() { return maxStartPrice; }
-    public List<String> getItemBlacklist() { return Collections.unmodifiableList(itemBlacklist); }
-
-    public String getVipPermission() { return vipPermission; }
-    public int getVipMaxActiveAuctions() { return vipMaxActiveAuctions; }
-    public long getVipExtendedDurationSeconds() { return vipExtendedDurationSeconds; }
-    public boolean isVipNoCreationFee() { return vipNoCreationFee; }
-    public boolean isVipExclusiveFilters() { return vipExclusiveFilters; } // Added
-
-    public String getDatabaseType() { return databaseType; }
-    public String getSqliteFileName() { return sqliteFileName; }
+    public Material getMainDecorativePaneMaterial() {
+        String materialName = config.getString("gui.main_decorative_pane_material", "GRAY_STAINED_GLASS_PANE");
+        try {
+            return Material.valueOf(materialName.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            plugin.getLogger().warning("Material inválido para 'gui.main_decorative_pane_material': " + materialName + ". Usando GRAY_STAINED_GLASS_PANE.");
+            return Material.GRAY_STAINED_GLASS_PANE;
+        }
+    }
 
     public Material getDetailsDecorativePaneMaterial() {
         String materialName = config.getString("gui.details_decorative_pane_material", "BLACK_STAINED_GLASS_PANE");
@@ -193,5 +109,13 @@ public class ConfigManager {
             plugin.getLogger().warning("Material inválido para 'gui.details_decorative_pane_material': " + materialName + ". Usando BLACK_STAINED_GLASS_PANE.");
             return Material.BLACK_STAINED_GLASS_PANE;
         }
+    }
+
+    public int getGuiItemsPerPage() {
+        return config.getInt("gui.items_per_page", 36);
+    }
+
+    public String getMessagesMissingKeyFormat() {
+        return config.getString("messages.missing_key_format", "&cError: Clave '%key%' no encontrada.");
     }
 }

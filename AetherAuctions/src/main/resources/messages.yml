@@ -1,197 +1,197 @@
-# Mensajes de AetherAuctions (Todos soportan códigos de color con &)
-prefix: "&e&lAetherAuctions &8» "
+# AetherAuctions Messages File
+# Soporta códigos de color con '&' y placeholders como %placeholder%.
+# El prefijo se aplica automáticamente desde config.yml (a menos que el mensaje sea un error de carga de clave).
 
-# Comandos Generales
-reload_success: "&aConfiguración recargada exitosamente."
-player_only_command: "&cEste comando solo puede ser usado por jugadores."
-no_permission: "&cNo tienes permiso para ejecutar este comando."
-invalid_command_usage: "&c¡Uso incorrecto! Prueba: %usage%"
-invalid_auction_id: "&cEl ID de subasta '%id%' no es válido o no existe."
-auction_not_found: "&cNo se encontró ninguna subasta con ese ID."
-auction_id_must_be_number: "&cEl ID de la subasta debe ser un número."
-internal_error: "&cOcurrió un error interno. Por favor, contacta a un administrador."
+# Mensajes Generales
+no_permission: "&cNo tienes permiso para hacer esto."
+player_only_command: "&cEste comando solo puede ser ejecutado por un jugador."
+unknown_command: "&cComando desconocido. Usa /subasta ayuda para ver los comandos disponibles."
+reload_success: "&aAetherAuctions ha sido recargado exitosamente."
+internal_error: "&cHa ocurrido un error interno. Por favor, contacta a un administrador."
 
-# Formato de Nombre de Ítem por Defecto (Usado en GUIs)
-item_default_name_format: "&r%item_name%" # %item_name% será el nombre original del item
+# Sugerencia de Comandos
+command_suggestion_prefix: "&7¿Quizás quisiste decir: "
+command_suggestion_suffix: "&7?"
 
-# --- Mensajes para la Nueva GUI Principal (Rework) ---
-new_main_gui_title_prefix: "&1Subastas Activas" # Usado como base para el título de la GUI Principal (se añade Pág. X/Y)
+# Errores de Base de Datos
+database_error_general: "&cError de base de datos. Revisa la consola para más detalles."
+auction_not_loaded_error: "&cNo se pudo cargar la información de la subasta seleccionada."
 
-# Lore para ítems en la Nueva GUI Principal
-new_gui_main_item_lore_seller: "&7Vendedor: &6%seller%"
-new_gui_main_item_lore_current_bid: "&7Puja Actual: &e%price% %currency%"
-new_gui_main_item_lore_buy_now: "&7Compra Directa: &a%price% %currency%"
-new_gui_main_item_lore_time_remaining: "&7Tiempo: &c%time%"
-new_gui_main_item_lore_id: "&8ID: #%id%"
-new_gui_main_item_lore_instruction_details: "&bClic Derecho: &fVer Detalles"
+# Creación de Subasta (AuctionManager)
+auction_create_error_no_item: "&cDebes tener un ítem en la mano para subastar o el ítem es inválido."
+auction_create_error_invalid_start_price: "&cEl precio inicial debe ser un número positivo."
+auction_create_error_buy_now_too_low: "&cEl precio de Compra Directa debe ser mayor que el precio inicial."
+auction_create_error_invalid_duration: "&cLa duración debe ser un número positivo de horas/segundos."
+auction_create_error_max_auctions_reached: "&cHas alcanzado tu límite de %limit% subastas activas."
+auction_create_error_item_blacklisted: "&cEl ítem %item_name% está en la lista negra y no puede ser subastado."
+auction_create_error_insufficient_funds_fee: "&cNo tienes suficiente dinero para pagar la tarifa de creación de %fee%."
+auction_create_error_fee_charge_failed: "&cNo se pudo cobrar la tarifa de creación. Inténtalo de nuevo."
+auction_create_fee_charged: "&eSe te ha cobrado %fee% por crear la subasta."
+auction_create_success: "&a¡Subasta #%id% creada exitosamente!"
+auction_create_error_database: "&cError al guardar la subasta en la base de datos."
 
-# Botones Comunes y Elementos Decorativos de la Nueva GUI
-button_close_gui: "&cCerrar"
-button_previous_page: "&aPágina Anterior"
-button_next_page: "&aPágina Siguiente"
-new_gui_decorative_pane_name: "&r " # Nombre vacío para paneles de vidrio decorativos
+# Pujas (AuctionManager)
+auction_bid_error_not_active: "&cEsta subasta ya no está activa o no existe."
+auction_bid_error_own_auction: "&cNo puedes pujar en tu propia subasta."
+auction_bid_error_too_low: "&cTu puja es demasiado baja. La puja mínima es %amount%."
+auction_bid_error_insufficient_funds: "&cNo tienes suficiente dinero para realizar esa puja."
+auction_bid_triggers_buy_now: "&eTu puja iguala o supera el precio de Compra Directa. Se procesará como una compra."
+auction_bid_error_payment_failed: "&cError al procesar el pago de tu puja."
+auction_outbid_notification: "&e¡Has sido superado en la subasta #%auction_id%!"
+auction_bid_success: "&aHas pujado %amount% exitosamente en la subasta."
+auction_new_bid_on_your_item: "&b¡%bidder% ha pujado %amount% en tu subasta %item_name% (#%auction_id%)!"
+auction_bid_error_database: "&cError al guardar tu puja en la base de datos."
 
-# --- Mensajes para la Nueva GUI de Detalles (Rework) ---
-auction_details_gui_title: "&1Detalles de la Subasta"
+# Compra Directa (AuctionManager)
+auction_buy_now_error_not_available: "&cEste ítem no está disponible para Compra Directa o la subasta ha finalizado."
+auction_buy_now_error_own_auction: "&cNo puedes comprar tu propia subasta."
+auction_buy_now_error_insufficient_funds: "&cNo tienes suficiente dinero para comprar esto ahora."
+auction_buy_now_error_payment_failed: "&cError al procesar el pago de la Compra Directa."
+auction_buy_now_inventory_full: "&cTu inventario está lleno. La compra no pudo completarse. (TODO: Sistema de Reclamar)"
+auction_buy_now_success: "&a¡Has comprado el ítem exitosamente!"
+auction_your_item_sold_buy_now: "&a¡Tu subasta (%item_name% #%auction_id%) fue comprada por %buyer% por %price%!"
+auction_bought_out_refund: "&eLa subasta #%auction_id% en la que pujaste fue comprada directamente. Tu puja ha sido devuelta."
+auction_buy_now_error_database: "&cError al procesar la Compra Directa en la base de datos."
 
-# Lore para el ítem central en la Nueva GUI de Detalles (reutiliza claves existentes donde sea posible)
-# details_auction_id, details_seller, etc., son usados para construir el lore del item central.
-details_auction_id: "&7ID: &b%id%"
-details_seller: "&7Vendedor: &6%seller%" # Changed to %seller%
-details_current_bid: "&7Puja Actual: &e%price% %currency%"
-details_buyout_price: "&7Compra Directa: &a%price% %currency%"
-item_lore_buy_now_not_available: "&7Compra Directa: &cNo disponible" # Reutilizado
-details_time_remaining: "&7Tiempo: &c%time%"
+# Finalización de Subasta (AuctionManager)
+auction_won_inventory_full: "&c¡Ganaste la subasta por %item_name%, pero tu inventario está lleno! (TODO: Sistema de Reclamar)"
+auction_won_item_received: "&a¡Ganaste la subasta por %item_name%! El ítem ha sido añadido a tu inventario."
+auction_your_item_sold_bid: "&a¡Tu subasta (%item_name% #%auction_id%) fue vendida a %winner% por %price%!"
+auction_expired_inventory_full: "&eTu subasta por %item_name% expiró y tu inventario está lleno. (TODO: Sistema de Reclamar)"
+auction_expired_item_returned: "&eTu subasta por %item_name% expiró sin pujas. El ítem ha sido devuelto a tu inventario."
 
-# Botones en la Nueva GUI de Detalles
-button_bid: "&aPujar" # Botón estándar de puja
-new_gui_button_buy_now_name: "&6Comprar Ahora" # Botón específico para la nueva GUI de detalles
-new_gui_button_back_name: "&cVolver Atrás"
+# Cancelación de Subasta (AuctionManager)
+auction_cancel_error_not_active: "&cEsta subasta no puede ser cancelada (ya finalizó o no existe)."
+auction_cancel_error_no_permission: "&cNo tienes permiso para cancelar esta subasta."
+auction_cancelled_inventory_full: "&eSubasta cancelada (%item_name%), pero tu inventario está lleno. (TODO: Sistema de Reclamar)"
+auction_cancelled_item_returned_self: "&aHas cancelado tu subasta por %item_name%. El ítem ha sido devuelto."
+auction_cancelled_item_returned_by_admin: "&eTu subasta por %item_name% fue cancelada por el admin %admin%. El ítem ha sido devuelto."
+auction_cancelled_bid_refunded: "&eLa subasta #%auction_id% en la que pujaste fue cancelada. Tu puja ha sido devuelta."
+auction_cancelled_admin_success: "&aSubasta #%id% cancelada exitosamente por un administrador."
+auction_cancel_error_database: "&cError al cancelar la subasta en la base de datos."
 
-# --- Mensajes para Interacciones (Listeners) de la Nueva GUI ---
-new_gui_chat_prompt_bid_amount: "&eEscribe la cantidad de tu puja en el chat:"
-auction_ended_info_closed: "&eLa subasta que estabas viendo ha finalizado y ya no está disponible."
-error_auction_not_buyable_details_gui: "&cEsta subasta ya no está disponible para compra directa o ha finalizado."
+# GUI Principal (MainAuctionGUI - ahora NewMainAuctionGUI)
+main_gui_title_prefix: "&1Subastas Activas"
+main_gui_item_name_format: "&r%item_name%"
+main_gui_lore_seller: "&7Vendedor: &6%seller%"
+main_gui_lore_price: "&7Precio: &e%price% %currency%" # Genérico, puede ser puja actual o precio inicial
+main_gui_lore_buy_now: "&7Compra Dir.: &a%buy_now_price% %currency%"
+main_gui_lore_buy_now_not_available: "&7Compra Dir.: &cNo disponible"
+main_gui_lore_time_remaining: "&7Tiempo: &c%time%"
+main_gui_lore_bids: "&7Pujas: &b%bid_count%"
+main_gui_lore_no_bids: "&7Pujas: &bNinguna"
+main_gui_lore_id: "&8ID: #%id%"
+main_gui_lore_instruction_details: "&bClic para ver detalles"
+# Botones GUI Principal
+main_gui_button_close: "&cCerrar"
+main_gui_button_next_page: "&aPágina Siguiente ->"
+main_gui_button_previous_page: "&a<- Página Anterior"
+main_gui_button_refresh: "&eRefrescar"
+main_gui_no_auctions: "&7No hay subastas activas en este momento."
+main_gui_decorative_pane_name: "&r "
 
-# Pujas y Compra (Algunas claves existentes, verificadas para uso en nueva GUI)
-error_invalid_bid_input_nan: "&c'%input%' no es un número válido para una puja."
-auction_ended_no_longer_exists: "&cEsta subasta ya no existe o ha finalizado."
-cannot_bid_on_own_auction: "&cNo puedes pujar o comprar tu propia subasta."
-bid_equals_buy_now: "&eTu puja iguala el precio de Compra Directa. La subasta se procesará como compra directa."
-bid_too_low_initial: "&cTu puja debe ser de al menos %min_bid% %currency% (precio inicial)."
-bid_too_low_increment: "&cTu puja debe ser de al menos %min_bid% %currency% (puja actual + %increment% %currency% incremento mínimo)."
-# Mensajes de éxito/fracaso de placeBid y buyNow son manejados por AuctionManager y usan claves existentes como:
-# bid_placed_success, buy_now_success, not_enough_money_bid, not_enough_money_buy_now, etc.
-
-
-# --- Claves Existentes (Relevantes y Verificadas) ---
-# (Se mantienen las claves de GUIs no refactorizadas como Create, MyAuctions, History, etc.)
-# (Se mantienen las claves de AuctionManager para feedback de acciones)
-
-# Creación de Subasta (GUI Antigua y por comando)
-auction_create_gui_title: "&8Crear Nueva Subasta"
-button_set_duration: "&bEstablecer Duración"
-lore_current_duration: "&7Actual: &f%duration%"
-# ... (todas las demás claves de la GUI de creación y otras GUIs no refactorizadas se mantienen como estaban) ...
-
-# Ejemplo de algunas claves importantes que deben permanecer de la versión anterior:
-chat_prompt_enter_start_price: "&eIntroduce el precio inicial de la subasta en el chat:"
-chat_prompt_enter_buy_now_price: "&eIntroduce el precio de compra directa en el chat (o '0' para no establecer):"
-chat_prompt_enter_duration: "&eIntroduce la duración (ej: 1d, 2h30m, 3600s) o elige de la GUI de duraciones:"
-invalid_price_format: "&cEl precio ingresado no es válido. Debe ser un número positivo."
-# ... y muchas más ...
-# Asegurar que todas las claves usadas por GUIManager (para Create, MyAuctions, History) y AuctionManager (para feedback) sigan aquí.
-# El contenido anterior de messages.yml tenía ~250 líneas, esta es una versión condensada
-# enfocada en las nuevas GUIs y algunas claves esenciales.
-# Para una regeneración completa, se necesitaría el messages.yml completo anterior y fusionar.
-# Por ahora, se añaden/verifican las claves directamente implicadas en el rework.
-
-# --- Mantener las claves existentes que no fueron explícitamente eliminadas o reemplazadas ---
-# (Esta sección es un placeholder para indicar que el resto del messages.yml original debe ser preservado)
-
-# Pujas y Compra (continuación de claves existentes)
-already_highest_bidder: "&cYa eres el máximo pujador en esta subasta."
-not_enough_money_bid: "&cNo tienes suficiente dinero para realizar esa puja."
-not_enough_money_buy_now: "&cNo tienes suficiente dinero para comprar esto ahora por %amount% %currency%."
-auction_bought_success: "&aHas comprado el ítem '%item%' por %price% %currency%!" # Usado por AuctionManager
-buy_now_success: "&a¡Has comprado '%item%' exitosamente!" # Usado por AuctionManager
-seller_paid_commission: "&e%seller% ha recibido %amount% %currency% (después de %commission_percent%% comisión)."
-auction_ended_won: "&a¡Has ganado la subasta #%id% por el ítem '%item%' con una puja de %bid% %currency%!"
-auction_ended_seller_sold: "&aTu subasta #%id% por '%item%' ha sido vendida a %buyer% por %price% %currency%. Recibiste %received_amount% %currency%."
-your_item_bought_out: "&aTu ítem '%item%' (Subasta #%id%) fue comprado directamente por %buyer% por %price% %currency%. Has recibido %received% %currency%."
-auction_ended_expired_seller: "&eTu subasta #%id% por '%item%' ha expirado sin pujas. El ítem ha sido devuelto."
-auction_ended_expired_claim: "&eTu subasta #%id% por '%item%' ha expirado. El ítem está en /auc reclamar."
-outbid_notification: "&e¡%new_bidder% ha superado tu puja en la subasta #%id% por '%item%'! Tu puja de %old_bid% %currency% ha sido devuelta."
-new_bid_on_your_auction: "&b¡Nueva puja de %bid% %currency% por %bidder% en tu subasta #%id% por '%item%!"
-buy_now_not_available: "&cEste ítem no está disponible para Compra Directa en este momento." # Usado por AuctionManager
-auction_bought_out_refund: "&eLa subasta #%id% en la que pujaste fue comprada directamente. Tu puja de %old_bid% %currency% ha sido devuelta."
-
-# Cancelación
-auction_cancelled_success: "&aSubasta #%id% cancelada exitosamente."
-# ... (y el resto de las ~200 líneas del messages.yml original)
-# Este es un ejemplo, y no puedo regenerar el archivo completo sin tenerlo.
-# Lo importante es que las claves listadas arriba para las NUEVAS GUIs estén definidas.
-# Las claves de las GUIs ANTIGUAS que no se tocaron (Create, MyAuctions, History) deben seguir existiendo.
-
-# GUI Principal (Antigua - algunas claves podrían ser reutilizadas o necesitar diferenciación)
-main_gui_title: "&8Subastas (Pág. %page%/%max_pages%)" # Clave de la GUI antigua
-
-# Item Lore en Main GUI (Antigua - para referencia de nombres de placeholders)
-item_lore_id: "&0ID:%id%" # Placeholder %id%
-item_lore_seller: "&7Vendedor: &f%seller%" # Placeholder %seller%
-item_lore_start_price: "&7Precio Inicial: &f%price% %currency%"
-item_lore_current_bid: "&7Oferta Actual: &f%bid% %currency% (por %bidder%)" # Placeholder %bid%, %currency%, %bidder%
-item_lore_no_bids: "&7Oferta Actual: &fSin ofertas"
-item_lore_buy_now_price: "&7Compra Directa: &f%price% %currency%"
-item_lore_time_left: "&7Tiempo restante: &b%time%" # Placeholder %time%
-item_lore_status: "&7Estado: &e%status%"
-item_lore_left_click_bid: "&eClic izquierdo: &aPujar"
-item_lore_right_click_details: "&eClic derecho: &aVer detalles"
-
-# GUI Mis Subastas (referencia de placeholders)
-my_auctions_gui_title: "&8Mis Subastas (Pág. %page%/%max_pages%)"
-lore_my_auction_status_sold: "&7Vendido a: &f%buyer% por %price% %currency%"
-
-# GUI Historial (referencia de placeholders)
-auction_history_gui_title: "&8Historial (Pág. %page%/%max_pages%)"
-lore_history_item_ended_date: "&7Fecha finalización: &b%date%"
-
-# Chat Prompts (existentes)
-prompt_enter_bid_amount: "&ePor favor, escribe la cantidad que deseas pujar:" # Usado por GUIManager antiguo
-
-# Otros mensajes que deben existir
-time_ended: "&cFinalizada"
-error_invalid_number_format: "&cError: '%value%' no es un número válido."
-# ... y el resto de claves usadas por GUIManager, AuctionManager, comandos, etc.
-status_not_set: "&7No establecido"
-missing_detail_item: "&cÍtem"
-missing_detail_duration: "&cDuración"
-missing_detail_start_price: "&cPrecio Inicial"
-lore_click_to_change: "&e(Clic para cambiar)"
-lore_click_to_change_or_remove: "&e(Clic para cambiar/quitar)"
-button_set_buy_now_price_disabled: "&m&cCompra Directa Deshabilitada"
-lore_buy_now_disabled_admin: "&7(Habilitar en config.yml)"
-duration_set_success: "&aDuración establecida a: %duration%"
-start_price_set_success: "&aPrecio inicial establecido a: %price% %currency%"
-start_price_cannot_be_zero: "&cEl precio inicial no puede ser cero."
-buy_now_price_set_success: "&aPrecio de compra directa establecido a: %price% %currency%"
-buy_now_price_removed: "&aPrecio de compra directa eliminado."
-auction_create_fee_charged_error: "&cNo se pudo cobrar la tarifa de creación. Inténtalo de nuevo."
-inventory_full_claimable_cancelled: "&cInventario lleno. Ítem de subasta #%id% (%item%) cancelada enviado a /auc reclamar."
-auction_cancelled_bid_refunded: "&eSubasta #%id% (%item%) cancelada. Tu puja de %bid% %currency% fue devuelta."
-internal_error_cancel_auction: "&cError interno al cancelar subasta."
-inventory_full_claimable_won: "&cInventario lleno. Ítem '%item%' (Subasta #%id%) ganado enviado a /auc reclamar."
-auction_won_item_received: "&a¡Ganaste la Subasta #%id% (%item%)! Ítem añadido a tu inventario."
-your_auction_ended_sold: "&aSubasta #%id% (%item%) vendida a %winner% por %price% %currency%. Recibiste %received% %currency%."
-inventory_full_claimable_expired_no_bids: "&cInventario lleno. Ítem de Subasta #%id% (%item%) expirada enviado a /auc reclamar."
-auction_expired_no_bids_item_returned: "&eSubasta #%id% (%item%) expiró sin pujas. Ítem devuelto a tu inventario."
-message_player_is_offline: "&cEl jugador %player% no está conectado."
-message_item_not_found: "&cEl ítem especificado no fue encontrado en tu inventario."
-button_confirm: "&aConfirmar"
-button_cancel: "&cCancelar"
-cannot_cancel_auction_not_active: "&cNo puedes cancelar esta subasta porque ya no está activa."
-internal_error_my_auctions: "&cOcurrió un error al cargar tus subastas."
-internal_error_history: "&cOcurrió un error al cargar el historial de subastas."
-
-# --- Fin de claves existentes ---
-
-# --- Mensajes para Comandos de Debug (Nuevas GUIs) ---
-new_gui_debug_no_active_auctions_for_test: "&cNo hay subastas activas disponibles para probar la GUI de detalles."
-new_gui_debug_details_gui_opened: "&aAbriendo GUI de detalles para la subasta de prueba ID: %id%."
-
-# --- Claves para la nueva AuctionDetailsGUI Estática ---
-# auction_details_gui_title: "&9Detalles de la Subasta" # Ya existe, verificar valor
-# button_bid: "&aPujar" # Ya existe
-# button_buy_now: "&6Comprar Ahora" # Ya existe
-button_back: "&cVolver Atrás" # Nuevo o verificar si "new_gui_button_back_name" debe ser este
-auction_lore_buy_now_not_available: "&cNo disponible" # Nuevo para el lore del ítem
+# GUI Detalles (AuctionDetailsGUI - la nueva estática)
+auction_details_gui_title: "&9Detalles de la Subasta"
 auction_lore:
   - "&7ID: &f%id%"
   - "&7Vendedor: &f%seller%"
-  - "&7Puja Actual: &a%price%"
+  - "&7Puja Actual: &e%price%"
   - "&7Compra Ahora: &a%buy_now%"
-  - "&7Tiempo restante: &f%time%"
+  - "&7Tiempo restante: &c%time%"
+  - ""
   - "&eUsa los botones para pujar o comprar."
-auction_not_loaded_error: "&cNo se pudo cargar la información de la subasta seleccionada." # Nuevo
-# item_default_name_format: "&r%item_name%" # Ya existe
-# new_gui_decorative_pane_name: "&r " # Ya existe
+auction_lore_buy_now_not_available: "&cNo disponible"
+# Botones GUI Detalles
+button_bid: "&aPujar"
+button_buy_now: "&6Comprar Ahora"
+button_buy_now_lore_price: "&7Precio: %price%" # Nueva clave para el lore del botón de compra directa
+button_back: "&cVolver Atrás"
+
+# Chat de Puja (PlayerChatListener)
+chat_prompt_enter_bid_amount: "&eEscribe la cantidad de tu puja en el chat para la subasta #%id%:"
+chat_bid_error_invalid_number: "&c'%input%' no es un número válido para una puja."
+
+# Ayuda de Comandos (CommandManager)
+help_header: "&8&m----------&r &6AetherAuctions Ayuda &8&m----------"
+help_footer: "&8&m-------------------------------------------"
+help_subasta: "&e/subasta &7- Abre la casa de subastas."
+help_subasta_crear: "&e/subasta crear <precio_inicial> [precio_compra_directa] <duracion_segundos> &7- Crea una subasta con el ítem en tu mano."
+help_subasta_cancelar: "&e/subasta cancelar <id_subasta> &7- Cancela una de tus subastas activas."
+help_subasta_mis: "&e/subasta mis &7- Muestra tus subastas activas."
+help_subasta_historial: "&e/subasta historial &7- Muestra tu historial de subastas (no implementado)."
+help_subasta_admin: "&c/subasta admin &7- Comandos de administración."
+admin_help_reload: "&e/subasta admin reload &7- Recarga la configuración del plugin."
+admin_help_ver: "&e/subasta admin ver <id_subasta> &7- Muestra detalles de cualquier subasta."
+admin_help_borrar: "&e/subasta admin borrar <id_subasta> &7- Elimina una subasta del sistema."
+
+# Mensajes de Uso de Comandos
+command_usage_crear: "&cIncorrecto. Uso: /subasta crear <precio_inicial> [precio_compra_directa] <duracion_segundos>"
+command_usage_cancelar: "&cIncorrecto. Uso: /subasta cancelar <id_subasta>"
+command_usage_admin_ver: "&cIncorrecto. Uso: /subasta admin ver <id_subasta>"
+command_usage_admin_borrar: "&cIncorrecto. Uso: /subasta admin borrar <id_subasta>"
+
+# Mensajes de Feedback de Comandos (Crear)
+auction_create_error_no_item_in_hand: "&cDebes tener un ítem en tu mano para crear una subasta."
+command_crear_error_invalid_numbers: "&cLos precios y la duración deben ser números válidos."
+# (Otras claves de auction_create_* ya existen y son usadas por AuctionManager)
+
+# Mensajes de Feedback de Comandos (Cancelar)
+auction_cancel_error_not_found: "&cNo se encontró una subasta con el ID '%id%'."
+# (AuctionManager maneja otros mensajes de cancelación)
+
+# Mensajes de Feedback de Comandos (Mis Subastas)
+command_mis_no_auctions: "&eNo tienes subastas activas en este momento."
+command_mis_header: "&6--- Tus Subastas Activas ---"
+command_mis_auction_line: "&7ID: &e%id_corto% &7| Ítem: &f%item% &7| Puja: &a%bid% &7| Tiempo: &c%time%"
+command_mis_footer: "&6---------------------------"
+
+# Mensajes de Feedback de Comandos (Historial)
+command_historial_not_implemented: "&eEl historial de subastas aún no está implementado."
+
+# Mensajes de Feedback de Comandos (Admin)
+admin_reload_success: "&aConfiguración y mensajes recargados." # Ya existe, pero verificar
+command_admin_ver_not_found: "&cNo se encontró ninguna subasta (activa o no) con el ID '%id%'."
+command_admin_ver_details_header: "&6--- Detalles de Subasta (Admin) ID: %id% ---"
+command_admin_ver_seller: "&7Vendedor: &e%name% (%uuid%)"
+command_admin_ver_item: "&7Ítem: &f%item% (Cantidad: %amount%)"
+command_admin_ver_status: "&7Estado: &b%status%"
+command_admin_ver_bid: "&7Puja Actual: &a%bid%"
+command_admin_ver_hb: "&7Pujador Máximo: &6%name% (%uuid%)"
+command_admin_ver_buynow: "&7Precio Compra Dir.: &a%price%"
+command_admin_ver_time: "&7Tiempo Restante/Finalizado: &c%time%"
+command_admin_ver_invalid_id_format: "&cEl formato del ID de subasta es inválido." # Si se usa parseo de UUID directo
+admin_borrar_success: "&aSubasta '%id%' borrada exitosamente por un administrador."
+admin_borrar_failed: "&cNo se pudo borrar la subasta '%id%'."
+# command_admin_borrar_invalid_id_format: "&cEl formato del ID de subasta es inválido." # Reusar command_admin_ver_invalid_id_format
+
+# Errores de carga de mensajes (MessageManager)
+# message_key_missing_error: "&cError: Clave de mensaje no encontrada (%key%)" # Configurado en config.yml
+# message_placeholder_error: "&cError: Placeholders inválidos para clave %key%" # Logueado a consola
+
+# --- Claves Reutilizadas y Verificadas Existentes (Asegurar que estén presentes) ---
+item_default_name_format: "&r%item_name%"
+new_gui_decorative_pane_name: "&r " # Ya estaba
+new_gui_chat_prompt_bid_amount: "&eEscribe la cantidad de tu puja en el chat:" # Ya estaba
+auction_ended_info_closed: "&eLa subasta que estabas viendo ha finalizado y ya no está disponible." # Ya estaba
+error_auction_not_buyable_details_gui: "&cEsta subasta ya no está disponible para compra directa o ha finalizado." # Ya estaba
+error_invalid_bid_input_nan: "&c'%input%' no es un número válido para una puja." # Ya estaba
+auction_ended_no_longer_exists: "&cEsta subasta ya no existe o ha finalizado." # Ya estaba
+cannot_bid_on_own_auction: "&cNo puedes pujar o comprar tu propia subasta." # Ya estaba
+bid_equals_buy_now: "&eTu puja iguala el precio de Compra Directa. La subasta se procesará como compra directa." # Ya estaba
+bid_too_low_initial: "&cTu puja debe ser de al menos %min_bid% %currency% (precio inicial)." # Ya estaba
+bid_too_low_increment: "&cTu puja debe ser de al menos %min_bid% %currency% (puja actual + %increment% %currency% incremento mínimo)." # Ya estaba
+new_gui_button_buy_now_name: "&6Comprar Ahora" # Ya estaba
+new_gui_button_back_name: "&cVolver Atrás" # Ya estaba
+new_gui_main_item_lore_seller: "&7Vendedor: &6%seller%" # Ya estaba
+new_gui_main_item_lore_current_bid: "&7Puja Actual: &e%price% %currency%" # Ya estaba
+new_gui_main_item_lore_buy_now: "&7Compra Directa: &a%price% %currency%" # Ya estaba
+new_gui_main_item_lore_time_remaining: "&7Tiempo: &c%time%" # Ya estaba
+new_gui_main_item_lore_id: "&8ID: #%id%" # Ya estaba
+new_gui_main_item_lore_instruction_details: "&bClic Derecho: &fVer Detalles" # Ya estaba
+details_auction_id: "&7ID: &b%id%" # Ya estaba
+details_seller: "&7Vendedor: &6%seller%" # Ya estaba
+details_current_bid: "&7Puja Actual: &e%price% %currency%" # Ya estaba
+details_buyout_price: "&7Compra Directa: &a%price% %currency%" # Ya estaba
+details_time_remaining: "&7Tiempo: &c%time%" # Ya estaba
+new_gui_debug_no_active_auctions_for_test: "&cNo hay subastas activas disponibles para probar la GUI de detalles." # Ya estaba
+new_gui_debug_details_gui_opened: "&aAbriendo GUI de detalles para la subasta de prueba ID: %id%."# Ya estaba
