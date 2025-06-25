@@ -64,7 +64,7 @@ auction_expired_item_returned: "&eTu subasta por %item_name% expiró sin pujas. 
 auction_cancel_error_not_active: "&cEsta subasta no puede ser cancelada (ya finalizó o no existe)."
 auction_cancel_error_no_permission: "&cNo tienes permiso para cancelar esta subasta."
 auction_cancelled_inventory_full: "&eSubasta cancelada (%item_name%), pero tu inventario está lleno. (TODO: Sistema de Reclamar)"
-auction_cancelled_item_returned_self: "&aHas cancelado tu subasta por %item_name%. El ítem ha sido devuelto."
+auction_cancelled_item_returned_self: "&aHas cancelado tu subasta por %item_name%. El ítem ha sido devuelto." # Already has %item_name%
 auction_cancelled_item_returned_by_admin: "&eTu subasta por %item_name% fue cancelada por el admin %admin%. El ítem ha sido devuelto."
 auction_cancelled_bid_refunded: "&eLa subasta #%auction_id% en la que pujaste fue cancelada. Tu puja ha sido devuelta."
 auction_cancelled_admin_success: "&aSubasta #%id% cancelada exitosamente por un administrador."
