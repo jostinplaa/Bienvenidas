@@ -85,20 +85,26 @@ public class AuctionStorage {
     }
 
     public Connection getConnection() throws SQLException {
-        if (connection == null || connection.isClosed()) {
-            plugin.getLogger().info("Database connection was closed/null, attempting to reconnect...");
+        // Check if the connection is valid before returning it.
+        // The 'timeout' parameter is in seconds.
+        if (connection == null || !connection.isValid(1)) { // Check validity, timeout of 1 second
+            plugin.getLogger().warning("La conexión a SQLite no es válida o está cerrada. Intentando reestablecer...");
+
             File dbFile = new File(plugin.getDataFolder(), dbName);
-             if (!dbFile.exists()) {
-                plugin.getLogger().severe("Database file does not exist. Cannot reconnect.");
-                throw new SQLException("Database file does not exist.");
+            if (!dbFile.exists()) {
+                plugin.getLogger().severe("El archivo de la base de datos no existe. No se puede reconectar.");
+                throw new SQLException("El archivo de la base de datos no existe al intentar reconectar.");
             }
             try {
-                Class.forName("org.sqlite.JDBC");
+                Class.forName("org.sqlite.JDBC"); // Ensure driver is loaded
                 connection = DriverManager.getConnection("jdbc:sqlite:" + dbFile.getAbsolutePath());
-                plugin.getLogger().info("Successfully reconnected to SQLite database.");
+                plugin.getLogger().info("Conexión a SQLite reestablecida.");
             } catch (ClassNotFoundException e) {
-                 plugin.getLogger().log(Level.SEVERE, "SQLite JDBC driver not found during reconnect.", e);
-                throw new SQLException("SQLite JDBC driver not found during reconnect.", e);
+                plugin.getLogger().log(Level.SEVERE, "Driver JDBC de SQLite no encontrado durante la reconexión.", e);
+                throw new SQLException("Driver JDBC de SQLite no encontrado durante la reconexión.", e);
+            } catch (SQLException e) { // Catch SQLException specifically for the getConnection attempt
+                plugin.getLogger().log(Level.SEVERE, "Fallo al reestablecer la conexión a SQLite.", e);
+                throw e; // Re-throw to notify the calling method of the failure
             }
         }
         return connection;

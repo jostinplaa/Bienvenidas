@@ -57,7 +57,7 @@ public class AuctionDetailsGUI {
 
         for (String loreLine : loreLinesRaw) {
             processedLore.add(loreLine // MessageManager now handles color translation
-                    .replace("%id%", auction.getId().toString().substring(0, 8))
+                    .replace("%id%", auction.getId().toString()) // Use full UUID for details GUI lore
                     .replace("%seller%", auction.getSellerName())
                     .replace("%price%", String.format("%.2f %s", auction.getCurrentBid(), cfgManager.getCurrencySymbol()))
                     .replace("%buy_now%", buyNowPriceString)

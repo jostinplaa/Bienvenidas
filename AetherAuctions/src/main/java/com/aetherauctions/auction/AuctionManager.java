@@ -375,9 +375,9 @@ public class AuctionManager {
         } else if (seller.isOnline() && seller.getPlayer() != null) {
             seller.getPlayer().getInventory().addItem(auction.getItemStack().clone());
             if (seller.getUniqueId().equals(canceller.getUniqueId())) {
-                 messageManager.sendMessage(seller.getPlayer(), "auction_cancelled_item_returned_self");
+                 messageManager.sendMessage(seller.getPlayer(), "auction_cancelled_item_returned_self", "%item_name%", com.aetherauctions.util.InventoryUtil.formatMaterialName(auction.getItemStack().getType()));
             } else {
-                 messageManager.sendMessage(seller.getPlayer(), "auction_cancelled_item_returned_by_admin", "%admin%", canceller.getName());
+                 messageManager.sendMessage(seller.getPlayer(), "auction_cancelled_item_returned_by_admin", "%item_name%", com.aetherauctions.util.InventoryUtil.formatMaterialName(auction.getItemStack().getType()), "%admin%", canceller.getName());
             }
         } else {
              plugin.getLogger().info("Vendedor " + seller.getName() + " offline. Ítem de subasta cancelada " + auction.getId() + " necesita ser reclamado.");
