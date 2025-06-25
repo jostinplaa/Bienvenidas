@@ -2,10 +2,10 @@ package com.aetherauctions.listeners;
 
 import com.aetherauctions.AetherAuctions;
 import com.aetherauctions.auction.AuctionManager;
-import com.aetherauctions.model.Auction;
+import com.aetherauctions.model.Auction; // Import Auction model
 import com.aetherauctions.auction.AuctionStatus;
 import com.aetherauctions.config.MessageManager;
-import com.aetherauctions.listener.InventoryClickListener; // Ensure this is the correct listener path
+import com.aetherauctions.listener.InventoryClickListener;
 
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -56,20 +56,14 @@ public class PlayerChatListener implements Listener {
                         return;
                     }
 
-                    // AuctionManager.placeBid will handle all internal validations and messaging
                     if (!auctionManager.placeBid(player, finalAuctionId, bidAmount)) {
-                        // Optional: Could re-open GUI on failure if desired, but AuctionManager should send feedback.
-                        // Auction failedAuction = auctionManager.getAuctionById(finalAuctionId);
-                        // if (failedAuction != null && inventoryClickListener != null) {
-                        //    com.aetherauctions.gui.GUIManager.openAuctionInfoGui(player, failedAuction, inventoryClickListener.getPlayerReturnPageMap().getOrDefault(playerId, 0));
-                        // }
+                        // Feedback handled by placeBid
                     }
                 });
             } catch (NumberFormatException e) {
                 msgManager.sendMessage(player, "chat_bid_error_invalid_number", "%input%", message);
             }
         }
-        // No other chat input states are handled by this listener anymore.
-        // Old GUIManager states (AWAITING_DURATION, etc.) were removed.
+        // Old input states (AWAITING_DURATION, etc.) were removed.
     }
 }

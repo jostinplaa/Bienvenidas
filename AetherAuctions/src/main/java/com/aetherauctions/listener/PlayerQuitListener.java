@@ -24,13 +24,14 @@ public class PlayerQuitListener implements Listener {
         UUID playerUUID = player.getUniqueId();
 
         // Clear any pending input states (for old GUI creation if still used)
-        plugin.getPlayerInputState().remove(playerUUID);
-        // plugin.getPlayerTargetAuction().remove(playerUUID); // This map might be from an old system
+        // plugin.getPlayerInputState().remove(playerUUID); // Removed, PlayerInputState map is gone from AetherAuctions
+        // plugin.getPlayerTargetAuction().remove(playerUUID); // This map was also part of old state system
 
-        // Clear temporary auction creation data from old GUIManager
-        if (plugin.getGuiManager() != null) {
-            plugin.getGuiManager().clearCreateAuctionData(playerUUID);
-        }
+        // Clear temporary auction creation data from old GUIManager (if GUIManager class still has this method)
+        // com.aetherauctions.gui.GUIManager is now static utils, does not hold player specific data.
+        // if (plugin.getGuiManager() != null) {  // getGuiManager was removed from AetherAuctions
+            // plugin.getGuiManager().clearCreateAuctionData(playerUUID);
+        // }
 
         // Clear states from the new consolidated InventoryClickListener
         if (inventoryClickListener != null) {

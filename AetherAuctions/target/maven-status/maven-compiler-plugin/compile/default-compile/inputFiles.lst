@@ -16,7 +16,6 @@
 /app/AetherAuctions/src/main/java/com/aetherauctions/model/Auction.java
 /app/AetherAuctions/src/main/java/com/aetherauctions/util/ItemSerializer.java
 /app/AetherAuctions/src/main/java/com/aetherauctions/gui/AuctionDetailsGUI.java
-/app/AetherAuctions/src/main/java/com/aetherauctions/gui/rework/NewMainAuctionGUI.java
 /app/AetherAuctions/src/main/java/com/aetherauctions/AetherAuctions.java
 /app/AetherAuctions/src/main/java/com/aetherauctions/util/SerializationUtil.java
 /app/AetherAuctions/src/main/java/com/aetherauctions/storage/AuctionStorage.java
