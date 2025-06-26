@@ -33,6 +33,9 @@ permissions:
   aetherauctions.command.historial:
     description: Permite ver el historial de subastas.
     default: true
+  aetherauctions.command.reclamar:
+    description: Permite usar /subasta reclamar para obtener recompensas pendientes.
+    default: true
   aetherauctions.admin: # Permiso paraguas para todos los comandos de admin
     description: Permite acceso a todos los comandos de administración de AetherAuctions.
     default: op

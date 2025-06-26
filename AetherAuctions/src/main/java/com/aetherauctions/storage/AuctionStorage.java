@@ -3,6 +3,7 @@ package com.aetherauctions.storage;
 import com.aetherauctions.AetherAuctions;
 import com.aetherauctions.model.Auction;
 import com.aetherauctions.model.Bid;
+import com.aetherauctions.model.PendingReward; // Import PendingReward
 import com.aetherauctions.auction.AuctionStatus;
 import com.aetherauctions.util.SerializationUtil;
 import org.bukkit.inventory.ItemStack;
@@ -123,15 +124,27 @@ public class AuctionStorage {
                                       + "bid_history_json TEXT"
                                       + ");";
 
-        Connection conn = getConnection(); // Get the shared connection
-        try (Statement stmt = conn.createStatement()) { // Use try-with-resources for Statement
+        String sqlCreatePendingRewardsTable = "CREATE TABLE IF NOT EXISTS pending_rewards ("
+                                           + "reward_id TEXT PRIMARY KEY NOT NULL,"
+                                           + "owner_id TEXT NOT NULL,"
+                                           + "reward_type TEXT NOT NULL,"
+                                           + "item_data TEXT,"
+                                           + "money_amount REAL DEFAULT 0,"
+                                           + "reason_message_key TEXT NOT NULL,"
+                                           + "reason_placeholders_json TEXT,"
+                                           + "creation_timestamp INTEGER NOT NULL,"
+                                           + "delivered INTEGER NOT NULL DEFAULT 0"
+                                           + ");";
+
+        Connection conn = getConnection();
+        try (Statement stmt = conn.createStatement()) {
             stmt.execute(sqlCreateAuctionsTable);
+            stmt.execute(sqlCreatePendingRewardsTable);
             plugin.getLogger().info("Database tables verified/created.");
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Error creating database tables.", e);
             throw e;
         }
-        // Do NOT close conn here
     }
 
     public void saveAuction(Auction auction) throws SQLException {
@@ -139,14 +152,12 @@ public class AuctionStorage {
             plugin.getLogger().warning("Attempted to save a null auction.");
             return;
         }
-
         String sql = "INSERT OR REPLACE INTO auctions (id, seller_id, seller_name, itemstack_data, "
                    + "current_bid, highest_bidder_id, highest_bidder_name, buy_now_price, "
                    + "creation_timestamp, expiration_timestamp, status, bid_history_json) "
                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
-
-        Connection conn = getConnection(); // Get the shared connection
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) { // Use try-with-resources for PreparedStatement
+        Connection conn = getConnection();
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, auction.getId().toString());
             pstmt.setString(2, auction.getSellerId().toString());
             pstmt.setString(3, auction.getSellerName());
@@ -169,7 +180,6 @@ public class AuctionStorage {
             plugin.getLogger().log(Level.SEVERE, "Serialization error while saving auction ID: " + auction.getId(), e);
             throw new SQLException("Serialization error while saving auction.", e);
         }
-        // Do NOT close conn here
     }
 
     private Auction mapResultSetToAuction(ResultSet rs) throws SQLException, IOException, ClassNotFoundException {
@@ -213,9 +223,9 @@ public class AuctionStorage {
         if (auctionId == null) return null;
         String sql = "SELECT * FROM auctions WHERE id = ?;";
         Auction auction = null;
-        Connection conn = null;
+        Connection conn;
         try {
-            conn = getConnection(); // Get the shared connection
+            conn = getConnection();
             try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
                 pstmt.setString(1, auctionId.toString());
                 try (ResultSet rs = pstmt.executeQuery()) {
@@ -229,16 +239,15 @@ public class AuctionStorage {
         } catch (IOException | ClassNotFoundException e) {
             plugin.getLogger().log(Level.SEVERE, "Deserialization error loading auction ID: " + auctionId, e);
         }
-        // Do NOT close conn here
         return auction;
     }
 
     public List<Auction> loadActiveAuctions() {
         List<Auction> activeAuctionsList = new ArrayList<>();
         String sql = "SELECT * FROM auctions WHERE status = ?;";
-        Connection conn = null;
+        Connection conn;
         try {
-            conn = getConnection(); // Get the shared connection
+            conn = getConnection();
             try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
                 pstmt.setString(1, AuctionStatus.ACTIVE.name());
                 try (ResultSet rs = pstmt.executeQuery()) {
@@ -259,7 +268,6 @@ public class AuctionStorage {
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Error loading active auctions from the database.", e);
         }
-        // Do NOT close conn here
         plugin.getLogger().info("Loaded " + activeAuctionsList.size() + " active auctions from the database.");
         return activeAuctionsList;
     }
@@ -267,18 +275,16 @@ public class AuctionStorage {
     public Auction loadAuctionFuzzy(String idStr) {
         if (idStr == null || idStr.isEmpty()) return null;
         Auction auction = null;
-
         try {
             UUID fullUuid = UUID.fromString(idStr);
             return loadAuction(fullUuid);
         } catch (IllegalArgumentException e) {
             // Not a full UUID
         }
-
         String sql = "SELECT * FROM auctions WHERE id LIKE ? LIMIT 1;";
-        Connection conn = null;
+        Connection conn;
         try {
-            conn = getConnection(); // Get the shared connection
+            conn = getConnection();
             try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
                 pstmt.setString(1, idStr + "%");
                 try (ResultSet rs = pstmt.executeQuery()) {
@@ -292,7 +298,138 @@ public class AuctionStorage {
         } catch (IOException | ClassNotFoundException e) {
             plugin.getLogger().log(Level.SEVERE, "Deserialization error loading auction by fuzzy ID prefix: " + idStr, e);
         }
-        // Do NOT close conn here
         return auction;
+    }
+
+    // --- PendingReward Methods ---
+
+    public void saveReward(PendingReward reward) throws SQLException {
+        if (reward == null) {
+            plugin.getLogger().warning("Se intentó guardar una recompensa pendiente null.");
+            return;
+        }
+        String sql = "INSERT OR REPLACE INTO pending_rewards (reward_id, owner_id, reward_type, item_data, "
+                   + "money_amount, reason_message_key, reason_placeholders_json, creation_timestamp, delivered) "
+                   + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);";
+        Connection conn = getConnection();
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, reward.getRewardId().toString());
+            pstmt.setString(2, reward.getOwnerId().toString());
+            pstmt.setString(3, reward.getType().name());
+            if (reward.getItemToClaim() != null) {
+                pstmt.setString(4, SerializationUtil.itemStackToBase64(reward.getItemToClaim()));
+            } else {
+                pstmt.setNull(4, java.sql.Types.VARCHAR);
+            }
+            pstmt.setDouble(5, reward.getMoneyToClaim());
+            pstmt.setString(6, reward.getReasonMessageKey());
+            pstmt.setString(7, SerializationUtil.stringListToJson(reward.getReasonPlaceholders())); // Changed to use stringListToJson
+            pstmt.setLong(8, reward.getCreationTimestamp());
+            pstmt.setInt(9, reward.isDelivered() ? 1 : 0);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Error al guardar PendingReward ID: " + reward.getRewardId(), e);
+            throw e;
+        } catch (IllegalStateException e) {
+            plugin.getLogger().log(Level.SEVERE, "Error de serialización de ItemStack al guardar PendingReward ID: " + reward.getRewardId(), e);
+            throw new SQLException("Error de serialización de ItemStack para PendingReward.", e);
+        }
+    }
+
+    private PendingReward mapResultSetToPendingReward(ResultSet rs) throws SQLException, IOException, ClassNotFoundException {
+        UUID rewardId = UUID.fromString(rs.getString("reward_id"));
+        UUID ownerId = UUID.fromString(rs.getString("owner_id"));
+        PendingReward.RewardType type = PendingReward.RewardType.valueOf(rs.getString("reward_type"));
+        ItemStack itemToClaim = null;
+        String itemData = rs.getString("item_data");
+        if (itemData != null) {
+            itemToClaim = SerializationUtil.itemStackFromBase64(itemData);
+            if (itemToClaim == null) {
+                 plugin.getLogger().warning("ItemStack deserializado para PendingReward ID " + rewardId + " es null. Puede haber datos corruptos.");
+            }
+        }
+        double moneyToClaim = rs.getDouble("money_amount");
+        String reasonMessageKey = rs.getString("reason_message_key");
+        List<String> reasonPlaceholders = SerializationUtil.stringListFromJson(rs.getString("reason_placeholders_json")); // Changed to use stringListFromJson
+        if (reasonPlaceholders == null) reasonPlaceholders = new ArrayList<>();
+        long creationTimestamp = rs.getLong("creation_timestamp");
+        boolean delivered = rs.getInt("delivered") == 1;
+        return new PendingReward(rewardId, ownerId, type, itemToClaim, moneyToClaim, reasonMessageKey, reasonPlaceholders, creationTimestamp, delivered);
+    }
+
+    public List<PendingReward> getPendingRewardsByOwner(UUID ownerId) {
+        List<PendingReward> rewards = new ArrayList<>();
+        String sql = "SELECT * FROM pending_rewards WHERE owner_id = ? AND delivered = 0 ORDER BY creation_timestamp ASC;";
+        Connection conn;
+        try {
+            conn = getConnection();
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setString(1, ownerId.toString());
+                try (ResultSet rs = pstmt.executeQuery()) {
+                    while (rs.next()) {
+                        try {
+                            rewards.add(mapResultSetToPendingReward(rs));
+                        } catch (IOException | ClassNotFoundException e) {
+                            plugin.getLogger().log(Level.SEVERE, "Error de deserialización al cargar PendingReward ID: " + (rs.getString("reward_id") != null ? rs.getString("reward_id") : "UNKNOWN") + ". Saltando.", e);
+                        } catch (IllegalArgumentException e) {
+                            plugin.getLogger().log(Level.SEVERE, "Error de datos (ej. Enum RewardType inválido) al cargar PendingReward ID: " + (rs.getString("reward_id") != null ? rs.getString("reward_id") : "UNKNOWN") + ". Saltando.", e);
+                        }
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Error al cargar PendingRewards para owner ID: " + ownerId, e);
+        }
+        return rewards;
+    }
+
+    public PendingReward getPendingReward(UUID rewardId) {
+        if (rewardId == null) return null;
+        String sql = "SELECT * FROM pending_rewards WHERE reward_id = ?;";
+        PendingReward reward = null;
+        Connection conn;
+        try {
+            conn = getConnection();
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setString(1, rewardId.toString());
+                try (ResultSet rs = pstmt.executeQuery()) {
+                    if (rs.next()) {
+                        reward = mapResultSetToPendingReward(rs);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Error loading PendingReward ID: " + rewardId + " from the database.", e);
+        } catch (IOException | ClassNotFoundException e) {
+            plugin.getLogger().log(Level.SEVERE, "Deserialization error loading PendingReward ID: " + rewardId, e);
+        }
+        return reward;
+    }
+
+    public void markRewardDelivered(UUID rewardId) throws SQLException {
+        String sql = "UPDATE pending_rewards SET delivered = 1 WHERE reward_id = ?;";
+        Connection conn = getConnection();
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, rewardId.toString());
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Error al marcar PendingReward ID: " + rewardId + " como entregada.", e);
+            throw e;
+        }
+    }
+
+    public int deleteOldDeliveredRewards(long olderThanTimestamp) throws SQLException {
+        String sql = "DELETE FROM pending_rewards WHERE delivered = 1 AND creation_timestamp < ?;";
+        Connection conn = getConnection();
+        int rowsAffected = 0;
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, olderThanTimestamp);
+            rowsAffected = pstmt.executeUpdate();
+            // Logging of actual deletion count moved to RewardManager after this method returns.
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Error al eliminar recompensas entregadas antiguas.", e);
+            throw e;
+        }
+        return rowsAffected;
     }
 }

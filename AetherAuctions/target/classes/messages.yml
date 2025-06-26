@@ -149,7 +149,7 @@ command_mis_footer: "&6---------------------------"
 command_historial_not_implemented: "&eEl historial de subastas aún no está implementado."
 
 # Mensajes de Feedback de Comandos (Admin)
-admin_reload_success: "&aConfiguración y mensajes recargados." # Ya existe, pero verificar
+admin_reload_success: "&aConfiguración y mensajes recargados."
 command_admin_ver_not_found: "&cNo se encontró ninguna subasta (activa o no) con el ID '%id%'."
 command_admin_ver_details_header: "&6--- Detalles de Subasta (Admin) ID: %id% ---"
 command_admin_ver_seller: "&7Vendedor: &e%name% (%uuid%)"
@@ -162,7 +162,61 @@ command_admin_ver_time: "&7Tiempo Restante/Finalizado: &c%time%"
 command_admin_ver_invalid_id_format: "&cEl formato del ID de subasta es inválido." # Si se usa parseo de UUID directo
 admin_borrar_success: "&aSubasta #%id% (%item_name%) borrada exitosamente por un administrador."
 admin_borrar_failed: "&cNo se pudo borrar la subasta '%id%'."
-# command_admin_borrar_invalid_id_format: "&cEl formato del ID de subasta es inválido." # Reusar command_admin_ver_invalid_id_format
+# command_admin_borrar_invalid_id_format: "&cEl formato del ID de subasta es inválido."
+
+# Notificaciones de Venta/Expiración (Vendedor)
+auction_your_item_sold_bid_money_received: "&aRecibiste &e%received% %currency%&a por tu subasta de &6%item_name%&a (#%id_short%) vendida a &b%winner%&a."
+auction_your_item_sold_bid_money_pending_error: "&eHubo un problema al pagarte por tu subasta de &6%item_name%&e (#%id_short%). El pago de &e%received% %currency%&e ha quedado pendiente. Razón: %reason%"
+auction_your_item_sold_buy_now_money_received: "&aRecibiste &e%received% %currency%&a por tu subasta de &6%item_name%&a (#%id_short%) comprada directamente por &b%buyer%&a."
+auction_your_item_sold_buy_now_money_pending_error: "&eHubo un problema al pagarte por tu subasta (compra directa) de &6%item_name%&e (#%id_short%). El pago de &e%received% %currency%&e ha quedado pendiente. Razón: %reason%"
+
+# Notificaciones de Entrega/Recompensa de Ítems (Ganador/Vendedor)
+auction_won_item_received: "&a¡Ganaste la subasta #%id_short% por &6%item_name%&a! El ítem ha sido añadido a tu inventario."
+auction_won_inventory_full_pending: "&e¡Ganaste la subasta #%id_short% por &6%item_name%&e, pero tu inventario está lleno! El ítem se ha guardado para que lo reclames con &b/subasta reclamar&e."
+auction_expired_item_returned: "&eTu subasta por &6%item_name%&e (#%id_short%) expiró. El ítem ha sido devuelto a tu inventario."
+auction_expired_inventory_full_pending: "&eTu subasta por &6%item_name%&e (#%id_short%) expiró, pero tu inventario está lleno. El ítem se ha guardado para que lo reclames con &b/subasta reclamar&e."
+auction_cancelled_inventory_full_pending: "&eLa subasta por &6%item_name%&e (#%id_short%) fue cancelada, pero tu inventario está lleno. El ítem se ha guardado para que lo reclames con &b/subasta reclamar&e."
+auction_buy_now_success_item_received: "&a¡Has comprado &6%item_name%&a exitosamente! El ítem ha sido añadido a tu inventario."
+auction_buy_now_inventory_full_pending: "&eHas comprado &6%item_name%&e, pero tu inventario está lleno. El ítem se ha guardado para que lo reclames con &b/subasta reclamar&e."
+
+# Notificaciones de Reembolso de Puja (Pujador)
+auction_cancelled_bid_refund_pending_error: "&eHubo un problema al devolver tu puja de &c%amount% %currency%&e para la subasta cancelada #%id_short%. El reembolso ha quedado pendiente. Razón: %reason%"
+# auction_cancelled_bid_refunded: "&eLa subasta #%auction_id_short% en la que pujaste fue cancelada. Tu puja de &a%amount% %currency%&e ha sido devuelta." (ya existe)
+
+# --- Mensajes del Sistema de Recompensas Pendientes ---
+reward_processing_on_join: "&aProcesando tus recompensas pendientes..."
+rewards_pending_notification: "&eTienes %count% recompensas pendientes. Usa /subasta reclamar para obtenerlas."
+rewards_none_pending: "&aNo tienes recompensas pendientes."
+reward_claim_successful_item: "&a¡Has reclamado %item_name%!"
+reward_claim_successful_money: "&a¡Has reclamado %amount% %currency%!"
+reward_claim_failed_inventory: "&cNo se pudo reclamar %item_name%. Tu inventario está lleno."
+reward_claim_failed_money: "&cNo se pudo reclamar %amount% %currency%. Ocurrió un error en la transacción."
+reward_auto_item_received: "&aHas recibido automáticamente %item_name% de una subasta."
+reward_auto_money_received: "&aHas recibido automáticamente %amount% %currency% de una subasta."
+
+# Razones para PendingReward (usadas por el sistema de reclamación)
+reward_reason_item_won: "&aÍtem &6%item_name%&a ganado en subasta #%id_short%."
+reward_reason_item_expired_return: "&eÍtem &6%item_name%&e devuelto de subasta expirada #%id_short%."
+reward_reason_item_cancelled_return: "&eÍtem &6%item_name%&e devuelto de subasta cancelada #%id_short%."
+reward_reason_item_bought: "&aÍtem &6%item_name%&a comprado directamente (subasta #%id_short%)."
+# reward_reason_money_sold: "&aDinero por venta de &6%item_name%&a (#%id_short%)."
+# reward_reason_money_refund: "&eReembolso de puja para subasta #%id_short%."
+
+# --- Mensajes para Borrado por Admin ---
+admin_borrar_error_not_found_generic: "&cLa subasta especificada no fue encontrada o ya no existe."
+
+# Notificaciones para adminDeleteAuction
+auction_admin_deleted_item_returned: "&eTu subasta (#%id_short% - %item_name%) fue eliminada por el admin &b%admin%&e. El ítem ha sido devuelto a tu inventario."
+auction_admin_deleted_item_pending_inv_full: "&eTu subasta (#%id_short% - %item_name%) fue eliminada por el admin &b%admin%&e, pero tu inventario estaba lleno. El ítem se ha guardado para que lo reclames."
+auction_admin_deleted_bid_refunded: "&eLa subasta (#%id_short%) en la que pujaste fue eliminada por el admin &b%admin%&e. Tu puja de &a%amount%&e ha sido devuelta."
+auction_admin_deleted_bid_refund_pending_error: "&eLa subasta (#%id_short%) en la que pujaste fue eliminada por el admin &b%admin%&e. Hubo un error al devolver tu puja de &c%amount%&e (Razón: %reason%). El reembolso quedó pendiente."
+
+# Razones para PendingReward (admin delete)
+reward_reason_item_admin_deleted: "&eÍtem &6%item_name%&e devuelto de subasta #%id_short% eliminada por admin &b%admin%&e."
+reward_reason_money_admin_deleted_refund: "&eReembolso de puja (%amount%) para subasta #%id_short% eliminada por admin &b%admin%&e." # Placeholder %amount% should include currency already from AuctionManager
+
+# Errores
+auction_buy_now_error_database_reverted: "&cError de base de datos al procesar la compra. Tu dinero ha sido devuelto. Inténtalo de nuevo."
 
 # Errores de carga de mensajes (MessageManager)
 # message_key_missing_error: "&cError: Clave de mensaje no encontrada (%key%)" # Configurado en config.yml

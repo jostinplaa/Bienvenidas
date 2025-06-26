@@ -79,4 +79,27 @@ public class SerializationUtil {
             return new ArrayList<>(); // Return empty list on error
         }
     }
+
+    // List<String> to JSON String
+    public static String stringListToJson(List<String> list) {
+        if (list == null || list.isEmpty()) {
+            return "[]";
+        }
+        return gson.toJson(list);
+    }
+
+    // JSON String to List<String>
+    public static List<String> stringListFromJson(String json) {
+        if (json == null || json.isEmpty() || json.equals("null")) {
+            return new ArrayList<>();
+        }
+        try {
+            Type stringListType = new TypeToken<ArrayList<String>>() {}.getType();
+            List<String> list = gson.fromJson(json, stringListType);
+            return list != null ? list : new ArrayList<>();
+        } catch (com.google.gson.JsonSyntaxException e) {
+            System.err.println("Error al deserializar la lista de strings desde JSON: " + json + " - " + e.getMessage());
+            return new ArrayList<>();
+        }
+    }
 }

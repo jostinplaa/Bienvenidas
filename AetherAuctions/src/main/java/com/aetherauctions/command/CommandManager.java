@@ -30,8 +30,9 @@ public class CommandManager implements CommandExecutor, TabCompleter {
     private final MessageManager msgManager;
     private final AuctionManager auctionManager;
     private final ConfigManager cfgManager;
+    // RewardManager is accessed via plugin.getRewardManager() when needed
 
-    private final List<String> validUserSubCommands = Arrays.asList("ayuda", "crear", "cancelar", "mis", "historial");
+    private final List<String> validUserSubCommands = Arrays.asList("ayuda", "crear", "cancelar", "mis", "historial", "reclamar"); // Added "reclamar"
     private final List<String> validAdminSubCommands = Arrays.asList("reload", "ver", "borrar");
     private static final double SIMILARITY_THRESHOLD = 0.75;
 
@@ -166,9 +167,22 @@ public class CommandManager implements CommandExecutor, TabCompleter {
                 msgManager.sendMessage(sender, "no_permission");
                 return true;
             }
-            handleAdminCommands(sender, Arrays.copyOfRange(args, 1, args.length), label); // Pass label
+            handleAdminCommands(sender, Arrays.copyOfRange(args, 1, args.length), label);
             return true;
-        } else {
+        } else if (subCommand.equals("reclamar")) {
+            if (!(sender instanceof Player)) {
+                msgManager.sendMessage(sender, "player_only_command");
+                return true;
+            }
+            Player playerToClaim = (Player) sender;
+            if (!playerToClaim.hasPermission("aetherauctions.command.reclamar")) {
+                msgManager.sendMessage(playerToClaim, "no_permission");
+                return true;
+            }
+            plugin.getRewardManager().attemptClaimNextReward(playerToClaim);
+            return true;
+        }
+        else {
             String inputSubCommand = args[0].toLowerCase();
             List<String> relevantCommands = new ArrayList<>(validUserSubCommands);
             if (sender.hasPermission("aetherauctions.admin")) {
@@ -276,10 +290,11 @@ public class CommandManager implements CommandExecutor, TabCompleter {
     private void sendHelpMessage(CommandSender sender) {
         sender.sendMessage(msgManager.getRawMessage("help_header"));
         msgManager.sendMessage(sender, "help_subasta");
-        msgManager.sendMessage(sender, "help_subasta_crear");
-        msgManager.sendMessage(sender, "help_subasta_cancelar");
-        msgManager.sendMessage(sender, "help_subasta_mis");
-        msgManager.sendMessage(sender, "help_subasta_historial");
+        if (sender.hasPermission("aetherauctions.command.crear")) msgManager.sendMessage(sender, "help_subasta_crear");
+        if (sender.hasPermission("aetherauctions.command.cancelar")) msgManager.sendMessage(sender, "help_subasta_cancelar");
+        if (sender.hasPermission("aetherauctions.command.mis")) msgManager.sendMessage(sender, "help_subasta_mis");
+        if (sender.hasPermission("aetherauctions.command.historial")) msgManager.sendMessage(sender, "help_subasta_historial");
+        if (sender.hasPermission("aetherauctions.command.reclamar")) msgManager.sendMessage(sender, "help_subasta_reclamar"); // Added help for reclamar
         if (sender.hasPermission("aetherauctions.admin")) {
             msgManager.sendMessage(sender, "help_subasta_admin");
         }
@@ -324,9 +339,12 @@ public class CommandManager implements CommandExecutor, TabCompleter {
         String currentArg = args[args.length - 1].toLowerCase();
 
         if (args.length == 1) {
-            List<String> allUserSubCommands = new ArrayList<>(validUserSubCommands);
-            for (String sc : allUserSubCommands) {
-                if (sender.hasPermission("aetherauctions.command." + sc) || (sc.equals("ayuda") && sender.hasPermission("aetherauctions.user"))) {
+            // Use a copy for modification if needed, or iterate directly over validUserSubCommands
+            for (String sc : validUserSubCommands) { // Iterate directly over the updated list
+                String permissionNode = "aetherauctions.command." + sc;
+                if (sc.equals("ayuda")) permissionNode = "aetherauctions.user"; // Special case for ayuda
+
+                if (sender.hasPermission(permissionNode)) {
                      if (sc.startsWith(currentArg)) {
                         completions.add(sc);
                     }

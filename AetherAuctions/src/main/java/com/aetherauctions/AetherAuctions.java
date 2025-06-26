@@ -6,8 +6,10 @@ import com.aetherauctions.config.ConfigManager;
 import com.aetherauctions.config.MessageManager;
 import com.aetherauctions.listener.InventoryClickListener;
 import com.aetherauctions.listener.PlayerChatListener;
-import com.aetherauctions.listener.PlayerQuitListener; // Added for constructor update
+import com.aetherauctions.listener.PlayerQuitListener;
+import com.aetherauctions.listener.PlayerJoinListener;
 import com.aetherauctions.storage.AuctionStorage;
+import com.aetherauctions.managers.RewardManager; // Corrected package
 // No longer need com.aetherauctions.gui.GUIManager instance if it's all static
 // No longer need com.aetherauctions.gui.rework.NewGUIInventoryListener
 
@@ -27,6 +29,7 @@ public class AetherAuctions extends JavaPlugin {
     private AuctionManager auctionManager;
     private CommandManager commandManager;
     private InventoryClickListener inventoryClickListener; // The main/consolidated listener
+    private RewardManager rewardManager; // Add RewardManager field
 
     @Override
     public void onEnable() {
@@ -57,9 +60,13 @@ public class AetherAuctions extends JavaPlugin {
         auctionManager.loadAuctions();
         getLogger().info("AuctionManager inicializado y subastas cargadas.");
 
-        // CommandManager might need an update if it was expecting a non-static GUIManager instance
-        // For now, the placeholder constructor `public CommandManager(AetherAuctions plugin)` is used.
-        // If CommandManager needs GUIManager for other GUIs, it should use static methods or be refactored.
+        // Initialize RewardManager with all its dependencies
+        rewardManager = new RewardManager(this, auctionStorage, configManager, messageManager, econ);
+        rewardManager.scheduleOldDeliveredRewardCleanup(); // Schedule cleanup task
+        getLogger().info("RewardManager inicializado y limpieza programada.");
+
+        // CommandManager constructor remains CommandManager(this)
+        // It will access RewardManager via plugin.getRewardManager()
         commandManager = new CommandManager(this);
         if (getCommand("subasta") != null) {
             getCommand("subasta").setExecutor(commandManager);
@@ -71,12 +78,14 @@ public class AetherAuctions extends JavaPlugin {
 
         // Register Listeners
         inventoryClickListener = new InventoryClickListener(this);
-        PlayerChatListener chatListener = new PlayerChatListener(this, inventoryClickListener);
+        PlayerChatListener chatListener = new PlayerChatListener(this, this.inventoryClickListener);
         PlayerQuitListener quitListener = new PlayerQuitListener(this, inventoryClickListener);
+        PlayerJoinListener joinListener = new PlayerJoinListener(this, rewardManager); // Pass initialized rewardManager
 
         getServer().getPluginManager().registerEvents(inventoryClickListener, this);
         getServer().getPluginManager().registerEvents(chatListener, this);
         getServer().getPluginManager().registerEvents(quitListener, this);
+        getServer().getPluginManager().registerEvents(joinListener, this);
         getLogger().info("Listeners registrados.");
 
         getLogger().info("AetherAuctions v" + getDescription().getVersion() + " habilitado exitosamente!");
@@ -129,7 +138,11 @@ public class AetherAuctions extends JavaPlugin {
         return auctionManager;
     }
 
-    public InventoryClickListener getInventoryClickListener() { // Getter for the main listener
+    public InventoryClickListener getInventoryClickListener() {
         return inventoryClickListener;
+    }
+
+    public RewardManager getRewardManager() { // Getter for RewardManager
+        return rewardManager;
     }
 }

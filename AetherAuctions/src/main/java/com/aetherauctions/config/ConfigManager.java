@@ -118,4 +118,8 @@ public class ConfigManager {
     public String getMessagesMissingKeyFormat() {
         return config.getString("messages.missing_key_format", "&cError: Clave '%key%' no encontrada.");
     }
+
+    public int getDeliveredRewardsKeptDays() {
+        return config.getInt("pending_rewards.cleanup_days_to_keep", 30); // Default to 30 days
+    }
 }
