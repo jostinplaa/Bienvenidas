@@ -7,6 +7,8 @@ import com.aetherauctions.storage.AuctionStorage; // Added import
 import com.aetherauctions.config.ConfigManager;   // Added import
 import com.aetherauctions.config.MessageManager; // Added import
 import com.aetherauctions.util.SerializationUtil;
+import com.aetherauctions.util.InventoryUtil; // Added import
+import java.sql.SQLException; // Added import
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -37,7 +39,7 @@ public class RewardManager {
     }
 
     public void createPendingReward(UUID ownerId, PendingReward.RewardType type, ItemStack item, String reasonKey, List<String> reasonPlaceholders) {
-        if (type != PendingReward.RewardType.ITEM_AUCTION_WON && type != PendingReward.RewardType.ITEM_AUCTION_RETURNED && type != PendingReward.RewardType.ITEM_BOUGHT) { // Added ITEM_BOUGHT
+        if (type != PendingReward.RewardType.ITEM_AUCTION_WON && type != PendingReward.RewardType.ITEM_AUCTION_RETURNED) {
             logger.warning("[RewardManager] createPendingReward (ITEM) llamado con tipo incorrecto: " + type + " para " + ownerId);
             return;
         }
@@ -167,13 +169,12 @@ public class RewardManager {
         switch (reward.getType()) {
             case ITEM_AUCTION_WON:
             case ITEM_AUCTION_RETURNED:
-            case ITEM_BOUGHT: // Added ITEM_BOUGHT
                 ItemStack item = reward.getItemToClaim();
                 if (item == null || item.getType() == Material.AIR) {
                     logger.severe(String.format("[RewardManager] Ítem nulo/aire para recompensa ID: %s para %s. Marcando como entregada.", rewardId, playerName));
                     try {
                         auctionStorage.markRewardDelivered(rewardId);
-                    } catch (java.sql.SQLException e) {
+                    } catch (SQLException e) {
                         logger.log(java.util.logging.Level.SEVERE, String.format("[RewardManager] CRITICAL: Fallo al marcar recompensa de ÍTEM CORRUPTO ID %s como entregada. Error: %s", rewardId, e.getMessage()), e);
                     }
                     return false; // No se puede entregar.
@@ -187,7 +188,7 @@ public class RewardManager {
                         messageManager.sendMessage(player, reward.getReasonMessageKey(), reward.getReasonPlaceholders().toArray(new String[0]));
                         logger.info(String.format("[RewardManager] ÉXITO entrega ÍTEM. ID: %s, Jugador: %s, Ítem: %s", rewardId, playerName, item.getType()));
                         success = true;
-                    } catch (java.sql.SQLException e) {
+                    } catch (SQLException e) {
                         logger.log(java.util.logging.Level.SEVERE, String.format("[RewardManager] CRITICAL DB: Ítem entregado para ID %s a %s PERO FALLÓ MARCADO. Error: %s", rewardId, playerName, e.getMessage()), e);
                         inventory.removeItem(item.clone());
                         player.updateInventory();
@@ -204,7 +205,6 @@ public class RewardManager {
                     success = false;
                 }
                 break;
-
             case MONEY_AUCTION_SOLD:
             case MONEY_BID_REFUND:
                 if (economy != null) {

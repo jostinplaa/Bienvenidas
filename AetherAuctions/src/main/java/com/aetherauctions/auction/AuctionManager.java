@@ -347,9 +347,9 @@ public class AuctionManager {
             );
             plugin.getRewardManager().createPendingReward(
                 buyer.getUniqueId(),
-                com.aetherauctions.model.PendingReward.RewardType.ITEM_BOUGHT, // Nuevo tipo o reutilizar ITEM_AUCTION_WON
+                com.aetherauctions.model.PendingReward.RewardType.ITEM_AUCTION_WON, // Usar ITEM_AUCTION_WON temporalmente o crear ITEM_PURCHASED si es necesario
                 auction.getItemStack().clone(),
-                "reward_reason_item_bought_inventory_full", // Nueva clave de mensaje para el motivo
+                "reward_reason_item_bought_inventory_full",
                 java.util.Arrays.asList(
                     "%item_name%", InventoryUtil.formatMaterialName(auction.getItemStack().getType()),
                     "#id_short%", auction.getId().toString().substring(0,8)
