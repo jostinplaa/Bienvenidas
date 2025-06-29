@@ -195,12 +195,20 @@ reward_auto_item_received: "&aHas recibido automáticamente %item_name% de una s
 reward_auto_money_received: "&aHas recibido automáticamente %amount% %currency% de una subasta."
 
 # Razones para PendingReward (usadas por el sistema de reclamación)
-reward_reason_item_won: "&aÍtem &6%item_name%&a ganado en subasta #%id_short%."
-reward_reason_item_expired_return: "&eÍtem &6%item_name%&e devuelto de subasta expirada #%id_short%."
-reward_reason_item_cancelled_return: "&eÍtem &6%item_name%&e devuelto de subasta cancelada #%id_short%."
-reward_reason_item_bought: "&aÍtem &6%item_name%&a comprado directamente (subasta #%id_short%)."
-# reward_reason_money_sold: "&aDinero por venta de &6%item_name%&a (#%id_short%)."
-# reward_reason_money_refund: "&eReembolso de puja para subasta #%id_short%."
+reward_reason_item_won_inventory_full: "&aGanaste el ítem &6%item_name%&a (subasta #%id_short%), pero tu inventario estaba lleno. Reclámalo con /subasta reclamar."
+reward_reason_item_won_offline: "&aGanaste el ítem &6%item_name%&a (subasta #%id_short%) mientras estabas desconectado. Reclámalo con /subasta reclamar."
+reward_reason_item_expired_inventory_full: "&eTu ítem &6%item_name%&e (subasta #%id_short%) expiró y fue devuelto, pero tu inventario estaba lleno. Reclámalo con /subasta reclamar."
+reward_reason_item_expired_offline: "&eTu ítem &6%item_name%&e (subasta #%id_short%) expiró y fue devuelto mientras estabas desconectado. Reclámalo con /subasta reclamar."
+reward_reason_item_cancelled_return_pending: "&eEl ítem &6%item_name%&e de tu subasta cancelada #%id_short% por %canceller% está pendiente de ser reclamado (inventario lleno o estabas offline)."
+reward_reason_item_bought_inventory_full: "&aCompraste el ítem &6%item_name%&a (subasta #%id_short%), pero tu inventario estaba lleno. Reclámalo con /subasta reclamar."
+
+reward_reason_money_sold_buynow_seller_error: "&aRecibiste &e%amount% %currency%&a por &6%item_name%&a (#%id_short%) comprada por &b%buyer%&a. Error al depositar: %reason%."
+reward_reason_money_sold_buynow_seller_offline: "&aRecibiste &e%amount% %currency%&a por &6%item_name%&a (#%id_short%) comprada por &b%buyer%&a mientras estabas desconectado."
+reward_reason_money_sold_bid_seller_error: "&aRecibiste &e%amount% %currency%&a por &6%item_name%&a (#%id_short%) vendida a &b%winner%&a. Error al depositar: %reason%."
+reward_reason_money_sold_bid_seller_offline: "&aRecibiste &e%amount% %currency%&a por &6%item_name%&a (#%id_short%) vendida a &b%winner%&a mientras estabas desconectado."
+
+reward_reason_money_cancelled_refund_error: "&eReembolso de &c%amount% %currency%&e por subasta cancelada #%id_short% pendiente. Error: %reason%."
+reward_reason_money_cancelled_refund_offline: "&eReembolso de &c%amount% %currency%&e por subasta cancelada #%id_short% pendiente (estabas offline)."
 
 # --- Mensajes para Borrado por Admin ---
 admin_borrar_error_not_found_generic: "&cLa subasta especificada no fue encontrada o ya no existe."
@@ -212,8 +220,15 @@ auction_admin_deleted_bid_refunded: "&eLa subasta (#%id_short%) en la que pujast
 auction_admin_deleted_bid_refund_pending_error: "&eLa subasta (#%id_short%) en la que pujaste fue eliminada por el admin &b%admin%&e. Hubo un error al devolver tu puja de &c%amount%&e (Razón: %reason%). El reembolso quedó pendiente."
 
 # Razones para PendingReward (admin delete)
-reward_reason_item_admin_deleted: "&eÍtem &6%item_name%&e devuelto de subasta #%id_short% eliminada por admin &b%admin%&e."
-reward_reason_money_admin_deleted_refund: "&eReembolso de puja (%amount%) para subasta #%id_short% eliminada por admin &b%admin%&e." # Placeholder %amount% should include currency already from AuctionManager
+reward_reason_item_admin_deleted: "&eÍtem &6%item_name%&e devuelto de subasta #%id_short% eliminada por admin &b%admin%&e. Reclámalo con /subasta reclamar si no lo recibiste."
+reward_reason_money_admin_deleted_refund: "&eReembolso de &c%amount% %currency%&e por subasta #%id_short% eliminada por admin &b%admin%&e. Reclámalo con /subasta reclamar si no lo recibiste."
+
+# Errores y Notificaciones de Reclamo de Recompensas (RewardManager)
+reward_claim_failed_money_econ_error: "&cNo se pudo reclamar el dinero (&e%amount% %currency%&c) de la recompensa #%id_short%. Error de Vault: %reason%."
+reward_claim_failed_money_no_vault: "&cNo se pudo reclamar el dinero (&e%amount% %currency%&c) de la recompensa #%id_short%. El sistema de economía no está disponible."
+# auction_buy_now_success_item_received: "&a¡Has comprado &6%item_name%&a exitosamente! El ítem ha sido añadido a tu inventario." (ya existe y es usado)
+# auction_buy_now_inventory_full_pending: "&eHas comprado &6%item_name%&e, pero tu inventario está lleno. El ítem se ha guardado para que lo reclames con &b/subasta reclamar&e." (ya existe y es usado)
+# reward_claim_failed_inventory: "&cNo se pudo reclamar %item_name%. Tu inventario está lleno." (ya existe y es usado)
 
 # Errores
 auction_buy_now_error_database_reverted: "&cError de base de datos al procesar la compra. Tu dinero ha sido devuelto. Inténtalo de nuevo."
@@ -248,4 +263,4 @@ details_current_bid: "&7Puja Actual: &e%price% %currency%" # Ya estaba
 details_buyout_price: "&7Compra Directa: &a%price% %currency%" # Ya estaba
 details_time_remaining: "&7Tiempo: &c%time%" # Ya estaba
 new_gui_debug_no_active_auctions_for_test: "&cNo hay subastas activas disponibles para probar la GUI de detalles." # Ya estaba
-new_gui_debug_details_gui_opened: "&aAbriendo GUI de detalles para la subasta de prueba ID: %id%."# Ya estaba
+new_gui_debug_details_gui_opened: "&aAbriendo GUI de detalles para la subasta de prueba ID: %id%." # Ya estaba

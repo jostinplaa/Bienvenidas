@@ -286,34 +286,81 @@ public class AuctionManager {
                         "%buyer%", buyer.getName(),
                         "%price%", String.format("%.2f", buyNowPrice),
                         "%received%", String.format("%.2f", amountToSeller),
-                        "%item_name%", InventoryUtil.formatMaterialName(auction.getItemStack().getType()));
+                        "%item_name%", InventoryUtil.formatMaterialName(auction.getItemStack().getType()),
+                        "%currency%", configManager.getCurrencySymbol(),
+                        "#id_short%", auction.getId().toString().substring(0,8));
                 } else {
                     plugin.getLogger().warning("Fallo al depositar dinero a vendedor online " + sellerOffline.getName() + " para subasta (compra directa) " + auction.getId() + ". Razón: " + tx.errorMessage + ". Se creará PendingReward.");
-                    // TODO PASO 13: Crear PendingReward (MONEY) para el vendedor
-                    messageManager.sendMessage(sellerOffline.getPlayer(), "auction_your_item_sold_buy_now_money_pending_error", "%reason%", tx.errorMessage);
+                    plugin.getRewardManager().createPendingReward(
+                        sellerOffline.getUniqueId(),
+                        com.aetherauctions.model.PendingReward.RewardType.MONEY_AUCTION_SOLD,
+                        amountToSeller,
+                        "reward_reason_money_sold_buynow_seller_error", // Nueva clave de mensaje para el motivo
+                        java.util.Arrays.asList(
+                            "%amount%", String.format("%.2f", amountToSeller),
+                            "%currency%", configManager.getCurrencySymbol(),
+                            "%item_name%", InventoryUtil.formatMaterialName(auction.getItemStack().getType()),
+                            "#id_short%", auction.getId().toString().substring(0,8),
+                            "%buyer%", buyer.getName(),
+                            "%reason%", tx.errorMessage
+                        )
+                    );
+                    messageManager.sendMessage(sellerOffline.getPlayer(), "auction_your_item_sold_buy_now_money_pending_error",
+                        "%received%", String.format("%.2f", amountToSeller),
+                        "%currency%", configManager.getCurrencySymbol(),
+                        "%item_name%", InventoryUtil.formatMaterialName(auction.getItemStack().getType()),
+                        "#id_short%", auction.getId().toString().substring(0,8),
+                        "%reason%", tx.errorMessage);
                 }
             } else {
                 plugin.getLogger().info("Vendedor " + sellerOffline.getName() + " offline para subasta (compra directa) " + auction.getId() + ". Se creará PendingReward (MONEY).");
-                // TODO PASO 13: Crear PendingReward (MONEY) para el vendedor
+                plugin.getRewardManager().createPendingReward(
+                    sellerOffline.getUniqueId(),
+                    com.aetherauctions.model.PendingReward.RewardType.MONEY_AUCTION_SOLD,
+                    amountToSeller,
+                    "reward_reason_money_sold_buynow_seller_offline", // Nueva clave de mensaje para el motivo
+                    java.util.Arrays.asList(
+                        "%amount%", String.format("%.2f", amountToSeller),
+                        "%currency%", configManager.getCurrencySymbol(),
+                        "%item_name%", InventoryUtil.formatMaterialName(auction.getItemStack().getType()),
+                        "#id_short%", auction.getId().toString().substring(0,8),
+                        "%buyer%", buyer.getName()
+                    )
+                );
             }
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Error de DB al procesar compra directa (SOLD_BUYNOW) para subasta " + auction.getId() + ". El pago al vendedor podría no haberse procesado.", e);
-            econ.depositPlayer(buyer, buyNowPrice);
+            econ.depositPlayer(buyer, buyNowPrice); // Revertir pago al comprador
             messageManager.sendMessage(buyer, "auction_buy_now_error_database_reverted");
-            // Revert status in memory if save failed, so it's not stuck in SOLD_BUYNOW if payment couldn't be made to seller
+            // Revert status in memory if save failed
             auction.setStatus(AuctionStatus.ACTIVE);
-            auction.setHighestBidderId(null); // Revert bidder info as well
-            auction.setHighestBidderName(null);
-            // auction.setCurrentBid(oldBid); // Revert to old bid if any - oldBid is not defined in this scope
+            // Potentially revert bidder info if it was a bid that triggered buy now
+            // activeAuctionsCache.put(auction.getId(), auction); // Ensure it's back in cache if removed prematurely
             return false;
         }
 
+        // Entregar ítem al comprador
         if (buyer.getInventory().firstEmpty() == -1) {
-            messageManager.sendMessage(buyer, "auction_buy_now_inventory_full");
-            // TODO PASO 13: Crear PendingReward (ITEM) para el comprador
+            messageManager.sendMessage(buyer, "auction_buy_now_inventory_full_pending",
+                "%item_name%", InventoryUtil.formatMaterialName(auction.getItemStack().getType()),
+                "#id_short%", auction.getId().toString().substring(0,8)
+            );
+            plugin.getRewardManager().createPendingReward(
+                buyer.getUniqueId(),
+                com.aetherauctions.model.PendingReward.RewardType.ITEM_BOUGHT, // Nuevo tipo o reutilizar ITEM_AUCTION_WON
+                auction.getItemStack().clone(),
+                "reward_reason_item_bought_inventory_full", // Nueva clave de mensaje para el motivo
+                java.util.Arrays.asList(
+                    "%item_name%", InventoryUtil.formatMaterialName(auction.getItemStack().getType()),
+                    "#id_short%", auction.getId().toString().substring(0,8)
+                )
+            );
         } else {
             buyer.getInventory().addItem(auction.getItemStack().clone());
-            messageManager.sendMessage(buyer, "buy_now_success"); // Generic success, item received.
+            messageManager.sendMessage(buyer, "auction_buy_now_success_item_received", // Cambiado a mensaje específico
+                "%item_name%", InventoryUtil.formatMaterialName(auction.getItemStack().getType()),
+                "#id_short%", auction.getId().toString().substring(0,8)
+            );
         }
         // TODO: Actualizar GUIs
         return true;
@@ -348,34 +395,87 @@ public class AuctionManager {
                             "%winner%", auction.getHighestBidderName(),
                             "%price%", String.format("%.2f", finalPrice),
                             "%received%", String.format("%.2f", amountToSeller),
-                            "%item_name%", InventoryUtil.formatMaterialName(auction.getItemStack().getType()));
+                            "%item_name%", InventoryUtil.formatMaterialName(auction.getItemStack().getType()),
+                            "%currency%", configManager.getCurrencySymbol(),
+                            "#id_short%", auction.getId().toString().substring(0,8));
                     } else {
                         plugin.getLogger().warning("Fallo al depositar dinero a vendedor online " + sellerOffline.getName() + " para subasta " + auction.getId() + ". Razón: " + tx.errorMessage + ". Se creará PendingReward.");
-                        // TODO PASO 13: Crear PendingReward (MONEY) para el vendedor
-                        messageManager.sendMessage(sellerOffline.getPlayer(), "auction_your_item_sold_bid_money_pending_error", "%reason%", tx.errorMessage);
+                        plugin.getRewardManager().createPendingReward(
+                            sellerOffline.getUniqueId(),
+                            com.aetherauctions.model.PendingReward.RewardType.MONEY_AUCTION_SOLD,
+                            amountToSeller,
+                            "reward_reason_money_sold_bid_seller_error", // Nueva clave de mensaje
+                            java.util.Arrays.asList(
+                                "%amount%", String.format("%.2f", amountToSeller),
+                                "%currency%", configManager.getCurrencySymbol(),
+                                "%item_name%", InventoryUtil.formatMaterialName(auction.getItemStack().getType()),
+                                "#id_short%", auction.getId().toString().substring(0,8),
+                                "%winner%", auction.getHighestBidderName(),
+                                "%reason%", tx.errorMessage
+                            )
+                        );
+                        messageManager.sendMessage(sellerOffline.getPlayer(), "auction_your_item_sold_bid_money_pending_error",
+                            "%received%", String.format("%.2f", amountToSeller),
+                             "%currency%", configManager.getCurrencySymbol(),
+                            "%item_name%", InventoryUtil.formatMaterialName(auction.getItemStack().getType()),
+                            "#id_short%", auction.getId().toString().substring(0,8),
+                            "%reason%", tx.errorMessage);
                     }
                 } else {
                     plugin.getLogger().info("Vendedor " + sellerOffline.getName() + " offline para subasta " + auction.getId() + ". Se creará PendingReward (MONEY).");
-                    // TODO PASO 13: Crear PendingReward (MONEY) para el vendedor
+                    plugin.getRewardManager().createPendingReward(
+                        sellerOffline.getUniqueId(),
+                        com.aetherauctions.model.PendingReward.RewardType.MONEY_AUCTION_SOLD,
+                        amountToSeller,
+                        "reward_reason_money_sold_bid_seller_offline", // Nueva clave de mensaje
+                        java.util.Arrays.asList(
+                            "%amount%", String.format("%.2f", amountToSeller),
+                            "%currency%", configManager.getCurrencySymbol(),
+                            "%item_name%", InventoryUtil.formatMaterialName(auction.getItemStack().getType()),
+                            "#id_short%", auction.getId().toString().substring(0,8),
+                            "%winner%", auction.getHighestBidderName()
+                        )
+                    );
                 }
 
                 // Dar ítem al ganador
                 if (winner.isOnline() && winner.getPlayer() != null && winner.getPlayer().getInventory().firstEmpty() == -1) {
-                    messageManager.sendMessage(winner.getPlayer(), "auction_won_inventory_full", "%item_name%", InventoryUtil.formatMaterialName(auction.getItemStack().getType()));
-                    // TODO PASO 13: Crear PendingReward (ITEM) para el ganador
+                    messageManager.sendMessage(winner.getPlayer(), "auction_won_inventory_full_pending", // Cambiado
+                        "%item_name%", InventoryUtil.formatMaterialName(auction.getItemStack().getType()),
+                        "#id_short%", auction.getId().toString().substring(0,8));
+                    plugin.getRewardManager().createPendingReward(
+                        winner.getUniqueId(),
+                        com.aetherauctions.model.PendingReward.RewardType.ITEM_AUCTION_WON,
+                        auction.getItemStack().clone(),
+                        "reward_reason_item_won_inventory_full", // Nueva clave de mensaje
+                        java.util.Arrays.asList(
+                            "%item_name%", InventoryUtil.formatMaterialName(auction.getItemStack().getType()),
+                            "#id_short%", auction.getId().toString().substring(0,8)
+                        )
+                    );
                 } else if (winner.isOnline() && winner.getPlayer() != null) {
                      winner.getPlayer().getInventory().addItem(auction.getItemStack().clone());
-                     messageManager.sendMessage(winner.getPlayer(), "auction_won_item_received", "%item_name%", InventoryUtil.formatMaterialName(auction.getItemStack().getType()));
+                     messageManager.sendMessage(winner.getPlayer(), "auction_won_item_received",
+                        "%item_name%", InventoryUtil.formatMaterialName(auction.getItemStack().getType()),
+                        "#id_short%", auction.getId().toString().substring(0,8));
                 } else {
-                    plugin.getLogger().info("Ganador " + winner.getName() + " offline. Ítem para subasta " + auction.getId() + " necesita ser reclamado.");
-                    // TODO PASO 13: Crear PendingReward (ITEM) para el ganador (offline)
+                    plugin.getLogger().info("Ganador " + winner.getName() + " offline. Ítem para subasta " + auction.getId() + " necesita ser reclamado. Creando PendingReward.");
+                    plugin.getRewardManager().createPendingReward(
+                        winner.getUniqueId(),
+                        com.aetherauctions.model.PendingReward.RewardType.ITEM_AUCTION_WON,
+                        auction.getItemStack().clone(),
+                        "reward_reason_item_won_offline", // Nueva clave de mensaje
+                        java.util.Arrays.asList(
+                            "%item_name%", InventoryUtil.formatMaterialName(auction.getItemStack().getType()),
+                            "#id_short%", auction.getId().toString().substring(0,8)
+                        )
+                    );
                 }
 
             } catch (SQLException e) {
                 plugin.getLogger().log(Level.SEVERE, "Error de DB al finalizar (SOLD_BID) subasta " + auction.getId() + ". El pago/entrega podría no haberse procesado.", e);
-                // Auction status not updated in DB, so it might be re-processed or require admin. Cache state is not reverted here.
             }
-        } else {
+        } else { // Subasta expirada sin pujas
             auction.setStatus(AuctionStatus.EXPIRED);
             try {
                 auctionStorage.saveAuction(auction);
@@ -384,14 +484,36 @@ public class AuctionManager {
 
                 // Devolver ítem al vendedor
                 if (sellerOffline.isOnline() && sellerOffline.getPlayer() != null && sellerOffline.getPlayer().getInventory().firstEmpty() == -1) {
-                    messageManager.sendMessage(sellerOffline.getPlayer(), "auction_expired_inventory_full", "%item_name%", InventoryUtil.formatMaterialName(auction.getItemStack().getType()));
-                    // TODO PASO 13: Crear PendingReward (ITEM) para el vendedor
+                    messageManager.sendMessage(sellerOffline.getPlayer(), "auction_expired_inventory_full_pending", // Cambiado
+                        "%item_name%", InventoryUtil.formatMaterialName(auction.getItemStack().getType()),
+                        "#id_short%", auction.getId().toString().substring(0,8));
+                    plugin.getRewardManager().createPendingReward(
+                        sellerOffline.getUniqueId(),
+                        com.aetherauctions.model.PendingReward.RewardType.ITEM_AUCTION_RETURNED,
+                        auction.getItemStack().clone(),
+                        "reward_reason_item_expired_inventory_full", // Nueva clave de mensaje
+                         java.util.Arrays.asList(
+                            "%item_name%", InventoryUtil.formatMaterialName(auction.getItemStack().getType()),
+                            "#id_short%", auction.getId().toString().substring(0,8)
+                        )
+                    );
                 } else if (sellerOffline.isOnline() && sellerOffline.getPlayer() != null) {
                     sellerOffline.getPlayer().getInventory().addItem(auction.getItemStack().clone());
-                    messageManager.sendMessage(sellerOffline.getPlayer(), "auction_expired_item_returned");
+                    messageManager.sendMessage(sellerOffline.getPlayer(), "auction_expired_item_returned",
+                        "%item_name%", InventoryUtil.formatMaterialName(auction.getItemStack().getType()),
+                        "#id_short%", auction.getId().toString().substring(0,8));
                 } else {
-                    plugin.getLogger().info("Vendedor " + sellerOffline.getName() + " offline. Ítem de subasta expirada " + auction.getId() + " necesita ser reclamado.");
-                    // TODO PASO 13: Crear PendingReward (ITEM) para el vendedor (offline)
+                    plugin.getLogger().info("Vendedor " + sellerOffline.getName() + " offline. Ítem de subasta expirada " + auction.getId() + " necesita ser reclamado. Creando PendingReward.");
+                    plugin.getRewardManager().createPendingReward(
+                        sellerOffline.getUniqueId(),
+                        com.aetherauctions.model.PendingReward.RewardType.ITEM_AUCTION_RETURNED,
+                        auction.getItemStack().clone(),
+                        "reward_reason_item_expired_offline", // Nueva clave de mensaje
+                        java.util.Arrays.asList(
+                            "%item_name%", InventoryUtil.formatMaterialName(auction.getItemStack().getType()),
+                            "#id_short%", auction.getId().toString().substring(0,8)
+                        )
+                    );
                 }
             } catch (SQLException e) {
                  plugin.getLogger().log(Level.SEVERE, "Error de DB al finalizar (EXPIRED) subasta " + auction.getId() + ".", e);
@@ -430,17 +552,37 @@ public class AuctionManager {
             } else if (sellerOffline.isOnline() && sellerOffline.getPlayer() != null) {
                 sellerOffline.getPlayer().getInventory().addItem(auction.getItemStack().clone());
                 if (sellerOffline.getUniqueId().equals(canceller.getUniqueId())) {
-                     messageManager.sendMessage(sellerOffline.getPlayer(), "auction_cancelled_item_returned_self", "%item_name%", itemDisplayName);
-                } else {
-                     messageManager.sendMessage(sellerOffline.getPlayer(), "auction_cancelled_item_returned_by_admin", "%item_name%", itemDisplayName, "%admin%", canceller.getName());
+                     messageManager.sendMessage(sellerOffline.getPlayer(), "auction_cancelled_item_returned_self",
+                        "%item_name%", itemDisplayName,
+                        "#id_short%", auction.getId().toString().substring(0,8));
+                } else { // Cancelado por admin
+                     messageManager.sendMessage(sellerOffline.getPlayer(), "auction_cancelled_item_returned_by_admin",
+                        "%item_name%", itemDisplayName,
+                        "#id_short%", auction.getId().toString().substring(0,8),
+                        "%admin%", canceller.getName());
                 }
-            } else {
-                 plugin.getLogger().info("Vendedor " + sellerOffline.getName() + " offline. Ítem de subasta cancelada " + auction.getId() + " (" + itemDisplayName + ") necesita ser reclamado.");
-                 // TODO PASO 13: Crear PendingReward (ITEM) para el vendedor (offline)
+            } else { // Vendedor offline o inventario lleno (en caso de online)
+                 plugin.getLogger().info("Vendedor " + sellerOffline.getName() + " offline o inventario lleno. Ítem de subasta cancelada " + auction.getId() + " (" + itemDisplayName + ") irá a PendingReward.");
+                 plugin.getRewardManager().createPendingReward(
+                    sellerOffline.getUniqueId(),
+                    com.aetherauctions.model.PendingReward.RewardType.ITEM_AUCTION_RETURNED, // Reutilizar este tipo
+                    auction.getItemStack().clone(),
+                    "reward_reason_item_cancelled_return_pending", // Nueva clave de mensaje
+                    java.util.Arrays.asList(
+                        "%item_name%", itemDisplayName,
+                        "#id_short%", auction.getId().toString().substring(0,8),
+                        "%canceller%", canceller.getName() // Podría ser el mismo vendedor o un admin
+                    )
+                 );
+                 if (sellerOffline.isOnline() && sellerOffline.getPlayer() != null) { // Mensaje si está online pero inv full
+                     messageManager.sendMessage(sellerOffline.getPlayer(), "auction_cancelled_inventory_full_pending", // Cambiado
+                        "%item_name%", itemDisplayName,
+                        "#id_short%", auction.getId().toString().substring(0,8));
+                 }
             }
 
             // Reembolsar al pujador más alto si existe
-            if (auction.getHighestBidderId() != null) {
+            if (auction.getHighestBidderId() != null && auction.getCurrentBid() > 0) {
                 OfflinePlayer highestBidderOffline = Bukkit.getOfflinePlayer(auction.getHighestBidderId());
                 double amountToRefund = auction.getCurrentBid();
                 Economy econ = AetherAuctions.getEconomy();
@@ -449,21 +591,47 @@ public class AuctionManager {
                     EconomyResponse tx = econ.depositPlayer(highestBidderOffline, amountToRefund);
                     if (tx.transactionSuccess()) {
                         messageManager.sendMessage(highestBidderOffline.getPlayer(), "auction_cancelled_bid_refunded",
-                            "%auction_id_short%", auction.getId().toString().substring(0,8),
-                            "%amount%", String.format("%.2f", amountToRefund));
+                            "#id_short%", auction.getId().toString().substring(0,8), // Cambiado a #id_short%
+                            "%amount%", String.format("%.2f", amountToRefund),
+                            "%currency%", configManager.getCurrencySymbol());
                     } else {
                         plugin.getLogger().warning("Fallo al reembolsar puja a " + highestBidderOffline.getName() + " para subasta cancelada " + auction.getId() + ". Razón: " + tx.errorMessage + ". Se creará PendingReward.");
-                        // TODO PASO 13: Crear PendingReward (MONEY_REFUND) para highestBidderOffline
-                        messageManager.sendMessage(highestBidderOffline.getPlayer(), "auction_cancelled_bid_refund_pending_error", "%reason%", tx.errorMessage);
+                        plugin.getRewardManager().createPendingReward(
+                            highestBidderOffline.getUniqueId(),
+                            com.aetherauctions.model.PendingReward.RewardType.MONEY_BID_REFUND,
+                            amountToRefund,
+                            "reward_reason_money_cancelled_refund_error", // Nueva clave
+                            java.util.Arrays.asList(
+                                "%amount%", String.format("%.2f", amountToRefund),
+                                "%currency%", configManager.getCurrencySymbol(),
+                                "#id_short%", auction.getId().toString().substring(0,8),
+                                "%reason%", tx.errorMessage
+                            )
+                        );
+                        messageManager.sendMessage(highestBidderOffline.getPlayer(), "auction_cancelled_bid_refund_pending_error",
+                            "%amount%", String.format("%.2f", amountToRefund),
+                            "%currency%", configManager.getCurrencySymbol(),
+                            "#id_short%", auction.getId().toString().substring(0,8),
+                            "%reason%", tx.errorMessage);
                     }
                 } else {
-                    plugin.getLogger().info("Pujador " + highestBidderOffline.getName() + " offline para reembolso de subasta cancelada " + auction.getId() + ". Se creará PendingReward (MONEY_REFUND).");
-                    // TODO PASO 13: Crear PendingReward (MONEY_REFUND) para highestBidderOffline
+                    plugin.getLogger().info("Pujador " + highestBidderOffline.getName() + " offline para reembolso de subasta cancelada " + auction.getId() + ". Se creará PendingReward.");
+                    plugin.getRewardManager().createPendingReward(
+                        highestBidderOffline.getUniqueId(),
+                        com.aetherauctions.model.PendingReward.RewardType.MONEY_BID_REFUND,
+                        amountToRefund,
+                        "reward_reason_money_cancelled_refund_offline", // Nueva clave
+                        java.util.Arrays.asList(
+                            "%amount%", String.format("%.2f", amountToRefund),
+                            "%currency%", configManager.getCurrencySymbol(),
+                            "#id_short%", auction.getId().toString().substring(0,8)
+                        )
+                    );
                 }
             }
              // Notificar al cancelador (si es admin y no el mismo vendedor)
             if (isAdmin && !auction.getSellerId().equals(canceller.getUniqueId())) {
-                messageManager.sendMessage(canceller, "auction_cancelled_admin_success", "%id%", auction.getId().toString().substring(0,8));
+                messageManager.sendMessage(canceller, "auction_cancelled_admin_success", "#id_short%", auction.getId().toString().substring(0,8)); // Cambiado a #id_short%
             }
             // TODO: Actualizar GUIs
             return true;
@@ -499,40 +667,34 @@ public class AuctionManager {
                 if (seller.getPlayer().getInventory().firstEmpty() != -1) {
                     seller.getPlayer().getInventory().addItem(itemToReturn);
                     messageManager.sendMessage(seller.getPlayer(), "auction_admin_deleted_item_returned",
-                        "%id_short%", auction.getId().toString().substring(0,8),
+                        "#id_short%", auction.getId().toString().substring(0,8), // Cambiado a #id_short%
                         "%item_name%", InventoryUtil.formatMaterialName(itemToReturn.getType()),
                         "%admin%", adminSender.getName());
                     itemReturnedDirectly = true;
-                } else {
+                } else { // Inventario lleno
                     messageManager.sendMessage(seller.getPlayer(), "auction_admin_deleted_item_pending_inv_full",
-                         "%id_short%", auction.getId().toString().substring(0,8),
+                         "#id_short%", auction.getId().toString().substring(0,8), // Cambiado a #id_short%
                          "%item_name%", InventoryUtil.formatMaterialName(itemToReturn.getType()),
                          "%admin%", adminSender.getName());
                 }
             }
-            if (!itemReturnedDirectly) {
+            if (!itemReturnedDirectly) { // Vendedor offline o inventario lleno
                 plugin.getLogger().info("Ítem de subasta " + auction.getId() + " borrada por admin irá a PendingReward para vendedor " + seller.getName());
-                com.aetherauctions.model.PendingReward itemReward = new com.aetherauctions.model.PendingReward( // Explicitly use model package
+                plugin.getRewardManager().createPendingReward(
                     seller.getUniqueId(),
-                    com.aetherauctions.model.PendingReward.RewardType.ITEM_AUCTION_RETURNED, // Reusar este tipo
+                    com.aetherauctions.model.PendingReward.RewardType.ITEM_AUCTION_RETURNED,
                     itemToReturn,
-                    "reward_reason_item_admin_deleted",
-                    java.util.Arrays.asList( // Explicitly use java.util.Arrays
+                    "reward_reason_item_admin_deleted", // Clave existente
+                    java.util.Arrays.asList(
                         "%item_name%", InventoryUtil.formatMaterialName(itemToReturn.getType()),
-                        "%id_short%", auction.getId().toString().substring(0,8),
+                        "#id_short%", auction.getId().toString().substring(0,8), // Cambiado a #id_short%
                         "%admin%", adminSender.getName()
                     )
                 );
-                try {
-                    auctionStorage.saveReward(itemReward);
-                } catch (SQLException e) {
-                    plugin.getLogger().log(Level.SEVERE, "Fallo al guardar PendingReward (ítem admin_deleted) para " + seller.getName() + ", subasta " + auction.getId(), e);
-                }
             }
         }
 
-        // 2. Reembolsar al pujador más alto (si la subasta estaba activa y había un pujador válido con puja)
-        // highestBidderId check already done for highestBidder initialization
+        // 2. Reembolsar al pujador más alto
         if (originalStatus == AuctionStatus.ACTIVE && highestBidder != null && auction.getHighestBidderId() != null && auction.getCurrentBid() > 0 && !auction.getBidHistory().isEmpty()) {
             double amountToRefundToBidder = auction.getCurrentBid();
             boolean bidRefundedDirectly = false;
@@ -540,56 +702,57 @@ public class AuctionManager {
                 EconomyResponse tx = AetherAuctions.getEconomy().depositPlayer(highestBidder, amountToRefundToBidder);
                 if (tx.transactionSuccess()) {
                     messageManager.sendMessage(highestBidder.getPlayer(), "auction_admin_deleted_bid_refunded",
-                        "%id_short%", auction.getId().toString().substring(0,8),
-                        "%amount%", String.format("%.2f %s", amountToRefundToBidder, currencySymbol),
+                        "#id_short%", auction.getId().toString().substring(0,8), // Cambiado a #id_short%
+                        "%amount%", String.format("%.2f", amountToRefundToBidder),
+                        "%currency%", currencySymbol, // Añadido currency
                         "%admin%", adminSender.getName());
                     bidRefundedDirectly = true;
-                } else {
+                } else { // Fallo en la transacción Vault
                      messageManager.sendMessage(highestBidder.getPlayer(), "auction_admin_deleted_bid_refund_pending_error",
-                        "%id_short%", auction.getId().toString().substring(0,8),
-                        "%amount%", String.format("%.2f %s", amountToRefundToBidder, currencySymbol),
+                        "#id_short%", auction.getId().toString().substring(0,8), // Cambiado a #id_short%
+                        "%amount%", String.format("%.2f", amountToRefundToBidder),
+                        "%currency%", currencySymbol, // Añadido currency
                         "%admin%", adminSender.getName(),
                         "%reason%", tx.errorMessage);
                 }
             }
-            if (!bidRefundedDirectly) {
+            if (!bidRefundedDirectly) { // Pujador offline o fallo en Vault
                 plugin.getLogger().info("Reembolso para pujador " + highestBidder.getName() + " (subasta " + auction.getId() + " borrada por admin) irá a PendingReward.");
-                com.aetherauctions.model.PendingReward moneyRefundReward = new com.aetherauctions.model.PendingReward( // Explicitly use model package
+                plugin.getRewardManager().createPendingReward(
                     highestBidder.getUniqueId(),
-                    com.aetherauctions.model.PendingReward.RewardType.MONEY_BID_REFUND, // Reusar este tipo
+                    com.aetherauctions.model.PendingReward.RewardType.MONEY_BID_REFUND,
                     amountToRefundToBidder,
-                    "reward_reason_money_admin_deleted_refund",
-                     java.util.Arrays.asList( // Explicitly use java.util.Arrays
-                        "%amount%", String.format("%.2f %s", amountToRefundToBidder, currencySymbol),
-                        "%id_short%", auction.getId().toString().substring(0,8),
+                    "reward_reason_money_admin_deleted_refund", // Clave existente
+                     java.util.Arrays.asList(
+                        "%amount%", String.format("%.2f", amountToRefundToBidder),
+                        "%currency%", currencySymbol, // Añadido currency
+                        "#id_short%", auction.getId().toString().substring(0,8), // Cambiado a #id_short%
                         "%admin%", adminSender.getName()
                     )
                 );
-                try {
-                    auctionStorage.saveReward(moneyRefundReward);
-                } catch (SQLException e) {
-                    plugin.getLogger().log(Level.SEVERE, "Fallo al guardar PendingReward (reembolso admin_deleted) para " + highestBidder.getName() + ", subasta " + auction.getId(), e);
-                }
             }
         }
 
         // 3. Actualizar estado de la subasta y guardar/eliminar de caché
-        auction.setStatus(AuctionStatus.CANCELLED); // O un nuevo AuctionStatus.ADMIN_DELETED
+        auction.setStatus(AuctionStatus.ADMIN_DELETED); // Nuevo estado sugerido
         try {
-            auctionStorage.saveAuction(auction);
-            activeAuctionsCache.remove(auction.getId());
+            auctionStorage.saveAuction(auction); // Guardar el estado final
+            activeAuctionsCache.remove(auction.getId()); // Eliminar del caché de activas
             plugin.getLogger().info("Subasta " + auction.getId() + " marcada como " + auction.getStatus() + " y eliminada del caché por admin " + adminSender.getName());
+            messageManager.sendMessage(adminSender, "admin_borrar_success", "#id_short%", auction.getId().toString().substring(0,8), "%item_name%", InventoryUtil.formatMaterialName(auction.getItemStack().getType()));
             return true;
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Error de DB al actualizar subasta " + auction.getId() + " durante borrado por admin.", e);
-            // Attempt to revert in-memory state if DB save failed
+            messageManager.sendMessage(adminSender, "admin_borrar_failed", "#id_short%", auction.getId().toString().substring(0,8));
+            // Revertir estado en memoria si falla el guardado en DB
             auction.setStatus(originalStatus);
             if (originalStatus == AuctionStatus.ACTIVE && !activeAuctionsCache.containsKey(auction.getId())) {
-                 activeAuctionsCache.put(auction.getId(), auction); // Put back if it was active and removed
+                 activeAuctionsCache.put(auction.getId(), auction);
             }
             return false;
-        }
-    }
+        } // Cierre del catch (SQLException e)
+    } // Cierre del método adminDeleteAuction
+
 
     public Map<UUID, Auction> getActiveAuctionsMap() {
         return new ConcurrentHashMap<>(activeAuctionsCache);
@@ -618,7 +781,7 @@ public class AuctionManager {
             return getAuctionById(fullUuid);
         } catch (IllegalArgumentException e) {
             for (Auction auction : activeAuctionsCache.values()) {
-                if (auction.getId().toString().startsWith(idStr.toLowerCase())) {
+                if (auction.getId().toString().toLowerCase().startsWith(idStr.toLowerCase())) { // Asegurar comparación en minúsculas
                     return auction;
                 }
             }
