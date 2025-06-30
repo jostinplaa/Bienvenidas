@@ -22,10 +22,11 @@ public class MainAuctionGUI {
 
     public static final int AUCTION_ITEMS_START_SLOT = 0;
     // AUCTION_ITEMS_END_SLOT will depend on items_per_page from config
-    public static final int PREVIOUS_PAGE_SLOT = 45;
-    public static final int CLOSE_GUI_SLOT = 49;
-    public static final int NEXT_PAGE_SLOT = 53;
-    // public static final int REFRESH_BUTTON_SLOT = 48; // Example if added
+    public static final int PREVIOUS_PAGE_SLOT = 45; // Bottom left
+    public static final int CLOSE_GUI_SLOT = 49;     // Bottom center
+    public static final int NEXT_PAGE_SLOT = 53;     // Bottom right
+    public static final int REWARDS_BUTTON_SLOT = 4; // Top right (0-indexed)
+    // public static final int REFRESH_BUTTON_SLOT = 48; // Example if added, bottom row
 
     public static void open(Player player, int page) {
         AetherAuctions plugin = AetherAuctions.getInstance();
@@ -109,11 +110,32 @@ public class MainAuctionGUI {
         String decoName = msgManager.getMessage("main_gui_decorative_pane_name");
         ItemStack decorativePane = InventoryUtil.createGuiItem(decoMat, decoName);
 
-        for (int i = 0; i < gui.getSize(); i++) {
-            if (gui.getItem(i) == null) {
-                gui.setItem(i, decorativePane.clone()); // Use clone for safety if createGuiItem reuses instances
-            }
-        }
-        player.openInventory(gui);
+        // --- Rewards Button ---
+        // Asynchronously get pending reward count
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            int pendingCount = plugin.getAuctionStorage().getPendingRewardsByOwner(player.getUniqueId())
+                                .stream().filter(r -> !r.isDelivered()).toList().size();
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                List<String> rewardsLore = new ArrayList<>();
+                rewardsLore.add(msgManager.getRawMessage("main_gui_rewards_button_lore_count", "%pending_count%", String.valueOf(pendingCount)));
+                rewardsLore.add(msgManager.getRawMessage("main_gui_rewards_button_lore_action"));
+                ItemStack rewardsButton = InventoryUtil.createGuiItem(Material.CHEST,
+                    msgManager.getRawMessage("main_gui_rewards_button_name"),
+                    rewardsLore
+                );
+                // Ensure this slot is not overwritten by fill or pagination logic if it's in the main item area
+                // For now, assuming REWARDS_BUTTON_SLOT (4) is safe or handled by fill logic later
+                gui.setItem(REWARDS_BUTTON_SLOT, rewardsButton);
+
+                // Now fill remaining empty slots AFTER placing the rewards button
+                for (int i = 0; i < gui.getSize(); i++) {
+                    if (gui.getItem(i) == null) {
+                        gui.setItem(i, decorativePane.clone());
+                    }
+                }
+                player.openInventory(gui); // Open inventory only after async operations complete
+            });
+        });
+        // player.openInventory(gui); // Moved to inside async task to ensure rewards button is populated
     }
 }

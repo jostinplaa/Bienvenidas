@@ -86,13 +86,27 @@ public class RewardManager {
             logger.info(String.format("[RewardManager] Encontradas %d recompensas pendientes para %s (%s).", rewards.size(), playerName, playerId));
 
             plugin.getServer().getScheduler().runTask(plugin, () -> {
+                if ("gui".equalsIgnoreCase(configManager.getRewardDeliveryMethod())) {
+                    if (configManager.showMessageOnJoinForGuiMode() && !rewards.isEmpty()) {
+                        messageManager.sendMessage(player, "rewards_pending_notification", "%count%", String.valueOf(rewards.size()));
+                        logger.info(String.format("[RewardManager] Modo GUI: Notificando a %s de %d recompensas pendientes.", playerName, rewards.size()));
+                    } else if (rewards.isEmpty()) {
+                         logger.info(String.format("[RewardManager] Modo GUI: No hay recompensas pendientes para %s.", playerName));
+                    } else {
+                        // Modo GUI pero message_on_join_for_gui_mode es false, no hacer nada.
+                        logger.info(String.format("[RewardManager] Modo GUI: %s tiene %d recompensas, pero la notificación al unirse está desactivada.", playerName, rewards.size()));
+                    }
+                    return; // No procesar automáticamente en modo GUI
+                }
+
+                // Modo AUTO (comportamiento original)
                 messageManager.sendMessage(player, "reward_processing_on_join");
                 int successfullyClaimedCount = 0;
                 int initiallyPending = rewards.size();
 
                 for (PendingReward reward : rewards) {
                     logger.info(String.format("[RewardManager] Intentando procesar (auto) recompensa ID: %s, Tipo: %s para %s.", reward.getRewardId(), reward.getType(), playerName));
-                    boolean success = deliverRewardInternal(player, reward, true);
+                    boolean success = deliverRewardInternal(player, reward, true); // true para auto-proceso
                     if (success) {
                         successfullyClaimedCount++;
                         logger.info(String.format("[RewardManager] Recompensa ID: %s procesada (auto) exitosamente para %s.", reward.getRewardId(), playerName));

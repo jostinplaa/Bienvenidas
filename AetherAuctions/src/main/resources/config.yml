@@ -56,3 +56,18 @@ messages:
 #   max_active_auctions: 10
 #   reduced_commission_percentage: 2.5
 #   no_creation_fee: true
+
+pending_rewards:
+  # ¿Cuántos días mantener las recompensas ya entregadas en la base de datos antes de limpiarlas?
+  # Poner en 0 o negativo para deshabilitar la limpieza.
+  cleanup_days_to_keep: 30
+
+rewards:
+  # Método de entrega para recompensas (especialmente dinero de ventas a vendedores offline).
+  # Opciones:
+  # "auto": Las recompensas se intentan entregar automáticamente cuando el jugador se conecta. (Comportamiento por defecto)
+  # "gui": Las recompensas (ítems y dinero) deben ser reclamadas manualmente por el jugador usando /subasta reclamar o el botón en la GUI principal.
+  delivery-mode: "auto"
+
+  # Si delivery-mode es "gui", ¿se debe enviar un mensaje al jugador al unirse si tiene recompensas pendientes?
+  message_on_join_for_gui_mode: true

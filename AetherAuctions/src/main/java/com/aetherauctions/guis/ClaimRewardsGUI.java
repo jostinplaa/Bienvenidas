@@ -66,10 +66,37 @@ public class ClaimRewardsGUI implements Listener {
 
             ItemStack displayItem;
             List<String> lore = new ArrayList<>();
-            String rewardIdShort = reward.getRewardId().toString().substring(0, 8);
+            // String rewardIdShort = reward.getRewardId().toString().substring(0, 8); // No es necesario aquí si el mensaje de razón ya lo incluye.
 
-            lore.add(ChatColor.GRAY + "ID Recompensa: " + ChatColor.YELLOW + rewardIdShort);
-            lore.add(ChatColor.GRAY + "Origen: " + ChatColor.AQUA + plugin.getMessageManager().getRawMessage(reward.getReasonMessageKey() + "_short", reward.getReasonPlaceholders().toArray(new String[0]))); // Necesitarás versiones cortas de los mensajes de razón
+            // Construir los placeholders para el mensaje de razón.
+            // Es crucial que si el mensaje de razón usa %id_short%, se pase %id% con el UUID completo.
+            List<String> reasonPlaceholdersWithFullId = new ArrayList<>(reward.getReasonPlaceholders());
+            boolean hasIdPlaceholder = false;
+            for (int i = 0; i < reasonPlaceholdersWithFullId.size(); i += 2) {
+                if ("%id%".equals(reasonPlaceholdersWithFullId.get(i)) || "%auction_id%".equals(reasonPlaceholdersWithFullId.get(i)) || "#id_short%".equals(reasonPlaceholdersWithFullId.get(i))) {
+                    hasIdPlaceholder = true;
+                    // Asegurarse de que el valor sea el UUID completo si el placeholder es %id% o %auction_id%
+                    // y que MessageManager lo maneje para %id_short%
+                    // Si el placeholder ya es #id_short% y el valor es corto, MessageManager no lo tocará.
+                    // Si el placeholder es %id_short% (correcto), MessageManager lo reemplazará si %id% se pasa.
+                }
+            }
+            // Si no hay un placeholder de ID explícito en los placeholders de la recompensa,
+            // pero el mensaje de razón SÍ espera un %id% o %id_short% (lo cual es común para el origen),
+            // debemos añadirlo. Esto es un poco una suposición y podría necesitar ajuste.
+            // La forma más segura es que la creación de PendingReward SIEMPRE incluya "%id%", auction.getId().toString()
+            // en sus placeholders si el reasonMessageKey lo va a usar.
+
+            // Para el lore de la GUI, queremos el ID corto de la recompensa, no de la subasta necesariamente.
+             lore.add(ChatColor.GRAY + "ID Recompensa: " + ChatColor.YELLOW + reward.getRewardId().toString().substring(0, 8));
+
+            // Obtener el mensaje de razón, MessageManager se encargará de %id_short% si %id% (de la subasta) está en reasonPlaceholders.
+            // Aquí asumimos que reward.getReasonMessageKey() + "_short" es la clave correcta.
+            String reasonMessage = plugin.getMessageManager().getRawMessage(
+                reward.getReasonMessageKey() + "_short",
+                reasonPlaceholdersWithFullId.toArray(new String[0])
+            );
+            lore.add(ChatColor.GRAY + "Origen: " + ChatColor.AQUA + reasonMessage);
 
             switch (reward.getType()) {
                 case ITEM_AUCTION_WON:

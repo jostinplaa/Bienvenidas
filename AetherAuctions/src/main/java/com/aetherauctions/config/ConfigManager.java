@@ -122,4 +122,12 @@ public class ConfigManager {
     public int getDeliveredRewardsKeptDays() {
         return config.getInt("pending_rewards.cleanup_days_to_keep", 30); // Default to 30 days
     }
+
+    public String getRewardDeliveryMethod() {
+        return config.getString("rewards.delivery-mode", "auto").toLowerCase();
+    }
+
+    public boolean showMessageOnJoinForGuiMode() {
+        return config.getBoolean("rewards.message_on_join_for_gui_mode", true); // Renombrado para claridad
+    }
 }

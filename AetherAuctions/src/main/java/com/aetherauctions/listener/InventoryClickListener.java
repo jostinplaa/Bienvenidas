@@ -7,6 +7,7 @@ import com.aetherauctions.model.Auction;
 import com.aetherauctions.gui.AuctionDetailsGUI;
 import com.aetherauctions.gui.GUIManager;
 import com.aetherauctions.gui.MainAuctionGUI;
+import com.aetherauctions.guis.ClaimRewardsGUI; // Import ClaimRewardsGUI
 import com.aetherauctions.config.MessageManager;
 import com.aetherauctions.config.ConfigManager;
 
@@ -78,7 +79,14 @@ public class InventoryClickListener implements Listener {
                 GUIManager.openMainAuctionGUI(player, currentPage - 1);
             } else if (slot == MainAuctionGUI.NEXT_PAGE_SLOT && clickedItem.getType() == Material.ARROW) {
                 GUIManager.openMainAuctionGUI(player, currentPage + 1);
+            } else if (slot == MainAuctionGUI.REWARDS_BUTTON_SLOT && clickedItem.getType() == Material.CHEST) {
+                // GUIManager.openClaimRewardsGUI(player); // Si GUIManager lo maneja
+                ClaimRewardsGUI claimRewardsGUI = new ClaimRewardsGUI(plugin); // O instanciar directamente si es necesario
+                claimRewardsGUI.open(player);
             } else if (slot >= MainAuctionGUI.AUCTION_ITEMS_START_SLOT && slot < cfgManager.getGuiItemsPerPage()) {
+                // Asegurarse de que el clic no sea en el slot del botón de recompensas si está en esta área
+                if (slot == MainAuctionGUI.REWARDS_BUTTON_SLOT) return;
+
                 if (event.getClick() == ClickType.RIGHT || event.getClick() == ClickType.LEFT) {
                     String auctionUUIDString = getIdStringFromLore(clickedItem.getItemMeta().getLore(), "main_gui_lore_id");
                     if (auctionUUIDString != null) {
