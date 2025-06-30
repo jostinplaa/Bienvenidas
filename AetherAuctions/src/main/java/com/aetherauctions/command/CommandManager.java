@@ -2,6 +2,7 @@ package com.aetherauctions.command;
 
 import com.aetherauctions.AetherAuctions;
 import com.aetherauctions.gui.GUIManager;
+import com.aetherauctions.guis.ClaimRewardsGUI; // Added import
 import com.aetherauctions.config.MessageManager;
 import com.aetherauctions.config.ConfigManager;
 import com.aetherauctions.auction.AuctionManager;
@@ -30,9 +31,9 @@ public class CommandManager implements CommandExecutor, TabCompleter {
     private final MessageManager msgManager;
     private final AuctionManager auctionManager;
     private final ConfigManager cfgManager;
-    // RewardManager is accessed via plugin.getRewardManager() when needed
+    private ClaimRewardsGUI claimRewardsGUI; // Added
 
-    private final List<String> validUserSubCommands = Arrays.asList("ayuda", "crear", "cancelar", "mis", "historial", "reclamar"); // Added "reclamar"
+    private final List<String> validUserSubCommands = Arrays.asList("ayuda", "crear", "cancelar", "mis", "historial", "reclamar");
     private final List<String> validAdminSubCommands = Arrays.asList("reload", "ver", "borrar");
     private static final double SIMILARITY_THRESHOLD = 0.75;
 
@@ -41,6 +42,7 @@ public class CommandManager implements CommandExecutor, TabCompleter {
         this.msgManager = plugin.getMessageManager();
         this.auctionManager = plugin.getAuctionManager();
         this.cfgManager = plugin.getConfigManager();
+        this.claimRewardsGUI = new ClaimRewardsGUI(plugin); // Initialize GUI
     }
 
     @Override
@@ -179,7 +181,8 @@ public class CommandManager implements CommandExecutor, TabCompleter {
                 msgManager.sendMessage(playerToClaim, "no_permission");
                 return true;
             }
-            plugin.getRewardManager().attemptClaimNextReward(playerToClaim);
+            // plugin.getRewardManager().attemptClaimNextReward(playerToClaim); // Old text-based claim
+            claimRewardsGUI.open(playerToClaim); // Open the new GUI
             return true;
         }
         else {

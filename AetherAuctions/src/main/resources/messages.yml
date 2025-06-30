@@ -237,6 +237,41 @@ auction_buy_now_error_database_reverted: "&cError de base de datos al procesar l
 # message_key_missing_error: "&cError: Clave de mensaje no encontrada (%key%)" # Configurado en config.yml
 # message_placeholder_error: "&cError: Placeholders inválidos para clave %key%" # Logueado a consola
 
+# --- Mensajes para la GUI de Reclamar ---
+claim_gui_title: "&8Recompensas Pendientes de %player_name%"
+claim_gui_button_claim_all_name: "&6¡Reclamar Todo!"
+claim_gui_button_claim_all_lore:
+  - "&7Haz clic para intentar reclamar todas"
+  - "&7tus recompensas pendientes."
+claim_gui_action_claim_all_start: "&eIntentando reclamar todas tus recompensas..." # Placeholder, se puede mejorar
+claim_gui_action_claim_one_start: "&eIntentando reclamar recompensa #%reward_id%..." # Placeholder
+claim_gui_error_reward_gone: "&cLa recompensa que intentaste reclamar ya no está disponible o fue reclamada."
+
+# Razones cortas para el lore de la GUI de Reclamar (Ejemplos, deben coincidir con las claves largas + "_short")
+reward_reason_item_won_inventory_full_short: "&aÍtem Ganado (Inv. Lleno)"
+reward_reason_item_won_offline_short: "&aÍtem Ganado (Offline)"
+reward_reason_item_expired_inventory_full_short: "&eÍtem Devuelto (Inv. Lleno)"
+reward_reason_item_expired_offline_short: "&eÍtem Devuelto (Offline)"
+reward_reason_item_cancelled_return_pending_short: "&eÍtem Cancelado (Pendiente)"
+reward_reason_item_bought_inventory_full_short: "&aÍtem Comprado (Inv. Lleno)"
+reward_reason_money_sold_buynow_seller_error_short: "&6Venta (Error Pago)"
+reward_reason_money_sold_buynow_seller_offline_short: "&6Venta (Offline)"
+reward_reason_money_sold_bid_seller_error_short: "&6Venta Puja (Error Pago)"
+reward_reason_money_sold_bid_seller_offline_short: "&6Venta Puja (Offline)"
+reward_reason_money_cancelled_refund_error_short: "&cReembolso Puja (Error)"
+reward_reason_money_cancelled_refund_offline_short: "&cReembolso Puja (Offline)"
+reward_reason_item_admin_deleted_short: "&4Ítem (Borrado Admin)"
+reward_reason_money_admin_deleted_refund_short: "&4Reembolso (Borrado Admin)"
+
+# Mensajes para Reclamar Todo
+claim_all_summary_money: "&aReclamaste %count% recompensas de dinero por un total de %total_amount% %currency%."
+claim_all_summary_items_claimed: "&aReclamaste %count% ítems."
+claim_all_summary_items_failed: "&eNo se pudieron reclamar %count% ítems. Razón principal: %reason%"
+claim_all_reason_inventory_full: "&cInventario lleno"
+claim_all_reason_other: "&cError desconocido" # O podrías ser más específico si es posible
+claim_all_nothing_claimable_now: "&eNo se pudo reclamar ninguna recompensa en este momento. Verifica tu inventario o intenta más tarde."
+
+
 # --- Claves Reutilizadas y Verificadas Existentes (Asegurar que estén presentes) ---
 item_default_name_format: "&r%item_name%"
 new_gui_decorative_pane_name: "&r " # Ya estaba

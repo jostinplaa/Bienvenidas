@@ -12,11 +12,14 @@ com/aetherauctions/auction/AuctionStatus.class
 com/aetherauctions/config/MessageManager.class
 com/aetherauctions/util/SerializationUtil.class
 com/aetherauctions/model/PendingReward.class
+com/aetherauctions/guis/ClaimRewardsGUI.class
 com/aetherauctions/gui/MainAuctionGUI.class
 com/aetherauctions/listener/PlayerChatListener.class
+com/aetherauctions/util/ItemUtil.class
 com/aetherauctions/gui/GUIManager.class
 com/aetherauctions/database/DatabaseManager.class
 com/aetherauctions/AetherAuctions.class
+com/aetherauctions/guis/ClaimRewardsGUI$1.class
 com/aetherauctions/auction/AuctionItem.class
 com/aetherauctions/config/ConfigManager.class
 com/aetherauctions/managers/RewardManager.class

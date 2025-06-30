@@ -141,8 +141,8 @@ public class RewardManager {
                     // Verificar si aún hay recompensas pendientes para la notificación
                     long stillPendingCount = rewards.stream().filter(r -> !r.isDelivered() || r.getRewardId().equals(rewardToClaim.getRewardId())).count();
                     if (auctionStorage.getPendingReward(rewardToClaim.getRewardId()) != null && !auctionStorage.getPendingReward(rewardToClaim.getRewardId()).isDelivered()){
-                         messageManager.sendMessage(player, "rewards_pending_notification", "%count%", String.valueOf(stillPendingCount));
-                    } else { // Si la recompensa fue marcada como entregada por alguna razón (ej. corrupta)
+                         messageManager.sendMessage(player, "rewards_pending_notification", "%count%", String.valueOf(stillPendingCount -1 > 0 ? stillPendingCount -1 : 0 )); // Ajustar conteo
+                    } else {
                         List<PendingReward> remainingRewards = auctionStorage.getPendingRewardsByOwner(playerId)
                                 .stream()
                                 .filter(r -> !r.isDelivered())
@@ -150,7 +150,7 @@ public class RewardManager {
                         if(!remainingRewards.isEmpty()){
                             messageManager.sendMessage(player, "rewards_pending_notification", "%count%", String.valueOf(remainingRewards.size()));
                         } else {
-                             // No more rewards after this attempt, even if it failed due to corruption.
+                            messageManager.sendMessage(player, "rewards_none_pending");
                         }
                     }
                 }
@@ -158,7 +158,118 @@ public class RewardManager {
         });
     }
 
-    private boolean deliverRewardInternal(Player player, PendingReward reward, boolean isAutoProcess) {
+    // Método público para reclamar una recompensa específica, usualmente desde la GUI
+    public boolean attemptClaimSpecificReward(Player player, PendingReward reward) {
+        if (reward == null || reward.isDelivered()) {
+            logger.warning(String.format("[RewardManager] Intento de reclamar recompensa nula o ya entregada por %s. ID: %s", player.getName(), reward != null ? reward.getRewardId() : "NULL"));
+            return false;
+        }
+        logger.info(String.format("[RewardManager] %s intentando reclamar (específica) recompensa ID: %s, Tipo: %s.", player.getName(), reward.getRewardId(), reward.getType()));
+        boolean success = deliverRewardInternal(player, reward, false); // false indica que no es un proceso automático
+        if (success) {
+            logger.info(String.format("[RewardManager] Recompensa ID: %s reclamada (específica) exitosamente por %s.", reward.getRewardId(), player.getName()));
+        } else {
+            logger.info(String.format("[RewardManager] Fallo al reclamar (específica) recompensa ID: %s por %s.", reward.getRewardId(), player.getName()));
+        }
+        return success;
+    }
+
+    public void attemptClaimAllRewards(Player player) {
+        UUID playerId = player.getUniqueId();
+        String playerName = player.getName();
+        logger.info(String.format("[RewardManager] %s (%s) intentando reclamar TODAS las recompensas.", playerName, playerId));
+
+        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
+            List<PendingReward> allPendingRewards = auctionStorage.getPendingRewardsByOwner(playerId)
+                    .stream()
+                    .filter(r -> !r.isDelivered())
+                    .collect(Collectors.toList());
+
+            plugin.getServer().getScheduler().runTask(plugin, () -> {
+                if (allPendingRewards.isEmpty()) {
+                    messageManager.sendMessage(player, "rewards_none_pending");
+                    logger.info(String.format("[RewardManager] %s intentó reclamar todo, pero no hay recompensas pendientes.", playerName));
+                    return;
+                }
+
+                int moneyClaimedCount = 0;
+                double totalMoneyClaimed = 0;
+                int itemsClaimedCount = 0;
+                int itemsFailedCount = 0;
+                boolean inventoryWasFullForItem = false;
+
+                // Primero, dinero
+                List<PendingReward> moneyRewards = allPendingRewards.stream()
+                        .filter(r -> r.getType() == RewardType.MONEY_AUCTION_SOLD || r.getType() == RewardType.MONEY_BID_REFUND)
+                        .collect(Collectors.toList());
+
+                for (PendingReward moneyReward : moneyRewards) {
+                    if (deliverRewardInternal(player, moneyReward, false)) {
+                        moneyClaimedCount++;
+                        totalMoneyClaimed += moneyReward.getMoneyToClaim();
+                    }
+                    // No se necesita manejo de error aquí, deliverRewardInternal ya envía mensajes
+                }
+
+                // Luego, ítems
+                List<PendingReward> itemRewards = allPendingRewards.stream()
+                        .filter(r -> r.getType() == RewardType.ITEM_AUCTION_WON || r.getType() == RewardType.ITEM_AUCTION_RETURNED)
+                        .collect(Collectors.toList());
+
+                for (PendingReward itemReward : itemRewards) {
+                    if (inventoryWasFullForItem) { // Si ya se llenó el inventario, no intentar más ítems
+                        itemsFailedCount++;
+                        continue;
+                    }
+                    if (deliverRewardInternal(player, itemReward, false)) {
+                        itemsClaimedCount++;
+                    } else {
+                        // Verificar si fue por inventario lleno
+                        if (player.getInventory().firstEmpty() == -1) {
+                            inventoryWasFullForItem = true;
+                            // El mensaje de inventario lleno ya lo da deliverRewardInternal
+                        }
+                        itemsFailedCount++;
+                    }
+                }
+
+                // Mensajes de resumen
+                if (moneyClaimedCount > 0) {
+                    messageManager.sendMessage(player, "claim_all_summary_money", // Nueva clave
+                            "%count%", String.valueOf(moneyClaimedCount),
+                            "%total_amount%", String.format("%.2f", totalMoneyClaimed),
+                            "%currency%", configManager.getCurrencySymbol());
+                }
+                if (itemsClaimedCount > 0) {
+                     messageManager.sendMessage(player, "claim_all_summary_items_claimed", // Nueva clave
+                            "%count%", String.valueOf(itemsClaimedCount));
+                }
+                if (itemsFailedCount > 0) {
+                    messageManager.sendMessage(player, "claim_all_summary_items_failed", // Nueva clave
+                            "%count%", String.valueOf(itemsFailedCount),
+                            "%reason%", inventoryWasFullForItem ? messageManager.getRawMessage("claim_all_reason_inventory_full") : messageManager.getRawMessage("claim_all_reason_other") // Nuevas claves
+                    );
+                }
+                if (moneyClaimedCount == 0 && itemsClaimedCount == 0 && itemsFailedCount == 0 && !allPendingRewards.isEmpty()){
+                     messageManager.sendMessage(player, "claim_all_nothing_claimable_now"); // Nueva clave: Ej: "No se pudo reclamar nada en este momento. Revisa tu inventario."
+                } else if (moneyClaimedCount == 0 && itemsClaimedCount == 0 && itemsFailedCount > 0) {
+                    // Ya se notificó sobre el fallo de ítems
+                }
+                 else if (moneyClaimedCount == 0 && itemsClaimedCount == 0 && itemsFailedCount == 0 && allPendingRewards.isEmpty()){
+                     // Esto no debería pasar debido al chequeo inicial, pero por si acaso.
+                     messageManager.sendMessage(player, "rewards_none_pending");
+                 }
+
+
+                // La GUI se refrescará al ser reabierta desde ClaimRewardsGUI
+                logger.info(String.format("[RewardManager] Reclamo total para %s finalizado. Dinero: %d (%.2f %s), Ítems OK: %d, Ítems Fallidos: %d (Inv Lleno: %b)",
+                        playerName, moneyClaimedCount, totalMoneyClaimed, configManager.getCurrencySymbol(), itemsClaimedCount, itemsFailedCount, inventoryWasFullForItem));
+            });
+        });
+    }
+
+
+    public boolean deliverRewardInternal(Player player, PendingReward reward, boolean isAutoProcess) {
         String currencySymbol = configManager.getCurrencySymbol();
         boolean success = false;
         String playerName = player.getName();

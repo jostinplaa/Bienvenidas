@@ -83,24 +83,36 @@ public class MessageManager {
         if (placeholderPairs.length % 2 != 0) {
             plugin.getLogger().severe("[MessageManager] Error de placeholders para el mensaje: '" + rawMessage +
                                       "'. Se proporcionó un número impar de argumentos. Placeholders: " + Arrays.toString(placeholderPairs));
-            return message;
+            return message; // Devuelve el mensaje parcialmente formateado o sin formatear si no hay placeholders
         }
 
         for (int i = 0; i < placeholderPairs.length; i += 2) {
-            if (placeholderPairs[i] == null || placeholderPairs[i+1] == null) {
-                 plugin.getLogger().warning("[MessageManager] Par de placeholder nulo detectado para mensaje: '" + rawMessage + "'. Placeholder: " + placeholderPairs[i]);
+            String placeholder = placeholderPairs[i];
+            String value = placeholderPairs[i+1];
+
+            if (placeholder == null || value == null) {
+                 plugin.getLogger().warning("[MessageManager] Par de placeholder nulo detectado para mensaje: '" + rawMessage + "'. Placeholder: " + placeholder);
                  continue;
             }
-            message = message.replace(placeholderPairs[i], placeholderPairs[i + 1]);
+            // Manejo especial para %id_short%
+            if ("%id%".equals(placeholder) && message.contains("%id_short%")) {
+                if (value.length() >= 8) {
+                    message = message.replace("%id_short%", value.substring(0, 8));
+                } else {
+                    message = message.replace("%id_short%", value); // Usar el valor completo si es menor a 8 chars
+                }
+            }
+            message = message.replace(placeholder, value);
         }
         return message;
     }
+
 
     public String getMessage(String key, String... placeholderPairs) {
         String rawMessage = messagesConfig.getString(key);
         if (rawMessage == null) {
             plugin.getLogger().warning("[MessageManager] Clave de mensaje no encontrada en messages.yml: '" + key + "'.");
-            String errorFormat = plugin.getConfigManager().getMessagesMissingKeyFormat(); // Get format from ConfigManager
+            String errorFormat = plugin.getConfigManager().getMessagesMissingKeyFormat();
             return ChatColor.translateAlternateColorCodes('&', errorFormat.replace("%key%", key));
         }
         return formatMessage(rawMessage, placeholderPairs);
@@ -108,10 +120,9 @@ public class MessageManager {
 
     public String getPrefixedMessage(String key, String... placeholderPairs) {
         String message = getMessage(key, placeholderPairs);
-        // Check if the message is the "missing key" error message
         String missingKeyErrorFormat = ChatColor.translateAlternateColorCodes('&', plugin.getConfigManager().getMessagesMissingKeyFormat().replace("%key%", key));
         if (message.equals(missingKeyErrorFormat)) {
-            return message; // Don't add prefix to "key missing" errors
+            return message;
         }
         return this.prefix + message;
     }
