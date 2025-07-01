@@ -140,7 +140,22 @@ public class AuctionStorage {
         try (Statement stmt = conn.createStatement()) {
             stmt.execute(sqlCreateAuctionsTable);
             stmt.execute(sqlCreatePendingRewardsTable);
-            plugin.getLogger().info("Database tables verified/created.");
+
+            String sqlCreateAuctionHistoryTable = "CREATE TABLE IF NOT EXISTS auction_history ("
+                + "history_id INTEGER PRIMARY KEY AUTOINCREMENT," // Usar INTEGER para autoincremento en SQLite
+                + "player_uuid TEXT NOT NULL,"
+                + "auction_id TEXT," // Puede ser el UUID de la subasta original
+                + "item_name TEXT,"
+                + "item_material TEXT,"
+                + "item_snapshot TEXT," // Serialized ItemStack o descripción detallada
+                + "event_type TEXT NOT NULL," // e.g., SOLD, BOUGHT, EXPIRED, CANCELLED, BID_PLACED, BID_OUTBID
+                + "price REAL,"
+                + "counterparty_name TEXT,"
+                + "counterparty_uuid TEXT,"
+                + "timestamp INTEGER NOT NULL"
+                + ");";
+            stmt.execute(sqlCreateAuctionHistoryTable);
+            plugin.getLogger().info("Database tables verified/created (including auction_history).");
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Error creating database tables.", e);
             throw e;
@@ -431,5 +446,175 @@ public class AuctionStorage {
             throw e;
         }
         return rowsAffected;
+    }
+
+    // --- Auction History Methods ---
+
+    public void saveHistoryEvent(com.aetherauctions.model.AuctionHistoryEvent event) throws SQLException {
+        if (event == null) {
+            plugin.getLogger().warning("Attempted to save a null history event.");
+            return;
+        }
+        String sql = "INSERT INTO auction_history (player_uuid, auction_id, item_name, item_material, item_snapshot, "
+                   + "event_type, price, counterparty_name, counterparty_uuid, timestamp) "
+                   + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+        Connection conn = getConnection();
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, event.getPlayerUuid().toString());
+            pstmt.setString(2, event.getAuctionId() != null ? event.getAuctionId().toString() : null);
+            pstmt.setString(3, event.getItemName());
+            pstmt.setString(4, event.getItemMaterial());
+            pstmt.setString(5, event.getItemSnapshot());
+            pstmt.setString(6, event.getEventType().name());
+            pstmt.setDouble(7, event.getPrice());
+            pstmt.setString(8, event.getCounterpartyName());
+            pstmt.setString(9, event.getCounterpartyUuid() != null ? event.getCounterpartyUuid().toString() : null);
+            pstmt.setLong(10, event.getTimestamp());
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Error saving auction history event for player: " + event.getPlayerUuid(), e);
+            throw e;
+        }
+    }
+
+    private com.aetherauctions.model.AuctionHistoryEvent mapResultSetToHistoryEvent(ResultSet rs) throws SQLException {
+        int historyId = rs.getInt("history_id");
+        UUID playerUuid = UUID.fromString(rs.getString("player_uuid"));
+        String auctionIdStr = rs.getString("auction_id");
+        UUID auctionId = auctionIdStr != null ? UUID.fromString(auctionIdStr) : null;
+        String itemName = rs.getString("item_name");
+        String itemMaterial = rs.getString("item_material");
+        String itemSnapshot = rs.getString("item_snapshot");
+        com.aetherauctions.model.AuctionHistoryEvent.HistoryEventType eventType;
+        try {
+            eventType = com.aetherauctions.model.AuctionHistoryEvent.HistoryEventType.valueOf(rs.getString("event_type"));
+        } catch (IllegalArgumentException e) {
+            plugin.getLogger().warning("Invalid HistoryEventType in database: " + rs.getString("event_type") + " for history_id: " + historyId);
+            eventType = null; // Or a default/unknown type
+        }
+        double price = rs.getDouble("price");
+        String counterpartyName = rs.getString("counterparty_name");
+        String counterpartyUuidStr = rs.getString("counterparty_uuid");
+        UUID counterpartyUuid = counterpartyUuidStr != null ? UUID.fromString(counterpartyUuidStr) : null;
+        long timestamp = rs.getLong("timestamp");
+
+        return new com.aetherauctions.model.AuctionHistoryEvent(historyId, playerUuid, auctionId, itemName, itemMaterial, itemSnapshot, eventType, price, counterpartyName, counterpartyUuid, timestamp);
+    }
+
+    public List<com.aetherauctions.model.AuctionHistoryEvent> getAuctionHistory(UUID playerUuid, int page, int itemsPerPage) throws SQLException {
+        List<com.aetherauctions.model.AuctionHistoryEvent> historyEvents = new ArrayList<>();
+        String sql = "SELECT * FROM auction_history WHERE player_uuid = ? ORDER BY timestamp DESC LIMIT ? OFFSET ?;";
+        Connection conn = getConnection();
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, playerUuid.toString());
+            pstmt.setInt(2, itemsPerPage);
+            pstmt.setInt(3, page * itemsPerPage);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    com.aetherauctions.model.AuctionHistoryEvent event = mapResultSetToHistoryEvent(rs);
+                    if (event.getEventType() != null) { // Only add if event type was valid
+                        historyEvents.add(event);
+                    }
+                }
+            }
+        }
+        return historyEvents;
+    }
+
+    public int getHistoryCount(UUID playerUuid) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM auction_history WHERE player_uuid = ?;";
+        Connection conn = getConnection();
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, playerUuid.toString());
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        }
+        return 0;
+    }
+
+    public List<com.aetherauctions.model.AuctionHistoryEvent> getAuctionHistoryForAdmin(UUID playerUuid, long startDate, long endDate, int page, int itemsPerPage) throws SQLException {
+        List<com.aetherauctions.model.AuctionHistoryEvent> historyEvents = new ArrayList<>();
+        StringBuilder sqlBuilder = new StringBuilder("SELECT * FROM auction_history WHERE player_uuid = ? ");
+        if (startDate > 0) sqlBuilder.append("AND timestamp >= ? ");
+        if (endDate > 0) sqlBuilder.append("AND timestamp <= ? ");
+        sqlBuilder.append("ORDER BY timestamp DESC LIMIT ? OFFSET ?;");
+
+        Connection conn = getConnection();
+        try (PreparedStatement pstmt = conn.prepareStatement(sqlBuilder.toString())) {
+            int paramIndex = 1;
+            pstmt.setString(paramIndex++, playerUuid.toString());
+            if (startDate > 0) pstmt.setLong(paramIndex++, startDate);
+            if (endDate > 0) pstmt.setLong(paramIndex++, endDate);
+            pstmt.setInt(paramIndex++, itemsPerPage);
+            pstmt.setInt(paramIndex, page * itemsPerPage);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                     com.aetherauctions.model.AuctionHistoryEvent event = mapResultSetToHistoryEvent(rs);
+                    if (event.getEventType() != null) {
+                        historyEvents.add(event);
+                    }
+                }
+            }
+        }
+        return historyEvents;
+    }
+
+    public int getHistoryCountForAdmin(UUID playerUuid, long startDate, long endDate) throws SQLException {
+        StringBuilder sqlBuilder = new StringBuilder("SELECT COUNT(*) FROM auction_history WHERE player_uuid = ? ");
+        if (startDate > 0) sqlBuilder.append("AND timestamp >= ? ");
+        if (endDate > 0) sqlBuilder.append("AND timestamp <= ? ");
+
+        Connection conn = getConnection();
+        try (PreparedStatement pstmt = conn.prepareStatement(sqlBuilder.toString())) {
+            int paramIndex = 1;
+            pstmt.setString(paramIndex++, playerUuid.toString());
+            if (startDate > 0) pstmt.setLong(paramIndex++, startDate);
+            if (endDate > 0) pstmt.setLong(paramIndex, endDate);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        }
+        return 0;
+    }
+
+    public void purgeOldPlayerHistory(UUID playerUuid, int recordsToKeep) throws SQLException {
+        // This is a bit complex with SQLite as it doesn't directly support "LIMIT" in a subquery for DELETE like MySQL.
+        // A common workaround is to find the timestamp of the Nth record and delete older ones.
+        String findNthTimestampSQL = "SELECT timestamp FROM auction_history WHERE player_uuid = ? ORDER BY timestamp DESC LIMIT 1 OFFSET ?;";
+        long thresholdTimestamp = -1;
+
+        Connection conn = getConnection();
+        try (PreparedStatement pstmtFind = conn.prepareStatement(findNthTimestampSQL)) {
+            pstmtFind.setString(1, playerUuid.toString());
+            // Offset is N-1. If recordsToKeep is 50, we want the 50th record, so offset is 49.
+            // If there are fewer than `recordsToKeep` records, this query will return no rows.
+            pstmtFind.setInt(2, Math.max(0, recordsToKeep -1));
+            ResultSet rs = pstmtFind.executeQuery();
+            if (rs.next()) {
+                thresholdTimestamp = rs.getLong("timestamp");
+            } else {
+                // Fewer than `recordsToKeep` records exist, so nothing to purge.
+                return;
+            }
+        }
+
+        if (thresholdTimestamp > 0) {
+            String deleteSql = "DELETE FROM auction_history WHERE player_uuid = ? AND timestamp < ?;";
+            try (PreparedStatement pstmtDelete = conn.prepareStatement(deleteSql)) {
+                pstmtDelete.setString(1, playerUuid.toString());
+                pstmtDelete.setLong(2, thresholdTimestamp);
+                int deletedRows = pstmtDelete.executeUpdate();
+                if (deletedRows > 0) {
+                    plugin.getLogger().info("Purged " + deletedRows + " old history entries for player " + playerUuid.toString());
+                }
+            }
+        }
     }
 }

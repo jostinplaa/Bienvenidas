@@ -1,8 +1,11 @@
 package com.aetherauctions.command;
 
 import com.aetherauctions.AetherAuctions;
-import com.aetherauctions.gui.GUIManager;
-import com.aetherauctions.guis.ClaimRewardsGUI; // Added import
+import com.aetherauctions.gui.GUIManager; // Podría ser necesario si MainAuctionGUI se mueve aquí o se referencia
+import com.aetherauctions.guis.ClaimRewardsGUI;
+import com.aetherauctions.guis.MyActiveAuctionsGUI;
+import com.aetherauctions.guis.PlayerHistoryGUI;
+import com.aetherauctions.guis.AdminHistoryGUI;
 import com.aetherauctions.config.MessageManager;
 import com.aetherauctions.config.ConfigManager;
 import com.aetherauctions.auction.AuctionManager;
@@ -23,26 +26,33 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import org.apache.commons.text.similarity.JaroWinklerSimilarity; // Import for suggestions
-import java.util.Collections; // For Collections.emptyList() if needed
+import org.apache.commons.text.similarity.JaroWinklerSimilarity;
+import java.util.Collections;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Calendar;
+
 
 public class CommandManager implements CommandExecutor, TabCompleter {
     private final AetherAuctions plugin;
     private final MessageManager msgManager;
     private final AuctionManager auctionManager;
     private final ConfigManager cfgManager;
-    private ClaimRewardsGUI claimRewardsGUI; // Added
+    private ClaimRewardsGUI claimRewardsGUI;
+    // No es necesario instanciar MyActiveAuctionsGUI o PlayerHistoryGUI aquí si sus métodos open son estáticos
 
     private final List<String> validUserSubCommands = Arrays.asList("ayuda", "crear", "cancelar", "mis", "historial", "reclamar");
-    private final List<String> validAdminSubCommands = Arrays.asList("reload", "ver", "borrar");
+    private final List<String> validAdminSubCommands = Arrays.asList("reload", "ver", "borrar", "historial"); // Añadido historial admin
     private static final double SIMILARITY_THRESHOLD = 0.75;
+    private static final SimpleDateFormat ADMIN_DATE_FORMAT = new SimpleDateFormat("dd-MM-yyyy");
 
     public CommandManager(AetherAuctions plugin) {
         this.plugin = plugin;
         this.msgManager = plugin.getMessageManager();
         this.auctionManager = plugin.getAuctionManager();
         this.cfgManager = plugin.getConfigManager();
-        this.claimRewardsGUI = new ClaimRewardsGUI(plugin); // Initialize GUI
+        this.claimRewardsGUI = new ClaimRewardsGUI(plugin);
     }
 
     @Override
@@ -147,8 +157,14 @@ public class CommandManager implements CommandExecutor, TabCompleter {
             } else {
                 msgManager.sendMessage(myAuctionsPlayer, "command_mis_header");
                 for (Auction auc : myActiveAuctions) {
+                    // Usar %id% y pasar el ID completo. El messages.yml para command_mis_auction_line debe usar %id%.
+                    // Si se quisiera un ID corto aquí específicamente, se haría el substring aquí y se pasaría.
+                    // Por ahora, asumimos que command_mis_auction_line usará %id% para el ID completo o se adaptará.
+                    // Para mantener la funcionalidad anterior de ID corto aquí:
+                    String idToShow = auc.getId().toString();
+                     // La clave "command_mis_auction_line" ahora debe usar %id%
                     msgManager.sendMessage(myAuctionsPlayer, "command_mis_auction_line",
-                        "%id_corto%", auc.getId().toString().substring(0, 8),
+                        "%id%", idToShow,
                         "%item%", InventoryUtil.formatMaterialName(auc.getItemStack().getType()),
                         "%bid%", String.format("%.2f %s", auc.getCurrentBid(), cfgManager.getCurrencySymbol()),
                         "%time%", InventoryUtil.formatTime(auc.getRemainingTimeMillis())
@@ -158,7 +174,20 @@ public class CommandManager implements CommandExecutor, TabCompleter {
             }
             return true;
         } else if (subCommand.equals("historial")) {
-            msgManager.sendMessage(sender, "command_historial_not_implemented");
+            if (!(sender instanceof Player)) {
+                msgManager.sendMessage(sender, "player_only_command");
+                return true;
+            }
+            Player player = (Player) sender;
+            if (!player.hasPermission("aetherauctions.command.historial")) {
+                msgManager.sendMessage(player, "no_permission");
+                return true;
+            }
+            if (!cfgManager.isHistoryEnabled()) {
+                msgManager.sendMessage(player, "history_disabled");
+                return true;
+            }
+            PlayerHistoryGUI.open(player, 0);
             return true;
         } else if (subCommand.equals("admin")) {
             if (args.length < 2) {
@@ -275,6 +304,61 @@ public class CommandManager implements CommandExecutor, TabCompleter {
                      msgManager.sendMessage(sender, "command_admin_ver_not_found", "%id%", idToDeleteStr);
                 }
                 break;
+            case "historial":
+                if (!sender.hasPermission("aetherauctions.admin.historial")) { // Nueva permission
+                    msgManager.sendMessage(sender, "no_permission"); return;
+                }
+                if (!cfgManager.isHistoryEnabled()) {
+                    msgManager.sendMessage(sender, "history_disabled"); return;
+                }
+                if (adminArgs.length < 2) {
+                    msgManager.sendMessage(sender, "command_usage_admin_historial_player"); // Nueva clave: /subasta admin historial <jugador> [fecha_ini] [fecha_fin]
+                    return;
+                }
+                String targetPlayerName = adminArgs[1];
+                long startDate = 0;
+                long endDate = 0;
+
+                if (adminArgs.length >= 3) {
+                    try {
+                        Date parsedStartDate = ADMIN_DATE_FORMAT.parse(adminArgs[2]);
+                        Calendar cal = Calendar.getInstance();
+                        cal.setTime(parsedStartDate);
+                        cal.set(Calendar.HOUR_OF_DAY, 0); cal.set(Calendar.MINUTE, 0); cal.set(Calendar.SECOND, 0); cal.set(Calendar.MILLISECOND, 0);
+                        startDate = cal.getTimeInMillis();
+                    } catch (ParseException e) {
+                        msgManager.sendMessage(sender, "admin_history_invalid_date_format"); return;
+                    }
+                }
+                if (adminArgs.length >= 4) {
+                    try {
+                        Date parsedEndDate = ADMIN_DATE_FORMAT.parse(adminArgs[3]);
+                        Calendar cal = Calendar.getInstance();
+                        cal.setTime(parsedEndDate);
+                        cal.set(Calendar.HOUR_OF_DAY, 23); cal.set(Calendar.MINUTE, 59); cal.set(Calendar.SECOND, 59); cal.set(Calendar.MILLISECOND, 999);
+                        endDate = cal.getTimeInMillis();
+                    } catch (ParseException e) {
+                        msgManager.sendMessage(sender, "admin_history_invalid_date_format"); return;
+                    }
+                }
+                if (startDate > 0 && endDate > 0 && startDate > endDate) {
+                    msgManager.sendMessage(sender, "admin_history_start_date_after_end"); return;
+                }
+                if (startDate == 0 && endDate == 0 && cfgManager.getDefaultHistoryDaysToShowForAdmin() > 0) {
+                    Calendar cal = Calendar.getInstance();
+                    cal.add(Calendar.DAY_OF_MONTH, -cfgManager.getDefaultHistoryDaysToShowForAdmin());
+                    cal.set(Calendar.HOUR_OF_DAY, 0); cal.set(Calendar.MINUTE, 0); cal.set(Calendar.SECOND, 0); cal.set(Calendar.MILLISECOND, 0);
+                    startDate = cal.getTimeInMillis();
+                    // endDate remains 0 (meaning up to now) or could be set to end of current day
+                }
+
+                if (sender instanceof Player) {
+                    AdminHistoryGUI.open((Player) sender, targetPlayerName, startDate, endDate, 0);
+                } else {
+                    // Potentially add console output for admin history if needed, though GUI is primary
+                    msgManager.sendMessage(sender, "player_only_command"); // Or a specific "admin_history_console_unsupported"
+                }
+                break;
             default:
                 String inputAdminSubCommand = adminArgs[0].toLowerCase();
                 String adminSuggestion = findBestMatch(inputAdminSubCommand, validAdminSubCommands);
@@ -295,9 +379,9 @@ public class CommandManager implements CommandExecutor, TabCompleter {
         msgManager.sendMessage(sender, "help_subasta");
         if (sender.hasPermission("aetherauctions.command.crear")) msgManager.sendMessage(sender, "help_subasta_crear");
         if (sender.hasPermission("aetherauctions.command.cancelar")) msgManager.sendMessage(sender, "help_subasta_cancelar");
-        if (sender.hasPermission("aetherauctions.command.mis")) msgManager.sendMessage(sender, "help_subasta_mis");
-        if (sender.hasPermission("aetherauctions.command.historial")) msgManager.sendMessage(sender, "help_subasta_historial");
-        if (sender.hasPermission("aetherauctions.command.reclamar")) msgManager.sendMessage(sender, "help_subasta_reclamar"); // Added help for reclamar
+        if (sender.hasPermission("aetherauctions.command.mis") && cfgManager.isMyAuctionsGuiEnabled()) msgManager.sendMessage(sender, "help_subasta_mis");
+        if (sender.hasPermission("aetherauctions.command.historial") && cfgManager.isHistoryEnabled()) msgManager.sendMessage(sender, "help_subasta_historial");
+        if (sender.hasPermission("aetherauctions.command.reclamar")) msgManager.sendMessage(sender, "help_subasta_reclamar");
         if (sender.hasPermission("aetherauctions.admin")) {
             msgManager.sendMessage(sender, "help_subasta_admin");
         }
@@ -306,9 +390,10 @@ public class CommandManager implements CommandExecutor, TabCompleter {
 
     private void sendAdminHelpMessage(CommandSender sender) {
         sender.sendMessage(msgManager.getRawMessage("help_header"));
-        msgManager.sendMessage(sender, "admin_help_reload");
-        msgManager.sendMessage(sender, "admin_help_ver");
-        msgManager.sendMessage(sender, "admin_help_borrar");
+        if (sender.hasPermission("aetherauctions.admin.reload")) msgManager.sendMessage(sender, "admin_help_reload");
+        if (sender.hasPermission("aetherauctions.admin.ver")) msgManager.sendMessage(sender, "admin_help_ver");
+        if (sender.hasPermission("aetherauctions.admin.borrar")) msgManager.sendMessage(sender, "admin_help_borrar");
+        if (sender.hasPermission("aetherauctions.admin.historial") && cfgManager.isHistoryEnabled()) msgManager.sendMessage(sender, "admin_help_historial_player"); // Nueva clave
         sender.sendMessage(msgManager.getRawMessage("help_footer"));
     }
 

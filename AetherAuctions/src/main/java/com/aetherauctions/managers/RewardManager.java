@@ -283,26 +283,33 @@ public class RewardManager {
     }
 
 
+    // Sobrecarga para mantener compatibilidad con llamadas antiguas que no especifican isClaimAll
     public boolean deliverRewardInternal(Player player, PendingReward reward, boolean isAutoProcess) {
+        return deliverRewardInternal(player, reward, isAutoProcess, false);
+    }
+
+    public boolean deliverRewardInternal(Player player, PendingReward reward, boolean isAutoProcess, boolean isClaimAll) {
         String currencySymbol = configManager.getCurrencySymbol();
         boolean success = false;
         String playerName = player.getName();
         UUID rewardId = reward.getRewardId();
 
-        logger.info(String.format("[RewardManager] deliverRewardInternal para %s. Recompensa ID: %s, Tipo: %s, Auto: %b", playerName, rewardId, reward.getType(), isAutoProcess));
+        // No loguear aquí para reducir spam, ya se loguea en el método que llama.
+        // logger.info(String.format("[RewardManager] deliverRewardInternal para %s. Recompensa ID: %s, Tipo: %s, Auto: %b, ClaimAll: %b", playerName, rewardId, reward.getType(), isAutoProcess, isClaimAll));
 
         switch (reward.getType()) {
             case ITEM_AUCTION_WON:
             case ITEM_AUCTION_RETURNED:
                 ItemStack item = reward.getItemToClaim();
                 if (item == null || item.getType() == Material.AIR) {
+                    // No enviar mensaje al jugador por ítem corrupto, solo loguear.
                     logger.severe(String.format("[RewardManager] Ítem nulo/aire para recompensa ID: %s para %s. Marcando como entregada.", rewardId, playerName));
                     try {
                         auctionStorage.markRewardDelivered(rewardId);
                     } catch (SQLException e) {
                         logger.log(java.util.logging.Level.SEVERE, String.format("[RewardManager] CRITICAL: Fallo al marcar recompensa de ÍTEM CORRUPTO ID %s como entregada. Error: %s", rewardId, e.getMessage()), e);
                     }
-                    return false; // No se puede entregar.
+                    return false;
                 }
 
                 PlayerInventory inventory = player.getInventory();
@@ -310,23 +317,27 @@ public class RewardManager {
                     inventory.addItem(item.clone());
                     try {
                         auctionStorage.markRewardDelivered(rewardId);
-                        messageManager.sendMessage(player, reward.getReasonMessageKey(), reward.getReasonPlaceholders().toArray(new String[0]));
-                        logger.info(String.format("[RewardManager] ÉXITO entrega ÍTEM. ID: %s, Jugador: %s, Ítem: %s", rewardId, playerName, item.getType()));
+                        if (!isAutoProcess && !isClaimAll) { // Solo mensaje en reclamo individual manual
+                            messageManager.sendMessage(player, reward.getReasonMessageKey(), reward.getReasonPlaceholders().toArray(new String[0]));
+                        } else if (isAutoProcess && !"gui".equalsIgnoreCase(configManager.getRewardDeliveryMethod())) { // Modo AUTO
+                             messageManager.sendMessage(player, reward.getReasonMessageKey(), reward.getReasonPlaceholders().toArray(new String[0]));
+                        }
+                        // No enviar mensaje si es isClaimAll, el resumen se encarga.
+                        // No enviar mensaje si es isAutoProcess en modo GUI.
                         success = true;
                     } catch (SQLException e) {
                         logger.log(java.util.logging.Level.SEVERE, String.format("[RewardManager] CRITICAL DB: Ítem entregado para ID %s a %s PERO FALLÓ MARCADO. Error: %s", rewardId, playerName, e.getMessage()), e);
-                        inventory.removeItem(item.clone());
+                        inventory.removeItem(item.clone()); // Revertir
                         player.updateInventory();
-                        logger.warning(String.format("[RewardManager] Intento de REVERSIÓN de entrega de ítem para ID %s debido a fallo DB.", rewardId));
                         success = false;
                     }
-                } else {
-                    if (!isAutoProcess) {
+                } else { // Inventario Lleno
+                    if (!isAutoProcess && !isClaimAll) { // Mensaje de inv. lleno solo en reclamo individual manual
                         messageManager.sendMessage(player, "reward_claim_failed_inventory",
                             "%item_name%", InventoryUtil.formatMaterialName(item.getType()),
-                            "#id_short%", rewardId.toString().substring(0,8));
+                            "%id%", rewardId.toString());
                     }
-                    logger.info(String.format("[RewardManager] FALLO entrega ÍTEM (Inv. Lleno). ID: %s, Jugador: %s", rewardId, playerName));
+                    // No enviar mensaje si es isClaimAll o isAutoProcess, se maneja en el resumen o notificación general.
                     success = false;
                 }
                 break;
@@ -335,7 +346,6 @@ public class RewardManager {
                 if (economy != null) {
                     double amountToDeliver = reward.getMoneyToClaim();
                     if (amountToDeliver <= 0) {
-                        logger.info(String.format("[RewardManager] Monto <= 0 (%.2f) para recompensa ID: %s. Marcando como entregada.", amountToDeliver, rewardId));
                         try {
                             auctionStorage.markRewardDelivered(rewardId);
                         } catch (SQLException e) {
@@ -348,34 +358,34 @@ public class RewardManager {
                     if (econResponse.transactionSuccess()) {
                         try {
                             auctionStorage.markRewardDelivered(rewardId);
-                            messageManager.sendMessage(player, reward.getReasonMessageKey(), reward.getReasonPlaceholders().toArray(new String[0]));
-                            logger.info(String.format("[RewardManager] ÉXITO entrega DINERO. ID: %s, Jugador: %s, Monto: %.2f", rewardId, playerName, amountToDeliver));
+                             if (!isAutoProcess && !isClaimAll) { // Solo mensaje en reclamo individual manual
+                                messageManager.sendMessage(player, reward.getReasonMessageKey(), reward.getReasonPlaceholders().toArray(new String[0]));
+                            } else if (isAutoProcess && !"gui".equalsIgnoreCase(configManager.getRewardDeliveryMethod())) { // Modo AUTO
+                                 messageManager.sendMessage(player, reward.getReasonMessageKey(), reward.getReasonPlaceholders().toArray(new String[0]));
+                            }
                             success = true;
-                        } catch (java.sql.SQLException e) {
+                        } catch (SQLException e) {
                             logger.log(java.util.logging.Level.SEVERE, String.format("[RewardManager] CRITICAL DB: Dinero entregado para ID %s a %s (%.2f) PERO FALLÓ MARCADO. Error: %s", rewardId, playerName, amountToDeliver, e.getMessage()), e);
-                            logger.severe(String.format("[RewardManager] ACCIÓN MANUAL REQUERIDA: Revertir depósito de %.2f a %s (UUID: %s) por recompensa %s", amountToDeliver, playerName, player.getUniqueId(), rewardId));
                             success = false;
                         }
-                    } else {
-                        logger.warning(String.format("[RewardManager] FALLO Vault Tx. ID: %s, Jugador: %s, Razón: %s", rewardId, playerName, econResponse.errorMessage));
-                        if (!isAutoProcess) {
+                    } else { // Fallo Vault
+                        if (!isAutoProcess && !isClaimAll) {
                              messageManager.sendMessage(player, "reward_claim_failed_money_econ_error",
                                 "%amount%", String.format("%.2f", amountToDeliver), "%currency%", currencySymbol,
-                                "%reason%", econResponse.errorMessage, "#id_short%", rewardId.toString().substring(0,8));
+                                "%reason%", econResponse.errorMessage, "%id%", rewardId.toString());
                         }
                         success = false;
                     }
-                } else {
-                    logger.severe(String.format("[RewardManager] FALLO Vault No Disp. ID: %s, Jugador: %s", rewardId, playerName));
-                    if (!isAutoProcess) {
+                } else { // Vault no disponible
+                    if (!isAutoProcess && !isClaimAll) {
                         messageManager.sendMessage(player, "reward_claim_failed_money_no_vault",
                             "%amount%", String.format("%.2f", reward.getMoneyToClaim()), "%currency%", currencySymbol,
-                             "#id_short%", rewardId.toString().substring(0,8));
+                             "%id%", rewardId.toString());
                     }
                     success = false;
                 }
                 break;
-            default:
+            default: // Tipo desconocido
                 logger.warning(String.format("[RewardManager] Tipo recompensa DESCONOCIDO. ID: %s, Tipo: %s. Marcando como entregada.", rewardId, reward.getType()));
                 try {
                     auctionStorage.markRewardDelivered(rewardId);

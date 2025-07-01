@@ -128,6 +128,24 @@ public class ConfigManager {
     }
 
     public boolean showMessageOnJoinForGuiMode() {
-        return config.getBoolean("rewards.message_on_join_for_gui_mode", true); // Renombrado para claridad
+        return config.getBoolean("rewards.message_on_join_for_gui_mode", true);
+    }
+
+    // History Settings
+    public boolean isHistoryEnabled() {
+        return config.getBoolean("history.enabled", true);
+    }
+
+    public int getHistoryRecordsPerPlayer() {
+        return config.getInt("history.records_per_player", 50);
+    }
+
+    public int getDefaultHistoryDaysToShowForAdmin() {
+        return config.getInt("history.default_days_to_show", 7);
+    }
+
+    // My Auctions GUI Settings
+    public boolean isMyAuctionsGuiEnabled() {
+        return config.getBoolean("my_auctions_gui.enabled", true);
     }
 }

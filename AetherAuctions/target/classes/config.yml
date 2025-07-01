@@ -71,3 +71,13 @@ rewards:
 
   # Si delivery-mode es "gui", ¿se debe enviar un mensaje al jugador al unirse si tiene recompensas pendientes?
   message_on_join_for_gui_mode: true
+
+history:
+  enabled: true
+  records_per_player: 50
+  # Cuántos días de historial mostrar por defecto en /subasta admin historial <nick> si no se especifican fechas.
+  # Poner 0 o negativo para mostrar todos los registros disponibles para ese jugador.
+  default_days_to_show: 7
+
+my_auctions_gui:
+  enabled: true # Si es true, /subasta mis abrirá una GUI. Si es false, podría mostrar en chat o estar deshabilitado.

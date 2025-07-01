@@ -123,12 +123,15 @@ help_subasta_admin: "&c/subasta admin &7- Comandos de administración."
 admin_help_reload: "&e/subasta admin reload &7- Recarga la configuración del plugin."
 admin_help_ver: "&e/subasta admin ver <id_subasta> &7- Muestra detalles de cualquier subasta."
 admin_help_borrar: "&e/subasta admin borrar <id_subasta> &7- Elimina una subasta del sistema."
+admin_help_historial_player: "&e/subasta admin historial <jugador> [dd-MM-yyyy_inicio] [dd-MM-yyyy_fin] &7- Ver historial de un jugador."
+
 
 # Mensajes de Uso de Comandos
 command_usage_crear: "&cIncorrecto. Uso: /subasta crear <precio_inicial> [precio_compra_directa] <duracion_segundos>"
 command_usage_cancelar: "&cIncorrecto. Uso: /subasta cancelar <id_subasta>"
 command_usage_admin_ver: "&cIncorrecto. Uso: /subasta admin ver <id_subasta>"
 command_usage_admin_borrar: "&cIncorrecto. Uso: /subasta admin borrar <id_subasta>"
+command_usage_admin_historial_player: "&cIncorrecto. Uso: /subasta admin historial <jugador> [fecha_inicio dd-MM-yyyy] [fecha_fin dd-MM-yyyy]"
 
 # Mensajes de Feedback de Comandos (Crear)
 auction_create_error_no_item_in_hand: "&cDebes tener un ítem en tu mano para crear una subasta."
@@ -142,7 +145,7 @@ auction_cancel_error_not_found: "&cNo se encontró una subasta con el ID '%id%'.
 # Mensajes de Feedback de Comandos (Mis Subastas)
 command_mis_no_auctions: "&eNo tienes subastas activas en este momento."
 command_mis_header: "&6--- Tus Subastas Activas ---"
-command_mis_auction_line: "&7ID: &e%id_corto% &7| Ítem: &f%item% &7| Puja: &a%bid% &7| Tiempo: &c%time%"
+command_mis_auction_line: "&7ID: &e%id% &7| Ítem: &f%item% &7| Puja: &a%bid% &7| Tiempo: &c%time%" # Cambiado %id_corto% a %id%
 command_mis_footer: "&6---------------------------"
 
 # Mensajes de Feedback de Comandos (Historial)
@@ -165,23 +168,23 @@ admin_borrar_failed: "&cNo se pudo borrar la subasta '%id%'."
 # command_admin_borrar_invalid_id_format: "&cEl formato del ID de subasta es inválido."
 
 # Notificaciones de Venta/Expiración (Vendedor)
-auction_your_item_sold_bid_money_received: "&aRecibiste &e%received% %currency%&a por tu subasta de &6%item_name%&a (#%id_short%) vendida a &b%winner%&a."
-auction_your_item_sold_bid_money_pending_error: "&eHubo un problema al pagarte por tu subasta de &6%item_name%&e (#%id_short%). El pago de &e%received% %currency%&e ha quedado pendiente. Razón: %reason%"
-auction_your_item_sold_buy_now_money_received: "&aRecibiste &e%received% %currency%&a por tu subasta de &6%item_name%&a (#%id_short%) comprada directamente por &b%buyer%&a."
-auction_your_item_sold_buy_now_money_pending_error: "&eHubo un problema al pagarte por tu subasta (compra directa) de &6%item_name%&e (#%id_short%). El pago de &e%received% %currency%&e ha quedado pendiente. Razón: %reason%"
+auction_your_item_sold_bid_money_received: "&aRecibiste &e%received% %currency%&a por tu subasta de &6%item_name%&a (ID: %id%) vendida a &b%winner%&a."
+auction_your_item_sold_bid_money_pending_error: "&eHubo un problema al pagarte por tu subasta de &6%item_name%&e (ID: %id%). El pago de &e%received% %currency%&e ha quedado pendiente. Razón: %reason%"
+auction_your_item_sold_buy_now_money_received: "&aRecibiste &e%received% %currency%&a por tu subasta de &6%item_name%&a (ID: %id%) comprada directamente por &b%buyer%&a."
+auction_your_item_sold_buy_now_money_pending_error: "&eHubo un problema al pagarte por tu subasta (compra directa) de &6%item_name%&e (ID: %id%). El pago de &e%received% %currency%&e ha quedado pendiente. Razón: %reason%"
 
 # Notificaciones de Entrega/Recompensa de Ítems (Ganador/Vendedor)
-auction_won_item_received: "&a¡Ganaste la subasta #%id_short% por &6%item_name%&a! El ítem ha sido añadido a tu inventario."
-auction_won_inventory_full_pending: "&e¡Ganaste la subasta #%id_short% por &6%item_name%&e, pero tu inventario está lleno! El ítem se ha guardado para que lo reclames con &b/subasta reclamar&e."
-auction_expired_item_returned: "&eTu subasta por &6%item_name%&e (#%id_short%) expiró. El ítem ha sido devuelto a tu inventario."
-auction_expired_inventory_full_pending: "&eTu subasta por &6%item_name%&e (#%id_short%) expiró, pero tu inventario está lleno. El ítem se ha guardado para que lo reclames con &b/subasta reclamar&e."
-auction_cancelled_inventory_full_pending: "&eLa subasta por &6%item_name%&e (#%id_short%) fue cancelada, pero tu inventario está lleno. El ítem se ha guardado para que lo reclames con &b/subasta reclamar&e."
-auction_buy_now_success_item_received: "&a¡Has comprado &6%item_name%&a exitosamente! El ítem ha sido añadido a tu inventario."
-auction_buy_now_inventory_full_pending: "&eHas comprado &6%item_name%&e, pero tu inventario está lleno. El ítem se ha guardado para que lo reclames con &b/subasta reclamar&e."
+auction_won_item_received: "&a¡Ganaste la subasta (ID: %id%) por &6%item_name%&a! El ítem ha sido añadido a tu inventario."
+auction_won_inventory_full_pending: "&e¡Ganaste la subasta (ID: %id%) por &6%item_name%&e, pero tu inventario está lleno! El ítem se ha guardado para que lo reclames con &b/subasta reclamar&e."
+auction_expired_item_returned: "&eTu subasta por &6%item_name%&e (ID: %id%) expiró. El ítem ha sido devuelto a tu inventario."
+auction_expired_inventory_full_pending: "&eTu subasta por &6%item_name%&e (ID: %id%) expiró, pero tu inventario está lleno. El ítem se ha guardado para que lo reclames con &b/subasta reclamar&e."
+auction_cancelled_inventory_full_pending: "&eLa subasta por &6%item_name%&e (ID: %id%) fue cancelada, pero tu inventario está lleno. El ítem se ha guardado para que lo reclames con &b/subasta reclamar&e."
+auction_buy_now_success_item_received: "&a¡Has comprado &6%item_name%&a (Subasta ID: %id%) exitosamente! El ítem ha sido añadido a tu inventario."
+auction_buy_now_inventory_full_pending: "&eHas comprado &6%item_name%&e (Subasta ID: %id%), pero tu inventario está lleno. El ítem se ha guardado para que lo reclames con &b/subasta reclamar&e."
 
 # Notificaciones de Reembolso de Puja (Pujador)
-auction_cancelled_bid_refund_pending_error: "&eHubo un problema al devolver tu puja de &c%amount% %currency%&e para la subasta cancelada #%id_short%. El reembolso ha quedado pendiente. Razón: %reason%"
-# auction_cancelled_bid_refunded: "&eLa subasta #%auction_id_short% en la que pujaste fue cancelada. Tu puja de &a%amount% %currency%&e ha sido devuelta." (ya existe)
+auction_cancelled_bid_refund_pending_error: "&eHubo un problema al devolver tu puja de &c%amount% %currency%&e para la subasta cancelada (ID: %id%). El reembolso ha quedado pendiente. Razón: %reason%"
+# auction_cancelled_bid_refunded: "&eLa subasta (ID: %id%) en la que pujaste fue cancelada. Tu puja de &a%amount% %currency%&e ha sido devuelta."
 
 # --- Mensajes del Sistema de Recompensas Pendientes ---
 reward_processing_on_join: "&aProcesando tus recompensas pendientes..."
@@ -189,43 +192,44 @@ rewards_pending_notification: "&eTienes %count% recompensas pendientes. Usa /sub
 rewards_none_pending: "&aNo tienes recompensas pendientes."
 reward_claim_successful_item: "&a¡Has reclamado %item_name%!"
 reward_claim_successful_money: "&a¡Has reclamado %amount% %currency%!"
-reward_claim_failed_inventory: "&cNo se pudo reclamar %item_name%. Tu inventario está lleno."
-reward_claim_failed_money: "&cNo se pudo reclamar %amount% %currency%. Ocurrió un error en la transacción."
+reward_claim_failed_inventory: "&cNo se pudo reclamar %item_name% (Recompensa ID: %id%). Tu inventario está lleno."
+reward_claim_failed_money: "&cNo se pudo reclamar %amount% %currency% (Recompensa ID: %id%). Ocurrió un error en la transacción."
 reward_auto_item_received: "&aHas recibido automáticamente %item_name% de una subasta."
 reward_auto_money_received: "&aHas recibido automáticamente %amount% %currency% de una subasta."
 
 # Razones para PendingReward (usadas por el sistema de reclamación)
-reward_reason_item_won_inventory_full: "&aGanaste el ítem &6%item_name%&a (subasta #%id_short%), pero tu inventario estaba lleno. Reclámalo con /subasta reclamar."
-reward_reason_item_won_offline: "&aGanaste el ítem &6%item_name%&a (subasta #%id_short%) mientras estabas desconectado. Reclámalo con /subasta reclamar."
-reward_reason_item_expired_inventory_full: "&eTu ítem &6%item_name%&e (subasta #%id_short%) expiró y fue devuelto, pero tu inventario estaba lleno. Reclámalo con /subasta reclamar."
-reward_reason_item_expired_offline: "&eTu ítem &6%item_name%&e (subasta #%id_short%) expiró y fue devuelto mientras estabas desconectado. Reclámalo con /subasta reclamar."
-reward_reason_item_cancelled_return_pending: "&eEl ítem &6%item_name%&e de tu subasta cancelada #%id_short% por %canceller% está pendiente de ser reclamado (inventario lleno o estabas offline)."
-reward_reason_item_bought_inventory_full: "&aCompraste el ítem &6%item_name%&a (subasta #%id_short%), pero tu inventario estaba lleno. Reclámalo con /subasta reclamar."
+# En el lore de ClaimRewardsGUI, el ID de la subasta se mostrará si está en los reasonPlaceholders
+reward_reason_item_won_inventory_full: "&aGanaste el ítem &6%item_name%&a (subasta ID: %id%), pero tu inventario estaba lleno. Reclámalo con /subasta reclamar."
+reward_reason_item_won_offline: "&aGanaste el ítem &6%item_name%&a (subasta ID: %id%) mientras estabas desconectado. Reclámalo con /subasta reclamar."
+reward_reason_item_expired_inventory_full: "&eTu ítem &6%item_name%&e (subasta ID: %id%) expiró y fue devuelto, pero tu inventario estaba lleno. Reclámalo con /subasta reclamar."
+reward_reason_item_expired_offline: "&eTu ítem &6%item_name%&e (subasta ID: %id%) expiró y fue devuelto mientras estabas desconectado. Reclámalo con /subasta reclamar."
+reward_reason_item_cancelled_return_pending: "&eEl ítem &6%item_name%&e de tu subasta cancelada (ID: %id%) por %canceller% está pendiente de ser reclamado."
+reward_reason_item_bought_inventory_full: "&aCompraste el ítem &6%item_name%&a (subasta ID: %id%), pero tu inventario estaba lleno. Reclámalo con /subasta reclamar."
 
-reward_reason_money_sold_buynow_seller_error: "&aRecibiste &e%amount% %currency%&a por &6%item_name%&a (#%id_short%) comprada por &b%buyer%&a. Error al depositar: %reason%."
-reward_reason_money_sold_buynow_seller_offline: "&aRecibiste &e%amount% %currency%&a por &6%item_name%&a (#%id_short%) comprada por &b%buyer%&a mientras estabas desconectado."
-reward_reason_money_sold_bid_seller_error: "&aRecibiste &e%amount% %currency%&a por &6%item_name%&a (#%id_short%) vendida a &b%winner%&a. Error al depositar: %reason%."
-reward_reason_money_sold_bid_seller_offline: "&aRecibiste &e%amount% %currency%&a por &6%item_name%&a (#%id_short%) vendida a &b%winner%&a mientras estabas desconectado."
+reward_reason_money_sold_buynow_seller_error: "&aRecibiste &e%amount% %currency%&a por &6%item_name%&a (ID: %id%) comprada por &b%buyer%&a. Error al depositar: %reason%."
+reward_reason_money_sold_buynow_seller_offline: "&aRecibiste &e%amount% %currency%&a por &6%item_name%&a (ID: %id%) comprada por &b%buyer%&a mientras estabas desconectado."
+reward_reason_money_sold_bid_seller_error: "&aRecibiste &e%amount% %currency%&a por &6%item_name%&a (ID: %id%) vendida a &b%winner%&a. Error al depositar: %reason%."
+reward_reason_money_sold_bid_seller_offline: "&aRecibiste &e%amount% %currency%&a por &6%item_name%&a (ID: %id%) vendida a &b%winner%&a mientras estabas desconectado."
 
-reward_reason_money_cancelled_refund_error: "&eReembolso de &c%amount% %currency%&e por subasta cancelada #%id_short% pendiente. Error: %reason%."
-reward_reason_money_cancelled_refund_offline: "&eReembolso de &c%amount% %currency%&e por subasta cancelada #%id_short% pendiente (estabas offline)."
+reward_reason_money_cancelled_refund_error: "&eReembolso de &c%amount% %currency%&e por subasta cancelada (ID: %id%) pendiente. Error: %reason%."
+reward_reason_money_cancelled_refund_offline: "&eReembolso de &c%amount% %currency%&e por subasta cancelada (ID: %id%) pendiente (estabas offline)."
 
 # --- Mensajes para Borrado por Admin ---
 admin_borrar_error_not_found_generic: "&cLa subasta especificada no fue encontrada o ya no existe."
 
 # Notificaciones para adminDeleteAuction
-auction_admin_deleted_item_returned: "&eTu subasta (#%id_short% - %item_name%) fue eliminada por el admin &b%admin%&e. El ítem ha sido devuelto a tu inventario."
-auction_admin_deleted_item_pending_inv_full: "&eTu subasta (#%id_short% - %item_name%) fue eliminada por el admin &b%admin%&e, pero tu inventario estaba lleno. El ítem se ha guardado para que lo reclames."
-auction_admin_deleted_bid_refunded: "&eLa subasta (#%id_short%) en la que pujaste fue eliminada por el admin &b%admin%&e. Tu puja de &a%amount%&e ha sido devuelta."
-auction_admin_deleted_bid_refund_pending_error: "&eLa subasta (#%id_short%) en la que pujaste fue eliminada por el admin &b%admin%&e. Hubo un error al devolver tu puja de &c%amount%&e (Razón: %reason%). El reembolso quedó pendiente."
+auction_admin_deleted_item_returned: "&eTu subasta (ID: %id% - %item_name%) fue eliminada por el admin &b%admin%&e. El ítem ha sido devuelto a tu inventario."
+auction_admin_deleted_item_pending_inv_full: "&eTu subasta (ID: %id% - %item_name%) fue eliminada por el admin &b%admin%&e, pero tu inventario estaba lleno. El ítem se ha guardado para que lo reclames."
+auction_admin_deleted_bid_refunded: "&eLa subasta (ID: %id%) en la que pujaste fue eliminada por el admin &b%admin%&e. Tu puja de &a%amount%&e ha sido devuelta."
+auction_admin_deleted_bid_refund_pending_error: "&eLa subasta (ID: %id%) en la que pujaste fue eliminada por el admin &b%admin%&e. Hubo un error al devolver tu puja de &c%amount%&e (Razón: %reason%). El reembolso quedó pendiente."
 
 # Razones para PendingReward (admin delete)
-reward_reason_item_admin_deleted: "&eÍtem &6%item_name%&e devuelto de subasta #%id_short% eliminada por admin &b%admin%&e. Reclámalo con /subasta reclamar si no lo recibiste."
-reward_reason_money_admin_deleted_refund: "&eReembolso de &c%amount% %currency%&e por subasta #%id_short% eliminada por admin &b%admin%&e. Reclámalo con /subasta reclamar si no lo recibiste."
+reward_reason_item_admin_deleted: "&eÍtem &6%item_name%&e devuelto de subasta (ID: %id%) eliminada por admin &b%admin%&e. Reclámalo con /subasta reclamar si no lo recibiste."
+reward_reason_money_admin_deleted_refund: "&eReembolso de &c%amount% %currency%&e por subasta (ID: %id%) eliminada por admin &b%admin%&e. Reclámalo con /subasta reclamar si no lo recibiste."
 
 # Errores y Notificaciones de Reclamo de Recompensas (RewardManager)
-reward_claim_failed_money_econ_error: "&cNo se pudo reclamar el dinero (&e%amount% %currency%&c) de la recompensa #%id_short%. Error de Vault: %reason%."
-reward_claim_failed_money_no_vault: "&cNo se pudo reclamar el dinero (&e%amount% %currency%&c) de la recompensa #%id_short%. El sistema de economía no está disponible."
+reward_claim_failed_money_econ_error: "&cNo se pudo reclamar el dinero (&e%amount% %currency%&c) de la recompensa (ID: %id%). Error de Vault: %reason%."
+reward_claim_failed_money_no_vault: "&cNo se pudo reclamar el dinero (&e%amount% %currency%&c) de la recompensa (ID: %id%). El sistema de economía no está disponible."
 # auction_buy_now_success_item_received: "&a¡Has comprado &6%item_name%&a exitosamente! El ítem ha sido añadido a tu inventario." (ya existe y es usado)
 # auction_buy_now_inventory_full_pending: "&eHas comprado &6%item_name%&e, pero tu inventario está lleno. El ítem se ha guardado para que lo reclames con &b/subasta reclamar&e." (ya existe y es usado)
 # reward_claim_failed_inventory: "&cNo se pudo reclamar %item_name%. Tu inventario está lleno." (ya existe y es usado)
@@ -238,7 +242,7 @@ auction_buy_now_error_database_reverted: "&cError de base de datos al procesar l
 # message_placeholder_error: "&cError: Placeholders inválidos para clave %key%" # Logueado a consola
 
 # --- Mensajes para la GUI de Reclamar ---
-claim_gui_title: "&8Recompensas Pendientes de %player_name%" # Clave existente, mantener
+claim_gui_title: "&8Recompensas Pendientes de %player_name%"
 main_gui_rewards_button_name: "&6Recompensas Pendientes"
 main_gui_rewards_button_lore_count: "&7Tienes &e%pending_count% &7recompensas por reclamar."
 main_gui_rewards_button_lore_action: "&aClick para ver y reclamarlas."
@@ -274,10 +278,82 @@ claim_all_reason_inventory_full: "&cInventario lleno"
 claim_all_reason_other: "&cError desconocido" # O podrías ser más específico si es posible
 claim_all_nothing_claimable_now: "&eNo se pudo reclamar ninguna recompensa en este momento. Verifica tu inventario o intenta más tarde."
 
+# Botones Adicionales en MainAuctionGUI
+main_gui_my_auctions_button_name: "&eMis Subastas Activas"
+main_gui_my_auctions_button_lore:
+  - "&7Ver y gestionar tus"
+  - "&7subastas actualmente activas."
+main_gui_history_button_name: "&bHistorial de Subastas"
+main_gui_history_button_lore:
+  - "&7Revisa tu historial de"
+  - "&7participación en subastas."
 
 # --- Claves Reutilizadas y Verificadas Existentes (Asegurar que estén presentes) ---
+# ... (otras claves existentes)
+
+# --- Mensajes para MyActiveAuctionsGUI ---
+my_auctions_gui_title: "&eMis Subastas Activas - %player_name%"
+my_auctions_gui_no_auctions: "&7No tienes ninguna subasta activa en este momento."
+my_auctions_gui_item_name_format: "&r%item_name%" # Puede ser igual a main_gui_item_name_format
+my_auctions_gui_lore_status: "&7Estado: &b%status%"
+my_auctions_gui_lore_price: "&7Puja actual: &e%price% %currency%"
+my_auctions_gui_lore_buy_now: "&7Compra Directa: &a%buy_now_price% %currency%"
+my_auctions_gui_lore_time_remaining: "&7Tiempo restante: &c%time%"
+my_auctions_gui_lore_id: "&8ID: %id%"
+my_auctions_gui_lore_instruction_cancel: "&cClic Izquierdo para intentar Cancelar"
+my_auctions_gui_button_back_to_main: "&aVolver a Subastas"
+my_auctions_gui_cancel_confirm_title: "&4Confirmar Cancelación" # Para una posible GUI de confirmación
+my_auctions_gui_cancel_confirm_button: "&aConfirmar Cancelación"
+my_auctions_gui_cancel_deny_button: "&cNo Cancelar"
+
+# --- Mensajes para PlayerHistoryGUI ---
+history_disabled: "&cEl sistema de historial de subastas está desactivado."
+player_history_gui_title: "&bMi Historial de Subastas"
+player_history_gui_no_events: "&7No tienes eventos en tu historial de subastas."
+# --- Mensajes para AdminHistoryGUI ---
+admin_player_not_found: "&cJugador '%player%' no encontrado o nunca ha jugado en el servidor."
+admin_history_gui_title: "&cHistorial de %player_name%"
+admin_history_gui_no_events: "&7El jugador %player_name% no tiene eventos de subasta en el rango de fechas especificado."
+admin_history_invalid_date_format: "&cFormato de fecha inválido. Usa dd-MM-yyyy."
+admin_history_start_date_after_end: "&cLa fecha de inicio no puede ser posterior a la fecha de fin."
+
+# --- Mensajes para ManageAuctionContextGUI ---
+manage_auction_gui_title: "&8Gestionar Subasta ID: %id%"
+manage_auction_gui_button_cancel_name: "&cCancelar Subasta"
+manage_auction_gui_button_cancel_lore:
+  - "&7Cancela permanentemente esta subasta."
+  - "&c¡Esta acción no se puede deshacer!"
+manage_auction_gui_button_details_name: "&aVer Detalles"
+manage_auction_gui_button_details_lore:
+  - "&7Abre la vista detallada de"
+  - "&7esta subasta para pujar o comprar."
+manage_auction_gui_button_back_name: "&7Volver a Mis Subastas"
+manage_auction_gui_button_back_lore:
+  - "&7Regresa a la lista de tus"
+  - "&7subastas activas."
+
+history_event_name_auction_created: "&aSubasta Creada: &f%item_name%"
+history_event_name_auction_sold_to_buyer: "&6Compraste: &f%item_name%"
+history_event_name_auction_sold_for_seller: "&2Vendiste: &f%item_name%"
+history_event_name_auction_won_by_bidder: "&aGanaste Subasta: &f%item_name%"
+history_event_name_auction_expired_returned: "&eExpiró y Devuelto: &f%item_name%"
+history_event_name_auction_cancelled_by_seller: "&cCancelaste Subasta: &f%item_name%"
+history_event_name_auction_cancelled_by_admin: "&4Subasta Cancelada (Admin): &f%item_name%"
+history_event_name_bid_placed: "&bPujaste por: &f%item_name%"
+history_event_name_bid_outbid: "&7Puja Superada por: &f%item_name%"
+history_event_name_bid_refunded_auction_cancelled: "&ePuja Devuelta (Cancelada): &f%item_name%"
+history_event_name_bid_refunded_auction_sold_buynow: "&ePuja Devuelta (Compra Directa): &f%item_name%"
+# Lore para eventos de historial
+history_event_lore_type: "&7Tipo: &f%type%"
+history_event_lore_auction_id: "&8ID Subasta: &7%id%" # Usar %id% para el ID de la subasta
+history_event_lore_item: "&7Ítem: &6%item%"
+history_event_lore_price: "&7Precio: &e%price% %currency%"
+history_event_lore_counterparty: "&7Contraparte: &b%player%" # Vendedor, comprador, etc.
+history_event_lore_date: "&7Fecha: &f%date%"
+
+
 item_default_name_format: "&r%item_name%"
-new_gui_decorative_pane_name: "&r " # Ya estaba
+new_gui_decorative_pane_name: "&r "
 new_gui_chat_prompt_bid_amount: "&eEscribe la cantidad de tu puja en el chat:" # Ya estaba
 auction_ended_info_closed: "&eLa subasta que estabas viendo ha finalizado y ya no está disponible." # Ya estaba
 error_auction_not_buyable_details_gui: "&cEsta subasta ya no está disponible para compra directa o ha finalizado." # Ya estaba

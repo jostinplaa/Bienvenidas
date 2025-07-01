@@ -213,14 +213,18 @@ public class ClaimRewardsGUI implements Listener {
                         // Simplemente refrescamos la GUI
                         open(player); // Re-abrir para refrescar
                     } else {
-                        // El mensaje de error (ej. inventario lleno) ya se envía desde deliverRewardInternal
-                        // No es necesario cerrar, el jugador puede intentar otra cosa o salir.
-                        // Si la GUI necesita actualizarse incluso en fallo (ej. para mostrar que se intentó), entonces open(player)
-                        // open(player); // Opcional, dependiendo de si el estado visual debe cambiar en fallo
+                    // El mensaje de error (ej. inventario lleno) ya se envía desde deliverRewardInternal si no es claimAll.
+                    // Si es claimAll, el resumen se encarga.
+                    // No es necesario cerrar aquí si el reclamo falló, el jugador puede ver la GUI.
+                    // Se podría refrescar la GUI si el estado de la recompensa (aunque fallida) necesita actualizarse visualmente.
+                    // open(player); // Opcional, si el fallo debe refrescar la GUI.
                     }
-                } else {
-                    plugin.getMessageManager().sendMessage(player, "claim_gui_error_reward_gone");
-                    open(player); // Reabrir para refrescar la lista, la recompensa desapareció
+            } else if (rewardId == null && clickedItem.getType() != Material.AIR && event.getSlot() != (GUI_SIZE -5) ){
+                // Clic en un panel decorativo o ítem no reconocido (que no sea el botón de reclamar todo)
+                 plugin.getLogger().fine("Player " + player.getName() + " clicked on a non-reward item in ClaimRewardsGUI: " + clickedItem.getType());
+            } else if (rewardId == null && clickedItem.getType() != Material.CHEST_MINECART) {
+                 plugin.getMessageManager().sendMessage(player, "claim_gui_error_reward_gone"); // Mensaje genérico si no se pudo identificar recompensa
+                 open(player); // Reabrir para refrescar
                 }
             }
         }

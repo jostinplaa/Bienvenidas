@@ -94,19 +94,13 @@ public class MessageManager {
                  plugin.getLogger().warning("[MessageManager] Par de placeholder nulo detectado para mensaje: '" + rawMessage + "'. Placeholder: " + placeholder);
                  continue;
             }
-            // Manejo especial para %id_short%
-            if ("%id%".equals(placeholder) && message.contains("%id_short%")) {
-                if (value.length() >= 8) {
-                    message = message.replace("%id_short%", value.substring(0, 8));
-                } else {
-                    message = message.replace("%id_short%", value); // Usar el valor completo si es menor a 8 chars
-                }
-            }
+            // Ya no se necesita manejo especial para %id_short% aquí.
+            // Se asume que si se quiere un ID corto, el código que llama a formatMessage
+            // preparará el substring y lo pasará con un placeholder como %id% o %auction_id_short_display%.
             message = message.replace(placeholder, value);
         }
         return message;
     }
-
 
     public String getMessage(String key, String... placeholderPairs) {
         String rawMessage = messagesConfig.getString(key);
@@ -115,6 +109,9 @@ public class MessageManager {
             String errorFormat = plugin.getConfigManager().getMessagesMissingKeyFormat();
             return ChatColor.translateAlternateColorCodes('&', errorFormat.replace("%key%", key));
         }
+        // Asegurarse de que los placeholders como "#id_short%" que podrían haber quedado en messages.yml
+        // no causen problemas si no se pasan explícitamente. O mejor, eliminarlos de messages.yml.
+        // Por ahora, la lógica de reemplazo simple no fallará, solo no reemplazará si no hay par.
         return formatMessage(rawMessage, placeholderPairs);
     }
 

@@ -9,11 +9,12 @@ import java.util.UUID;
 
 public class Auction {
     private final UUID id;                 // Identificador único de la subasta
-    private final UUID sellerId;           // UUID del vendedor
-    private final String sellerName;       // Nombre del vendedor
-    private ItemStack itemStack;           // El ítem que se subasta (mutable solo por deserialización segura)
-    private double currentBid;             // La puja más alta actual
-    private UUID highestBidderId;          // UUID del pujador más alto
+    private final UUID sellerId;
+    private final String sellerName;
+    private ItemStack itemStack;
+    private final double startPrice; // Campo para el precio inicial
+    private double currentBid;
+    private UUID highestBidderId;
     private String highestBidderName;      // Nombre del pujador más alto
     private final double buyNowPrice;      // Precio de compra directa (-1 si no está disponible)
     private final long creationTimestamp;  // Momento de creación de la subasta
@@ -27,9 +28,10 @@ public class Auction {
         this.id = id;
         this.sellerId = sellerId;
         this.sellerName = sellerName;
-        this.itemStack = itemStack.clone(); // Clonar para seguridad
-        this.currentBid = startPrice; // La puja inicial es el precio de inicio
-        this.highestBidderId = null;  // Nadie ha pujado inicialmente
+        this.itemStack = itemStack.clone();
+        this.startPrice = startPrice; // Añadir campo para precio inicial
+        this.currentBid = startPrice;
+        this.highestBidderId = null;
         this.highestBidderName = null;
         this.buyNowPrice = buyNowPrice;
         this.creationTimestamp = creationTimestamp;
@@ -42,7 +44,8 @@ public class Auction {
     public UUID getId() { return id; }
     public UUID getSellerId() { return sellerId; }
     public String getSellerName() { return sellerName; }
-    public ItemStack getItemStack() { return itemStack.clone(); } // Devolver clon para evitar modificación externa
+    public ItemStack getItemStack() { return itemStack.clone(); }
+    public double getStartPrice() { return startPrice; } // Getter para startPrice
     public double getCurrentBid() { return currentBid; }
     public UUID getHighestBidderId() { return highestBidderId; }
     public String getHighestBidderName() { return highestBidderName; }

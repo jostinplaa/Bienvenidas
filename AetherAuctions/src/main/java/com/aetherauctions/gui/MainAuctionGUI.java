@@ -23,10 +23,12 @@ public class MainAuctionGUI {
     public static final int AUCTION_ITEMS_START_SLOT = 0;
     // AUCTION_ITEMS_END_SLOT will depend on items_per_page from config
     public static final int PREVIOUS_PAGE_SLOT = 45; // Bottom left
+    public static final int MY_AUCTIONS_SLOT = 47;   // Bottom row, second from left
     public static final int CLOSE_GUI_SLOT = 49;     // Bottom center
+    public static final int HISTORY_SLOT = 51;       // Bottom row, second from right
+    public static final int REWARDS_BUTTON_SLOT = 52; // Bottom row, penultimate right
     public static final int NEXT_PAGE_SLOT = 53;     // Bottom right
-    public static final int REWARDS_BUTTON_SLOT = 4; // Top right (0-indexed)
-    // public static final int REFRESH_BUTTON_SLOT = 48; // Example if added, bottom row
+    // public static final int REFRESH_BUTTON_SLOT = 48; // Example if added
 
     public static void open(Player player, int page) {
         AetherAuctions plugin = AetherAuctions.getInstance();
@@ -87,7 +89,7 @@ public class MainAuctionGUI {
                 lore.add(msgManager.getMessage("main_gui_lore_time_remaining", "%time%", InventoryUtil.formatTime(auction.getRemainingTimeMillis())));
                 // Example for bid count, ensure getBidHistory() is efficient or cache size
                 // lore.add(msgManager.getMessage("main_gui_lore_bids", "%bid_count%", String.valueOf(auction.getBidHistory().size())));
-                lore.add(msgManager.getMessage("main_gui_lore_id", "%id%", auction.getId().toString().substring(0,8)));
+                lore.add(msgManager.getMessage("main_gui_lore_id", "%id%", auction.getId().toString())); // Usar ID completo
                 lore.add(msgManager.getMessage("main_gui_lore_instruction_details"));
 
                 meta.setLore(lore);
@@ -105,37 +107,43 @@ public class MainAuctionGUI {
             gui.setItem(NEXT_PAGE_SLOT, InventoryUtil.createGuiItem(Material.ARROW, msgManager.getMessage("main_gui_button_next_page")));
         }
 
-        // --- Fill empty slots ---
-        Material decoMat = cfgManager.getMainDecorativePaneMaterial();
-        String decoName = msgManager.getMessage("main_gui_decorative_pane_name");
-        ItemStack decorativePane = InventoryUtil.createGuiItem(decoMat, decoName);
-
         // --- Rewards Button ---
-        // Asynchronously get pending reward count
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-            int pendingCount = plugin.getAuctionStorage().getPendingRewardsByOwner(player.getUniqueId())
-                                .stream().filter(r -> !r.isDelivered()).toList().size();
+            int pendingRewardCount = plugin.getAuctionStorage().getPendingRewardsByOwner(player.getUniqueId())
+                                    .stream().filter(r -> !r.isDelivered()).toList().size();
             Bukkit.getScheduler().runTask(plugin, () -> {
                 List<String> rewardsLore = new ArrayList<>();
-                rewardsLore.add(msgManager.getRawMessage("main_gui_rewards_button_lore_count", "%pending_count%", String.valueOf(pendingCount)));
+                rewardsLore.add(msgManager.getRawMessage("main_gui_rewards_button_lore_count", "%pending_count%", String.valueOf(pendingRewardCount)));
                 rewardsLore.add(msgManager.getRawMessage("main_gui_rewards_button_lore_action"));
-                ItemStack rewardsButton = InventoryUtil.createGuiItem(Material.CHEST,
-                    msgManager.getRawMessage("main_gui_rewards_button_name"),
-                    rewardsLore
-                );
-                // Ensure this slot is not overwritten by fill or pagination logic if it's in the main item area
-                // For now, assuming REWARDS_BUTTON_SLOT (4) is safe or handled by fill logic later
-                gui.setItem(REWARDS_BUTTON_SLOT, rewardsButton);
+                gui.setItem(REWARDS_BUTTON_SLOT, InventoryUtil.createGuiItem(Material.CHEST, msgManager.getRawMessage("main_gui_rewards_button_name"), rewardsLore));
 
-                // Now fill remaining empty slots AFTER placing the rewards button
+                // --- My Auctions Button ---
+                if (cfgManager.isMyAuctionsGuiEnabled()) {
+                    gui.setItem(MY_AUCTIONS_SLOT, InventoryUtil.createGuiItem(Material.WRITABLE_BOOK,
+                        msgManager.getRawMessage("main_gui_my_auctions_button_name"), // Nueva clave
+                        msgManager.getStringList("main_gui_my_auctions_button_lore") // Nueva clave
+                    ));
+                }
+
+                // --- History Button ---
+                if (cfgManager.isHistoryEnabled()) {
+                    gui.setItem(HISTORY_SLOT, InventoryUtil.createGuiItem(Material.CLOCK,
+                        msgManager.getRawMessage("main_gui_history_button_name"), // Nueva clave
+                        msgManager.getStringList("main_gui_history_button_lore") // Nueva clave
+                    ));
+                }
+
+                // --- Fill empty slots ---
+                Material decoMat = cfgManager.getMainDecorativePaneMaterial();
+                String decoName = msgManager.getMessage("main_gui_decorative_pane_name");
+                ItemStack decorativePane = InventoryUtil.createGuiItem(decoMat, decoName);
                 for (int i = 0; i < gui.getSize(); i++) {
                     if (gui.getItem(i) == null) {
                         gui.setItem(i, decorativePane.clone());
                     }
                 }
-                player.openInventory(gui); // Open inventory only after async operations complete
+                player.openInventory(gui);
             });
         });
-        // player.openInventory(gui); // Moved to inside async task to ensure rewards button is populated
     }
 }
