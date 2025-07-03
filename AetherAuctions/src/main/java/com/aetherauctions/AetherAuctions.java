@@ -96,29 +96,22 @@ public class AetherAuctions extends JavaPlugin {
         if (auctionManager != null) {
             auctionManager.stopScheduledTasks();
         }
-        // auctionStorage.closeDatabase(); // Ya no es necesario llamar explícitamente aquí si se maneja en onDisable de AuctionStorage
+        if (auctionStorage != null) {
+            auctionStorage.closeDatabase();
+        }
         getLogger().info("AetherAuctions v" + getDescription().getVersion() + " deshabilitado.");
     }
 
     private boolean setupEconomy() {
         if (getServer().getPluginManager().getPlugin("Vault") == null) {
-            getLogger().severe("Vault no encontrado. Deshabilitando AetherAuctions.");
-            getServer().getPluginManager().disablePlugin(this);
             return false;
         }
         RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
         if (rsp == null) {
-            getLogger().severe("No se encontró un proveedor de economía compatible con Vault. Deshabilitando AetherAuctions.");
-            getServer().getPluginManager().disablePlugin(this);
             return false;
         }
         econ = rsp.getProvider();
-        if (econ == null) {
-            getLogger().severe("El proveedor de economía de Vault es nulo. Deshabilitando AetherAuctions.");
-            getServer().getPluginManager().disablePlugin(this);
-            return false;
-        }
-        return true;
+        return econ != null;
     }
 
     public static AetherAuctions getInstance() {

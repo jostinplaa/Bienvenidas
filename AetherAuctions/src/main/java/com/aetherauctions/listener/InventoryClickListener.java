@@ -15,14 +15,16 @@ import com.aetherauctions.guis.AdminHistoryGUI; // Añadido
 import com.aetherauctions.config.MessageManager;
 import com.aetherauctions.config.ConfigManager;
 
+import org.bukkit.Bukkit; // Añadido
 import org.bukkit.Material;
-import org.bukkit.Sound; // Añadido
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.ClickType;
-// import org.bukkit.event.inventory.InventoryAction; // Not used in provided code
+// import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent; // Importar InventoryCloseEvent
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -69,7 +71,7 @@ public class InventoryClickListener implements Listener {
 
         if (inventoryTitle.startsWith(mainGuiTitlePrefix)) { // --- MainAuctionGUI ---
             event.setCancelled(true);
-            player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.7f, 1.2f); // Sonido para clics en Main GUI
+            // plugin.getSoundManager().playSound(player, "click"); // Reemplazar sonido directo
             ItemStack clickedItem = event.getCurrentItem();
             if (clickedItem == null || clickedItem.getType() == Material.AIR) return;
             int slot = event.getSlot();
@@ -77,23 +79,32 @@ public class InventoryClickListener implements Listener {
             int currentPage = getCurrentPageFromTitle(inventoryTitle);
 
             if (slot == MainAuctionGUI.CLOSE_GUI_SLOT) {
+                plugin.getSoundManager().playSound(player, "close_gui");
                 player.closeInventory();
             } else if (slot == MainAuctionGUI.PREVIOUS_PAGE_SLOT && clickedItem.getType() == Material.ARROW) {
-                MainAuctionGUI.open(player, currentPage - 1); // Llamar directamente al método estático
+                plugin.getSoundManager().playSound(player, "page_turn");
+                MainAuctionGUI.open(player, currentPage - 1);
             } else if (slot == MainAuctionGUI.NEXT_PAGE_SLOT && clickedItem.getType() == Material.ARROW) {
+                plugin.getSoundManager().playSound(player, "page_turn");
                 MainAuctionGUI.open(player, currentPage + 1);
             } else if (slot == MainAuctionGUI.REWARDS_BUTTON_SLOT && clickedItem.getType() == Material.CHEST) {
+                plugin.getSoundManager().playSound(player, "open_gui");
                 new ClaimRewardsGUI(plugin).open(player);
             } else if (slot == MainAuctionGUI.MY_AUCTIONS_SLOT && clickedItem.getType() == Material.WRITABLE_BOOK) {
                 if (cfgManager.isMyAuctionsGuiEnabled()) {
+                    plugin.getSoundManager().playSound(player, "open_gui");
                     MyActiveAuctionsGUI.open(player, 0);
                 }
             } else if (slot == MainAuctionGUI.HISTORY_SLOT && clickedItem.getType() == Material.CLOCK) {
                 if (cfgManager.isHistoryEnabled()) {
+                    plugin.getSoundManager().playSound(player, "open_gui");
                     PlayerHistoryGUI.open(player, 0);
                 }
             } else if (slot >= MainAuctionGUI.AUCTION_ITEMS_START_SLOT && slot < cfgManager.getGuiItemsPerPage()) {
-                handleAuctionItemClick(player, clickedItem, currentPage, event); // Pasar event
+                plugin.getSoundManager().playSound(player, "click");
+                handleAuctionItemClick(player, clickedItem, currentPage, event);
+            } else {
+                plugin.getSoundManager().playSound(player, "click"); // Sonido genérico para otros clics en la GUI (paneles)
             }
         }
         else if (inventoryTitle.startsWith(myAuctionsGuiTitle)) { // --- MyActiveAuctionsGUI ---
@@ -103,26 +114,34 @@ public class InventoryClickListener implements Listener {
             int slot = event.getSlot();
             int currentPage = getCurrentPageFromTitle(inventoryTitle);
 
-            if (slot == MyActiveAuctionsGUI.CLOSE_GUI_SLOT) { // Botón de Volver a Main GUI
+            if (slot == MyActiveAuctionsGUI.CLOSE_GUI_SLOT) {
+                plugin.getSoundManager().playSound(player, "close_gui"); // O un sonido de "volver"
                 MainAuctionGUI.open(player, 0);
             } else if (slot == MyActiveAuctionsGUI.PREVIOUS_PAGE_SLOT && clickedItem.getType() == Material.ARROW) {
+                plugin.getSoundManager().playSound(player, "page_turn");
                 MyActiveAuctionsGUI.open(player, currentPage - 1);
             } else if (slot == MyActiveAuctionsGUI.NEXT_PAGE_SLOT && clickedItem.getType() == Material.ARROW) {
+                plugin.getSoundManager().playSound(player, "page_turn");
                 MyActiveAuctionsGUI.open(player, currentPage + 1);
             } else if (slot == MyActiveAuctionsGUI.HISTORY_BUTTON_SLOT && clickedItem.getType() == Material.CLOCK) {
-                 if (cfgManager.isHistoryEnabled()) PlayerHistoryGUI.open(player,0);
-            } else if (slot < cfgManager.getGuiItemsPerPage()) { // Asumiendo que los ítems de subasta están antes de los botones
+                 if (cfgManager.isHistoryEnabled()) {
+                    plugin.getSoundManager().playSound(player, "open_gui");
+                    PlayerHistoryGUI.open(player,0);
+                 }
+            } else if (slot < cfgManager.getGuiItemsPerPage()) {
                 String auctionIdString = getIdStringFromLore(clickedItem.getItemMeta().getLore(), "my_auctions_gui_lore_id");
                 if (auctionIdString != null) {
                     Auction auction = auctionManager.getAuctionById(UUID.fromString(auctionIdString));
                     if (auction != null && auction.getSellerId().equals(player.getUniqueId()) && auction.getStatus() == AuctionStatus.ACTIVE) {
-                        player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.7f, 1.0f);
+                        plugin.getSoundManager().playSound(player, "click"); // Sonido para abrir contexto
                         ManageAuctionContextGUI.open(player, auction);
-                    } else if (auction != null) { // Si no es el dueño o no está activa, abrir detalles
-                         player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.7f, 1.0f);
+                    } else if (auction != null) {
+                         plugin.getSoundManager().playSound(player, "click");
                          GUIManager.openAuctionInfoGui(player, auction, currentPage);
                     }
                 }
+            } else {
+                plugin.getSoundManager().playSound(player, "click");
             }
         }
         else if (inventoryTitle.startsWith(playerHistoryGuiTitle)) { // --- PlayerHistoryGUI ---
@@ -131,14 +150,18 @@ public class InventoryClickListener implements Listener {
             if (clickedItem == null || clickedItem.getType() == Material.AIR) return;
             int slot = event.getSlot();
             int currentPage = getCurrentPageFromTitle(inventoryTitle);
-            player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.7f, 1.2f);
 
             if (slot == PlayerHistoryGUI.CLOSE_GUI_SLOT) {
+                plugin.getSoundManager().playSound(player, "close_gui"); // O "volver"
                 MainAuctionGUI.open(player, 0);
             } else if (slot == PlayerHistoryGUI.PREVIOUS_PAGE_SLOT && clickedItem.getType() == Material.ARROW) {
+                plugin.getSoundManager().playSound(player, "page_turn");
                 PlayerHistoryGUI.open(player, currentPage - 1);
             } else if (slot == PlayerHistoryGUI.NEXT_PAGE_SLOT && clickedItem.getType() == Material.ARROW) {
+                plugin.getSoundManager().playSound(player, "page_turn");
                 PlayerHistoryGUI.open(player, currentPage + 1);
+            } else {
+                plugin.getSoundManager().playSound(player, "click");
             }
         }
         else if (inventoryTitle.startsWith(adminHistoryGuiTitle)) { // --- AdminHistoryGUI ---
@@ -320,7 +343,33 @@ public class InventoryClickListener implements Listener {
         return playerPendingBidAuctionId.remove(playerId);
     }
     public void clearPlayerStatesOnQuit(UUID playerId){
+        Player player = Bukkit.getPlayer(playerId);
+        if (player != null) {
+            plugin.getOpenGUIManager().playerClosedGUI(player); // Notificar al OpenGUIManager
+        }
         playerReturnPageMap.remove(playerId);
         playerPendingBidAuctionId.remove(playerId);
+    }
+
+    @EventHandler
+    public void onInventoryClose(InventoryCloseEvent event) {
+        if (event.getPlayer() instanceof Player) {
+            Player player = (Player) event.getPlayer();
+            // Notificar a OpenGUIManager que una GUI se cerró.
+            // OpenGUIManager internamente verificará si es una de las que rastrea.
+            plugin.getOpenGUIManager().playerClosedGUI(player);
+
+            // También limpiar estados específicos de este listener si la GUI cerrada es relevante
+            String closedInventoryTitle = ChatColor.stripColor(event.getView().getTitle());
+            String detailsGuiTitle = ChatColor.stripColor(msgManager.getRawMessage("auction_details_gui_title"));
+            if (closedInventoryTitle.equals(detailsGuiTitle)) {
+                playerReturnPageMap.remove(player.getUniqueId());
+            }
+
+            if (isPlayerPendingBid(player.getUniqueId())) {
+                getAndRemovePlayerPendingBidAuctionId(player.getUniqueId());
+                // msgManager.sendMessage(player, "chat_bid_cancelled_gui_closed"); // Opcional
+            }
+        }
     }
 }

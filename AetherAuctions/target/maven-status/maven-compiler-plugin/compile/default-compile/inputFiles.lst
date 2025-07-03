@@ -6,6 +6,8 @@
 /app/AetherAuctions/src/main/java/com/aetherauctions/gui/GUIManager.java
 /app/AetherAuctions/src/main/java/com/aetherauctions/managers/RewardManager.java
 /app/AetherAuctions/src/main/java/com/aetherauctions/model/PendingReward.java
+/app/AetherAuctions/src/main/java/com/aetherauctions/managers/SoundManager.java
+/app/AetherAuctions/src/main/java/com/aetherauctions/events/AuctionUpdateEvent.java
 /app/AetherAuctions/src/main/java/com/aetherauctions/gui/MainAuctionGUI.java
 /app/AetherAuctions/src/main/java/com/aetherauctions/database/DatabaseManager.java
 /app/AetherAuctions/src/main/java/com/aetherauctions/command/CommandManager.java
@@ -18,6 +20,7 @@
 /app/AetherAuctions/src/main/java/com/aetherauctions/listener/InventoryClickListener.java
 /app/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionItem.java
 /app/AetherAuctions/src/main/java/com/aetherauctions/listener/PlayerChatListener.java
+/app/AetherAuctions/src/main/java/com/aetherauctions/managers/OpenGUIManager.java
 /app/AetherAuctions/src/main/java/com/aetherauctions/guis/ManageAuctionContextGUI.java
 /app/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionStatus.java
 /app/AetherAuctions/src/main/java/com/aetherauctions/guis/MyActiveAuctionsGUI.java

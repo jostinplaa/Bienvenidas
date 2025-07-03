@@ -121,8 +121,17 @@ public class AuctionStorage {
                                       + "creation_timestamp INTEGER NOT NULL,"
                                       + "expiration_timestamp INTEGER NOT NULL,"
                                       + "status TEXT NOT NULL,"
-                                      + "bid_history_json TEXT"
+                                      + "bid_history_json TEXT,"
+                                      + "is_mystery INTEGER DEFAULT 0,"      // Nueva columna
+                                      + "mystery_description TEXT"         // Nueva columna
                                       + ");";
+
+        String sqlCreateAuctionMysteryContentsTable = "CREATE TABLE IF NOT EXISTS auction_mystery_contents ("
+                                                 + "content_id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                                                 + "auction_id TEXT NOT NULL,"
+                                                 + "item_data TEXT NOT NULL,"
+                                                 + "FOREIGN KEY(auction_id) REFERENCES auctions(id) ON DELETE CASCADE"
+                                                 + ");";
 
         String sqlCreatePendingRewardsTable = "CREATE TABLE IF NOT EXISTS pending_rewards ("
                                            + "reward_id TEXT PRIMARY KEY NOT NULL,"
@@ -140,6 +149,7 @@ public class AuctionStorage {
         try (Statement stmt = conn.createStatement()) {
             stmt.execute(sqlCreateAuctionsTable);
             stmt.execute(sqlCreatePendingRewardsTable);
+            stmt.execute(sqlCreateAuctionMysteryContentsTable); // Crear la nueva tabla
 
             String sqlCreateAuctionHistoryTable = "CREATE TABLE IF NOT EXISTS auction_history ("
                 + "history_id INTEGER PRIMARY KEY AUTOINCREMENT," // Usar INTEGER para autoincremento en SQLite
@@ -169,15 +179,23 @@ public class AuctionStorage {
         }
         String sql = "INSERT OR REPLACE INTO auctions (id, seller_id, seller_name, itemstack_data, "
                    + "current_bid, highest_bidder_id, highest_bidder_name, buy_now_price, "
-                   + "creation_timestamp, expiration_timestamp, status, bid_history_json) "
-                   + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+                   + "creation_timestamp, expiration_timestamp, status, bid_history_json, "
+                   + "is_mystery, mystery_description) " // Añadir nuevas columnas
+                   + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"; // Añadir placeholders
         Connection conn = getConnection();
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, auction.getId().toString());
             pstmt.setString(2, auction.getSellerId().toString());
             pstmt.setString(3, auction.getSellerName());
-            String itemStackData = SerializationUtil.itemStackToBase64(auction.getItemStack());
-            pstmt.setString(4, itemStackData);
+
+            // Para subastas misteriosas, el itemstack_data principal puede ser null o un placeholder
+            // Los ítems reales están en auction_mystery_contents
+            if (auction.isMystery() && (auction.getItemStack() == null || auction.getItemStack().getType() == Material.AIR) ) {
+                 pstmt.setNull(4, java.sql.Types.VARCHAR); // O guardar un placeholder serializado si se prefiere
+            } else {
+                pstmt.setString(4, SerializationUtil.itemStackToBase64(auction.getItemStack()));
+            }
+
             pstmt.setDouble(5, auction.getCurrentBid());
             pstmt.setString(6, auction.getHighestBidderId() != null ? auction.getHighestBidderId().toString() : null);
             pstmt.setString(7, auction.getHighestBidderName());
@@ -185,13 +203,15 @@ public class AuctionStorage {
             pstmt.setLong(9, auction.getCreationTimestamp());
             pstmt.setLong(10, auction.getExpirationTimestamp());
             pstmt.setString(11, auction.getStatus().name());
-            String bidHistoryJson = SerializationUtil.bidListToJson(auction.getBidHistory());
-            pstmt.setString(12, bidHistoryJson);
+            pstmt.setString(12, SerializationUtil.bidListToJson(auction.getBidHistory()));
+            pstmt.setInt(13, auction.isMystery() ? 1 : 0); // Guardar estado de misterio
+            pstmt.setString(14, auction.getMysteryDescription()); // Guardar descripción de misterio
+
             pstmt.executeUpdate();
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Error saving auction ID: " + auction.getId() + " to the database.", e);
             throw e;
-        } catch (IllegalStateException e) {
+        } catch (IllegalStateException e) { // Catching potential SerializationUtil errors
             plugin.getLogger().log(Level.SEVERE, "Serialization error while saving auction ID: " + auction.getId(), e);
             throw new SQLException("Serialization error while saving auction.", e);
         }
@@ -201,7 +221,14 @@ public class AuctionStorage {
         UUID id = UUID.fromString(rs.getString("id"));
         UUID sellerId = UUID.fromString(rs.getString("seller_id"));
         String sellerName = rs.getString("seller_name");
-        ItemStack itemStack = SerializationUtil.itemStackFromBase64(rs.getString("itemstack_data"));
+
+        boolean isMystery = rs.getInt("is_mystery") == 1;
+        String mysteryDescription = rs.getString("mystery_description");
+        ItemStack itemStack = null;
+        if (!isMystery || rs.getString("itemstack_data") != null) { // Solo deserializar si no es misterio o si hay un item principal para el misterio
+             itemStack = SerializationUtil.itemStackFromBase64(rs.getString("itemstack_data"));
+        }
+
         double currentBid = rs.getDouble("current_bid");
         String highestBidderIdStr = rs.getString("highest_bidder_id");
         UUID highestBidderId = highestBidderIdStr != null ? UUID.fromString(highestBidderIdStr) : null;
@@ -213,24 +240,30 @@ public class AuctionStorage {
         try {
             status = AuctionStatus.valueOf(rs.getString("status"));
         } catch (IllegalArgumentException e) {
-            plugin.getLogger().log(Level.SEVERE, "Invalid status in database for auction ID: " + id + ". Status: " + rs.getString("status"), e);
-            status = AuctionStatus.CANCELLED;
+            plugin.getLogger().severe("Invalid status in database for auction ID: " + id + ". Status: " + rs.getString("status") + ". Defaulting to CANCELLED.");
+            status = AuctionStatus.CANCELLED; // Default a un estado seguro
         }
         List<Bid> bidHistory = SerializationUtil.bidListFromJson(rs.getString("bid_history_json"));
-        ItemStack effectiveItemStack = itemStack;
-        if (itemStack == null) {
-             plugin.getLogger().warning("ItemStack deserialized to null for auction ID: " + id + ". Using a placeholder BARRIER item.");
+
+        ItemStack effectiveItemStack = itemStack; // itemStack ya maneja el caso de ser null para misteriosas
+        if (!isMystery && itemStack == null) { // Solo es un problema si NO es misteriosa y el item es null
+             plugin.getLogger().warning("ItemStack deserialized to null for NON-MYSTERY auction ID: " + id + ". Using a placeholder BARRIER item.");
              effectiveItemStack = new ItemStack(Material.BARRIER, 1);
         }
+
+        // Usar el constructor que incluye isMystery y mysteryDescription
         Auction auction = new Auction(
-            id, sellerId, sellerName, effectiveItemStack, 0,
-            buyNowPrice, creationTimestamp, expirationTimestamp
+            id, sellerId, sellerName, effectiveItemStack, 0, // startPrice no se guarda/carga directamente, currentBid inicial es startPrice
+            buyNowPrice, creationTimestamp, expirationTimestamp,
+            isMystery, mysteryDescription
         );
-        auction.setCurrentBid(currentBid);
+        auction.setCurrentBid(currentBid); // currentBid se setea después, ya que puede cambiar.
         auction.setHighestBidderId(highestBidderId);
         auction.setHighestBidderName(highestBidderName);
         auction.setStatus(status);
         auction.setBidHistory(bidHistory);
+        // auction.setMystery(isMystery); // Ya se hace en el constructor
+        // auction.setMysteryDescription(mysteryDescription); // Ya se hace en el constructor
         return auction;
     }
 
@@ -447,6 +480,62 @@ public class AuctionStorage {
         }
         return rowsAffected;
     }
+
+    // --- Mystery Auction Contents Methods ---
+    public void saveMysteryAuctionContents(UUID auctionId, List<ItemStack> items) throws SQLException {
+        if (items == null || items.isEmpty()) return;
+        String sql = "INSERT INTO auction_mystery_contents (auction_id, item_data) VALUES (?, ?);";
+        Connection conn = getConnection();
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            for (ItemStack item : items) {
+                if (item != null && item.getType() != Material.AIR) {
+                    pstmt.setString(1, auctionId.toString());
+                    pstmt.setString(2, SerializationUtil.itemStackToBase64(item));
+                    pstmt.addBatch();
+                }
+            }
+            pstmt.executeBatch();
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Error saving mystery auction contents for auction ID: " + auctionId, e);
+            throw e;
+        }
+    }
+
+    public List<ItemStack> getMysteryAuctionContents(UUID auctionId) throws SQLException {
+        List<ItemStack> items = new ArrayList<>();
+        String sql = "SELECT item_data FROM auction_mystery_contents WHERE auction_id = ?;";
+        Connection conn = getConnection();
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, auctionId.toString());
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    try {
+                        ItemStack item = SerializationUtil.itemStackFromBase64(rs.getString("item_data"));
+                        if (item != null) {
+                            items.add(item);
+                        }
+                    } catch (IOException | ClassNotFoundException e) {
+                        plugin.getLogger().log(Level.SEVERE, "Error deserializing item for mystery auction ID: " + auctionId, e);
+                    }
+                }
+            }
+        }
+        return items;
+    }
+     public int getMysteryAuctionContentsCount(UUID auctionId) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM auction_mystery_contents WHERE auction_id = ?;";
+        Connection conn = getConnection();
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, auctionId.toString());
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        }
+        return 0;
+    }
+
 
     // --- Auction History Methods ---
 

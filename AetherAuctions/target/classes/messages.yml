@@ -317,6 +317,20 @@ admin_history_gui_no_events: "&7El jugador %player_name% no tiene eventos de sub
 admin_history_invalid_date_format: "&cFormato de fecha inválido. Usa dd-MM-yyyy."
 admin_history_start_date_after_end: "&cLa fecha de inicio no puede ser posterior a la fecha de fin."
 
+# --- Mensajes para PrepareMysteryLotGUI ---
+prepare_mystery_gui_title: "&5Prepara tu Lote Misterioso"
+prepare_mystery_gui_confirm_name: "&aConfirmar Lote y Crear Subasta"
+prepare_mystery_gui_confirm_lore:
+  - "&7Los ítems en esta ventana"
+  - "&7serán parte de la subasta misteriosa."
+prepare_mystery_gui_cancel_name: "&cCancelar Creación"
+prepare_mystery_gui_cancel_lore:
+  - "&7Cierra la ventana o haz clic aquí"
+  - "&7para cancelar. Los ítems serán devueltos."
+prepare_mystery_gui_error_no_items: "&cDebes añadir al menos un ítem al lote misterioso."
+prepare_mystery_gui_items_returned_on_close: "&eLos ítems del lote misterioso han sido devueltos a tu inventario."
+
+
 # --- Mensajes para ManageAuctionContextGUI ---
 manage_auction_gui_title: "&8Gestionar Subasta ID: %id%"
 manage_auction_gui_button_cancel_name: "&cCancelar Subasta"
@@ -331,6 +345,20 @@ manage_auction_gui_button_back_name: "&7Volver a Mis Subastas"
 manage_auction_gui_button_back_lore:
   - "&7Regresa a la lista de tus"
   - "&7subastas activas."
+
+# --- Mensajes para Subastas Misteriosas ---
+mystery_auctions_disabled: "&cLas subastas misteriosas están actualmente desactivadas."
+command_usage_crear_misteriosa: "&cIncorrecto. Uso: /subasta crearmisteriosa <precio_ini> [compra_dir] <duración_seg> \"<descripción>\""
+command_error_mystery_description_empty: "&cLa descripción para una subasta misteriosa no puede estar vacía."
+mystery_auction_create_success: "&a¡Subasta Misteriosa #%id% creada! Coloca los ítems en la GUI que se abrió."
+mystery_auction_creation_cancelled: "&eCreación de subasta misteriosa cancelada."
+mystery_auction_gui_item_name: "&dSubasta Misteriosa"
+mystery_auction_gui_lore_description: "&7Descripción: &f%description%"
+mystery_auction_gui_lore_item_count: "&7Contiene: &e%count% &7ítems misteriosos."
+mystery_auction_gui_lore_item_count_placeholder: "&7Contiene: &e? &7ítems misteriosos." # Usado si el conteo no está disponible inmediatamente
+mystery_auction_gui_lore_item_count_error: "&cError al cargar conteo de ítems."
+auction_won_mystery_empty: "&e¡Ganaste la subasta misteriosa (ID: %id%) pero estaba vacía! Contacta a un admin."
+
 
 history_event_name_auction_created: "&aSubasta Creada: &f%item_name%"
 history_event_name_auction_sold_to_buyer: "&6Compraste: &f%item_name%"

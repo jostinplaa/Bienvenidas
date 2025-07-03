@@ -81,3 +81,110 @@ history:
 
 my_auctions_gui:
   enabled: true # Si es true, /subasta mis abrirá una GUI. Si es false, podría mostrar en chat o estar deshabilitado.
+
+gui:
+  # ... (otras configuraciones de GUI existentes como main_decorative_pane_material)
+  main_decorative_pane_material: "GRAY_STAINED_GLASS_PANE"
+  details_decorative_pane_material: "BLACK_STAINED_GLASS_PANE"
+  items_per_page: 36
+  main_auto_refresh_interval_seconds: 10 # 0 para desactivar el refresco por conteo
+
+  sounds:
+    enabled: true
+    # Nombres de sonidos de Bukkit: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Sound.html
+    # Puedes cambiar estos a cualquier sonido válido.
+    # Cada sonido puede tener opcionalmente ".volume" y ".pitch"
+    # Ejemplo:
+    # click:
+    #   sound: "UI_BUTTON_CLICK"
+    #   volume: 1.0
+    #   pitch: 1.0
+    # GUI Interactions
+    click: { sound: "UI_BUTTON_CLICK", volume: 1.0, pitch: 1.0 }
+    open_gui: { sound: "BLOCK_CHEST_OPEN", volume: 0.8, pitch: 1.1 }
+    close_gui: { sound: "BLOCK_CHEST_CLOSE", volume: 0.8, pitch: 1.1 }
+    page_turn: { sound: "ITEM_BOOK_PAGE_TURN", volume: 0.8, pitch: 1.0 }
+    # Auction Events
+    bid_placed_success: { sound: "ENTITY_EXPERIENCE_ORB_PICKUP", volume: 0.8, pitch: 1.2 }
+    bid_outbid_notification: { sound: "ENTITY_VILLAGER_NO", volume: 1.0, pitch: 0.9 }
+    auction_won: { sound: "ENTITY_PLAYER_LEVELUP", volume: 0.9, pitch: 1.0 }
+    auction_sold_for_seller: { sound: "ENTITY_VILLAGER_YES", volume: 1.0, pitch: 1.0 }
+    auction_item_claimed: { sound: "ENTITY_ITEM_PICKUP", volume: 0.8, pitch: 1.1 }
+    auction_created: { sound: "ENTITY_ITEM_FRAME_ADD_ITEM", volume: 1.0, pitch: 1.0 }
+    auction_cancelled: { sound: "BLOCK_LEVER_CLICK", volume: 1.0, pitch: 0.8 }
+    reward_pending_notification: { sound: "ENTITY_EXPERIENCE_ORB_PICKUP", volume: 0.7, pitch: 1.5 }
+    # Errors / Warnings
+    error: { sound: "BLOCK_NOTE_BLOCK_PLING", volume: 1.0, pitch: 0.7 }
+    inventory_full: { sound: "ENTITY_VILLAGER_NO", volume: 1.0, pitch: 0.8 }
+
+auction:
+  # ... (otras configuraciones de auction existentes como default_duration_hours, max_active_auctions_per_player, etc.)
+  default_duration_hours: 24
+  max_active_auctions_per_player: 5
+  min_bid_increment: 10.0
+  allow_buy_now: true
+  creation_fee: 0.0
+  expired_check_interval_seconds: 60
+  item_blacklist:
+    - "BEDROCK"
+    - "COMMAND_BLOCK"
+  allow_mystery_auctions: true # Añadido para subastas misteriosas
+
+  commission:
+    # Type: "flat_percentage", "per_category_percentage", "tiered_percentage"
+    type: "flat_percentage"
+    default_percentage: 5.0 # Usado para flat_percentage y como fallback para per_category
+
+    # Para per_category_percentage: Asocia Materiales (o categorías más amplias en el futuro) a un porcentaje
+    # Las claves deben ser nombres de Material de Bukkit válidos.
+    # DEFAULT_OTHER es la comisión para ítems no listados específicamente.
+    categories:
+      DIAMOND_SWORD: 10.0
+      ELYTRA: 15.0
+      GRASS_BLOCK: 2.0
+      DEFAULT_OTHER: 5.0
+
+    # Para tiered_percentage: Lista de tramos. El primero que cumpla (max_price >= precio de venta) se aplica.
+    # max_price: -1 o un número muy grande para "y superior". El orden importa.
+    tiers:
+      - { max_price: 100, percentage: 7.0 }
+      - { max_price: 1000, percentage: 5.0 }
+      - { max_price: 10000, percentage: 3.0 }
+      - { max_price: -1, percentage: 1.5 }
+
+gui:
+  # ... (otras configuraciones de GUI existentes como main_decorative_pane_material)
+  main_decorative_pane_material: "GRAY_STAINED_GLASS_PANE"
+  details_decorative_pane_material: "BLACK_STAINED_GLASS_PANE"
+  items_per_page: 36
+  # Intervalo en segundos para el refresco automático de la GUI principal si el conteo de subastas cambia.
+  # Poner en 0 para desactivar este tipo de refresco automático.
+  # La actualización en tiempo real de pujas individuales es una característica separada y más compleja.
+  main_auto_refresh_interval_seconds: 10
+
+  sounds:
+    enabled: true
+    # Nombres de sonidos de Bukkit: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Sound.html
+    # Cada sonido puede tener opcionalmente ".volume" y ".pitch"
+    # Ejemplo:
+    # click:
+    #   sound: "UI_BUTTON_CLICK"
+    #   volume: 1.0
+    #   pitch: 1.0
+    # GUI Interactions
+    click: { sound: "UI_BUTTON_CLICK", volume: 1.0, pitch: 1.0 }
+    open_gui: { sound: "BLOCK_CHEST_OPEN", volume: 0.8, pitch: 1.1 }
+    close_gui: { sound: "BLOCK_CHEST_CLOSE", volume: 0.8, pitch: 1.1 }
+    page_turn: { sound: "ITEM_BOOK_PAGE_TURN", volume: 0.8, pitch: 1.0 }
+    # Auction Events
+    bid_placed_success: { sound: "ENTITY_EXPERIENCE_ORB_PICKUP", volume: 0.8, pitch: 1.2 }
+    bid_outbid_notification: { sound: "ENTITY_VILLAGER_NO", volume: 1.0, pitch: 0.9 }
+    auction_won: { sound: "ENTITY_PLAYER_LEVELUP", volume: 0.9, pitch: 1.0 }
+    auction_sold_for_seller: { sound: "ENTITY_VILLAGER_YES", volume: 1.0, pitch: 1.0 }
+    auction_item_claimed: { sound: "ENTITY_ITEM_PICKUP", volume: 0.8, pitch: 1.1 }
+    auction_created: { sound: "ENTITY_ITEM_FRAME_ADD_ITEM", volume: 1.0, pitch: 1.0 }
+    auction_cancelled: { sound: "BLOCK_LEVER_CLICK", volume: 1.0, pitch: 0.8 }
+    reward_pending_notification: { sound: "ENTITY_EXPERIENCE_ORB_PICKUP", volume: 0.7, pitch: 1.5 }
+    # Errors / Warnings
+    error: { sound: "BLOCK_NOTE_BLOCK_PLING", volume: 1.0, pitch: 0.7 }
+    inventory_full: { sound: "ENTITY_VILLAGER_NO", volume: 1.0, pitch: 0.8 }
