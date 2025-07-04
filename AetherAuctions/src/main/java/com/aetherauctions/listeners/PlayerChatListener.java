@@ -2,7 +2,7 @@ package com.aetherauctions.listeners;
 
 import com.aetherauctions.AetherAuctions;
 import com.aetherauctions.auction.AuctionManager;
-import com.aetherauctions.model.Auction; // Import Auction model
+import com.aetherauctions.Auction; // Corrected import
 import com.aetherauctions.auction.AuctionStatus;
 import com.aetherauctions.config.MessageManager;
 import com.aetherauctions.listener.InventoryClickListener;

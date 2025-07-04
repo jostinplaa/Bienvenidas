@@ -1,7 +1,7 @@
 package com.aetherauctions.storage;
 
 import com.aetherauctions.AetherAuctions;
-import com.aetherauctions.model.Auction;
+import com.aetherauctions.Auction; // Corrected import
 import com.aetherauctions.model.Bid;
 import com.aetherauctions.model.PendingReward; // Import PendingReward
 import com.aetherauctions.auction.AuctionStatus;

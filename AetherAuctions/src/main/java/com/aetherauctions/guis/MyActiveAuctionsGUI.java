@@ -1,7 +1,7 @@
 package com.aetherauctions.guis;
 
 import com.aetherauctions.AetherAuctions;
-import com.aetherauctions.model.Auction;
+import com.aetherauctions.Auction; // Corrected import
 import com.aetherauctions.auction.AuctionManager;
 import com.aetherauctions.config.ConfigManager;
 import com.aetherauctions.config.MessageManager;

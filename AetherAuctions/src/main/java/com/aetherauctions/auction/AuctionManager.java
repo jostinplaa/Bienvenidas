@@ -1,7 +1,7 @@
 package com.aetherauctions.auction;
 
 import com.aetherauctions.AetherAuctions;
-import com.aetherauctions.model.Auction;
+import com.aetherauctions.Auction; // Corrected import
 import com.aetherauctions.auction.AuctionStatus;
 import com.aetherauctions.model.Bid;
 import com.aetherauctions.storage.AuctionStorage;
@@ -10,7 +10,7 @@ import com.aetherauctions.config.MessageManager;
 import com.aetherauctions.util.InventoryUtil;
 import com.aetherauctions.util.SerializationUtil;
 import com.aetherauctions.model.AuctionHistoryEvent;
-import com.aetherauctions.events.AuctionUpdateEvent;
+// import com.aetherauctions.events.AuctionUpdateEvent; // Removed import
 import com.aetherauctions.managers.RewardManager;
 import com.aetherauctions.model.PendingReward;
 
@@ -192,7 +192,7 @@ public class AuctionManager {
                     plugin.getLogger().log(Level.SEVERE, "Error al guardar evento de historial (AUCTION_CREATED) para subasta ID: " + auction.getAuctionId(), ex);
                 }
             }
-            Bukkit.getPluginManager().callEvent(new AuctionUpdateEvent(auction, AuctionUpdateEvent.UpdateType.NEW_AUCTION_LISTED));
+            // Bukkit.getPluginManager().callEvent(new AuctionUpdateEvent(auction, AuctionUpdateEvent.UpdateType.NEW_AUCTION_LISTED)); // Comentado
             return true;
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Error al guardar la nueva subasta ID: " + auction.getAuctionId(), e);
@@ -252,7 +252,7 @@ public class AuctionManager {
             if (previousHighestBidderOp.isOnline() && previousHighestBidderOp.getPlayer() != null) {
                 Player prevBidderPlayer = previousHighestBidderOp.getPlayer();
                 messageManager.sendMessage(prevBidderPlayer, configManager.getPluginPrefix() + messageManager.getMessage("auction_outbid_notification", "%id%", auction.getAuctionId().toString()));
-                plugin.getSoundManager().playSound(prevBidderPlayer, "bid_outbid_notification");
+                // plugin.getSoundManager().playSound(prevBidderPlayer, "bid_outbid_notification"); // Comentado
             }
         }
 
@@ -271,9 +271,9 @@ public class AuctionManager {
                     "%amount%", String.valueOf(bidAmount),
                     "%item_name%", InventoryUtil.formatMaterialName(auction.getItemStack().getType()),
                     "%id%", auction.getAuctionId().toString()));
-                plugin.getSoundManager().playSound(sellerPlayer, "bid_new_on_own");
+                // plugin.getSoundManager().playSound(sellerPlayer, "bid_new_on_own"); // Comentado
             }
-            plugin.getSoundManager().playSound(bidder, "bid_placed_success");
+            // plugin.getSoundManager().playSound(bidder, "bid_placed_success"); // Comentado
 
             if (plugin.getConfigManager().isHistoryEnabled()) {
                 AuctionHistoryEvent bidPlacedEvent = new AuctionHistoryEvent(
@@ -296,7 +296,7 @@ public class AuctionManager {
                     auctionStorage.purgeOldPlayerHistory(previousHighestBidderUUID, plugin.getConfigManager().getHistoryRecordsPerPlayer());
                 }
             }
-            Bukkit.getPluginManager().callEvent(new AuctionUpdateEvent(auction, AuctionUpdateEvent.UpdateType.NEW_BID));
+            // Bukkit.getPluginManager().callEvent(new AuctionUpdateEvent(auction, AuctionUpdateEvent.UpdateType.NEW_BID)); // Comentado
             return true;
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Error al guardar la puja para la subasta ID: " + auction.getAuctionId(), e);
@@ -442,7 +442,7 @@ public class AuctionManager {
             if (!activeAuctionsCache.containsKey(auction.getAuctionId())) activeAuctionsCache.put(auction.getAuctionId(), auction);
             return false;
         }
-        Bukkit.getPluginManager().callEvent(new AuctionUpdateEvent(auction, AuctionUpdateEvent.UpdateType.SOLD_BUYNOW));
+        // Bukkit.getPluginManager().callEvent(new AuctionUpdateEvent(auction, AuctionUpdateEvent.UpdateType.SOLD_BUYNOW)); // Comentado
 
         boolean itemDeliveredToInv = false;
         if (buyer.getInventory().firstEmpty() != -1) {
@@ -470,12 +470,12 @@ public class AuctionManager {
         }
 
         if (itemDeliveredToInv) {
-            plugin.getSoundManager().playSound(buyer, "auction_item_claimed");
+            // plugin.getSoundManager().playSound(buyer, "auction_item_claimed"); // Comentado
         } else {
-            plugin.getSoundManager().playSound(buyer, "inventory_full");
+            // plugin.getSoundManager().playSound(buyer, "inventory_full"); // Comentado
         }
         if (sellerOffline.isOnline() && sellerOffline.getPlayer() != null) {
-             plugin.getSoundManager().playSound(sellerOffline.getPlayer(), "auction_sold_for_seller");
+             // plugin.getSoundManager().playSound(sellerOffline.getPlayer(), "auction_sold_for_seller"); // Comentado
         }
         return true;
     }
@@ -514,7 +514,7 @@ public class AuctionManager {
                             "%item_name%", InventoryUtil.formatMaterialName(auction.getItemStack().getType()),
                             "%currency%", configManager.getCurrencySymbol(),
                             "%id%", auction.getAuctionId().toString()));
-                        plugin.getSoundManager().playSound(sellerPlayer, "auction_sold_for_seller");
+                        // plugin.getSoundManager().playSound(sellerPlayer, "auction_sold_for_seller"); // Comentado
                     } else {
                         rewardManager.createPendingReward(
                             sellerOffline.getUniqueId(),
@@ -536,7 +536,7 @@ public class AuctionManager {
                             "%item_name%", InventoryUtil.formatMaterialName(auction.getItemStack().getType()),
                             "%id%", auction.getAuctionId().toString(),
                             "%reason%", tx.errorMessage));
-                        plugin.getSoundManager().playSound(sellerPlayer, "error");
+                        // plugin.getSoundManager().playSound(sellerPlayer, "error"); // Comentado
                     }
                 } else {
                     rewardManager.createPendingReward(
@@ -582,10 +582,10 @@ public class AuctionManager {
                         }
                         if (allItemsDeliveredToInv) {
                             messageManager.sendMessage(winnerPlayer, configManager.getPluginPrefix() + messageManager.getMessage("auction_won_item_received", "%item_name%", itemNameForNotification, "%id%", auction.getAuctionId().toString()));
-                            plugin.getSoundManager().playSound(winnerPlayer, "auction_won");
+                            // plugin.getSoundManager().playSound(winnerPlayer, "auction_won"); // Comentado
                         } else {
                             messageManager.sendMessage(winnerPlayer, configManager.getPluginPrefix() + messageManager.getMessage("auction_won_inventory_full_pending", "%item_name%", itemNameForNotification, "%id%", auction.getAuctionId().toString()));
-                             plugin.getSoundManager().playSound(winnerPlayer, "inventory_full");
+                             // plugin.getSoundManager().playSound(winnerPlayer, "inventory_full"); // Comentado
                         }
                     } else {
                         for (ItemStack item : itemsToDeliver) {
@@ -623,7 +623,7 @@ public class AuctionManager {
             } catch (SQLException e) {
                 plugin.getLogger().log(Level.SEVERE, "Error de DB al finalizar (SOLD_BID) subasta " + auction.getAuctionId() + ". El pago/entrega podría no haberse procesado.", e);
             }
-            Bukkit.getPluginManager().callEvent(new AuctionUpdateEvent(auction, AuctionUpdateEvent.UpdateType.SOLD_BID));
+            // Bukkit.getPluginManager().callEvent(new AuctionUpdateEvent(auction, AuctionUpdateEvent.UpdateType.SOLD_BID)); // Comentado
 
         } else {
             auction.setStatus(AuctionStatus.EXPIRED);
@@ -704,7 +704,7 @@ public class AuctionManager {
             } catch (SQLException e) {
                  plugin.getLogger().log(Level.SEVERE, "Error de DB al finalizar (EXPIRED) subasta " + auction.getAuctionId() + ".", e);
             }
-            Bukkit.getPluginManager().callEvent(new AuctionUpdateEvent(auction, AuctionUpdateEvent.UpdateType.EXPIRED));
+            // Bukkit.getPluginManager().callEvent(new AuctionUpdateEvent(auction, AuctionUpdateEvent.UpdateType.EXPIRED)); // Comentado
         }
     }
 
@@ -841,7 +841,7 @@ public class AuctionManager {
             if (isAdmin && !auction.getSellerUUID().equals(canceller.getUniqueId())) {
                 messageManager.sendMessage(canceller, configManager.getPluginPrefix() + messageManager.getMessage("auction_cancelled_admin_success", "%id%", auction.getAuctionId().toString()));
             }
-            Bukkit.getPluginManager().callEvent(new AuctionUpdateEvent(auction, AuctionUpdateEvent.UpdateType.CANCELLED));
+            // Bukkit.getPluginManager().callEvent(new AuctionUpdateEvent(auction, AuctionUpdateEvent.UpdateType.CANCELLED)); // Comentado
             return true;
 
         } catch (SQLException e) {
@@ -976,7 +976,7 @@ public class AuctionManager {
             activeAuctionsCache.remove(auction.getAuctionId());
             plugin.getLogger().info("Subasta " + auction.getAuctionId() + " marcada como " + auction.getStatus() + " y eliminada del caché por admin " + adminSender.getName());
             messageManager.sendMessage(adminSender, configManager.getPluginPrefix() + messageManager.getMessage("admin_borrar_success", "%id%", auction.getAuctionId().toString(), "%item_name%", itemDisplayName));
-            Bukkit.getPluginManager().callEvent(new AuctionUpdateEvent(auction, AuctionUpdateEvent.UpdateType.CANCELLED));
+            // Bukkit.getPluginManager().callEvent(new AuctionUpdateEvent(auction, AuctionUpdateEvent.UpdateType.CANCELLED)); // Comentado
             return true;
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Error de DB al actualizar subasta " + auction.getAuctionId() + " durante borrado por admin.", e);
@@ -1085,7 +1085,7 @@ public class AuctionManager {
                 auctionStorage.saveHistoryEvent(historyEvent);
                 auctionStorage.purgeOldPlayerHistory(seller.getUniqueId(), plugin.getConfigManager().getHistoryRecordsPerPlayer());
             }
-            Bukkit.getPluginManager().callEvent(new AuctionUpdateEvent(auction, AuctionUpdateEvent.UpdateType.NEW_AUCTION_LISTED));
+            // Bukkit.getPluginManager().callEvent(new AuctionUpdateEvent(auction, AuctionUpdateEvent.UpdateType.NEW_AUCTION_LISTED)); // Comentado
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Error al guardar la nueva subasta misteriosa ID: " + auction.getAuctionId(), e);
             messageManager.sendMessage(seller, configManager.getPluginPrefix() + messageManager.getMessage("auction_create_error_database"));

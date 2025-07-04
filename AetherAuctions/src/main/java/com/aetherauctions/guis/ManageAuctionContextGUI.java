@@ -1,7 +1,7 @@
 package com.aetherauctions.guis;
 
 import com.aetherauctions.AetherAuctions;
-import com.aetherauctions.model.Auction;
+import com.aetherauctions.Auction; // Corrected import
 import com.aetherauctions.util.ItemUtil;
 import com.aetherauctions.config.MessageManager;
 import org.bukkit.Bukkit;

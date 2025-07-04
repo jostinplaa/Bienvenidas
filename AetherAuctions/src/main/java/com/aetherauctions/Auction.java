@@ -1,6 +1,7 @@
 package com.aetherauctions; // Changed
 
-// import com.aetherauctions.auction.AuctionStatus; // Will be in same package
+import com.aetherauctions.auction.AuctionStatus;
+import com.aetherauctions.model.Bid; // Added import for Bid
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;

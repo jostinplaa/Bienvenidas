@@ -1,7 +1,7 @@
 package com.aetherauctions.gui;
 
 import com.aetherauctions.AetherAuctions;
-import com.aetherauctions.model.Auction; // Asegurar que es el modelo correcto
+import com.aetherauctions.Auction; // Corrected import
 import com.aetherauctions.config.MessageManager; // Para el mensaje de error
 
 import org.bukkit.entity.Player;

@@ -5,7 +5,7 @@ import com.aetherauctions.gui.GUIManager;
 import com.aetherauctions.config.MessageManager;
 import com.aetherauctions.config.ConfigManager;
 import com.aetherauctions.auction.AuctionManager;
-import com.aetherauctions.model.Auction;
+import com.aetherauctions.Auction; // Corrected import
 import com.aetherauctions.util.InventoryUtil;
 
 import org.bukkit.Material;
