@@ -101,6 +101,37 @@ public class Auction {
     public void setMystery(boolean isMystery) { this.isMystery = isMystery; }
     public void setMysteryDescription(String mysteryDescription) { this.mysteryDescription = (isMystery ? mysteryDescription : null); }
 
+    public boolean hasBuyNow() {
+        return buyNowPrice > 0;
+    }
+
+    public double getBuyNowPrice() {
+        return buyNowPrice;
+    }
+
+    public UUID getId() {
+        return id;
+    }
+
+    public UUID getSellerId() {
+        return sellerId;
+    }
+
+    public UUID getHighestBidderId() {
+        return highestBidderUUID;
+    }
+
+    public long getCreationTimestamp() {
+        return creationTimestamp;
+    }
+
+    public long getExpirationTimestamp() {
+        return endTimeMillis;
+    }
+
+    public void setHighestBidderId(UUID uuid) {
+        this.highestBidderUUID = uuid;
+    }
 
     @Override
     public String toString() {

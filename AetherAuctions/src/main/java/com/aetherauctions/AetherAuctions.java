@@ -10,6 +10,7 @@ import com.aetherauctions.listener.PlayerQuitListener;
 import com.aetherauctions.listener.PlayerJoinListener;
 import com.aetherauctions.storage.AuctionStorage;
 import com.aetherauctions.managers.RewardManager; // Corrected package
+import com.aetherauctions.gui.OpenGUIManager;
 // No longer need com.aetherauctions.gui.GUIManager instance if it's all static
 // No longer need com.aetherauctions.gui.rework.NewGUIInventoryListener
 
@@ -30,6 +31,7 @@ public class AetherAuctions extends JavaPlugin {
     private CommandManager commandManager;
     private InventoryClickListener inventoryClickListener; // The main/consolidated listener
     private RewardManager rewardManager; // Add RewardManager field
+    private OpenGUIManager openGUIManager;
 
     @Override
     public void onEnable() {
@@ -43,6 +45,7 @@ public class AetherAuctions extends JavaPlugin {
         getLogger().info("Vault Economy hookeado exitosamente.");
 
         configManager = new ConfigManager(this);
+        configManager.loadConfig();
         messageManager = new MessageManager(this);
         getLogger().info("ConfigManager y MessageManager inicializados.");
 
@@ -67,6 +70,8 @@ public class AetherAuctions extends JavaPlugin {
 
         // CommandManager constructor remains CommandManager(this)
         // It will access RewardManager via plugin.getRewardManager()
+        openGUIManager = new OpenGUIManager();
+
         commandManager = new CommandManager(this);
         if (getCommand("subasta") != null) {
             getCommand("subasta").setExecutor(commandManager);
@@ -144,5 +149,9 @@ public class AetherAuctions extends JavaPlugin {
 
     public RewardManager getRewardManager() { // Getter for RewardManager
         return rewardManager;
+    }
+
+    public OpenGUIManager getOpenGUIManager() {
+        return openGUIManager;
     }
 }

@@ -514,7 +514,7 @@ public class AuctionStorage {
                         if (item != null) {
                             items.add(item);
                         }
-                    } catch (IOException | ClassNotFoundException e) {
+                    } catch (IOException e) {
                         plugin.getLogger().log(Level.SEVERE, "Error deserializing item for mystery auction ID: " + auctionId, e);
                     }
                 }
