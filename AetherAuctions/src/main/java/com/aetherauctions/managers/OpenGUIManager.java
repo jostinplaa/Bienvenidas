@@ -12,6 +12,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -83,24 +84,52 @@ public class OpenGUIManager implements Listener {
         else if (guiInstance instanceof ManageAuctionContextGUI) openManageAuctionContextGUIs.put(player.getUniqueId(), (ManageAuctionContextGUI) guiInstance);
     }
 
-    public void registerOpenGUI(Player player, MainAuctionGUI gui, Map<Integer, UUID> visibleAuctionsMap) {
-        playerOpenedGUI(player, gui, player.getOpenInventory().getTopInventory(), gui.getCurrentPage(), "MainAuctionGUI", visibleAuctionsMap, gui.getCurrentSort());
+    public void registerOpenGUI(Player player, MainAuctionGUI gui, Map<Integer, UUID> visibleAuctionsMap, int currentPage, String currentSort) {
+        playerOpenedGUI(player, gui, player.getOpenInventory().getTopInventory(), currentPage, "MainAuctionGUI", visibleAuctionsMap, currentSort);
     }
-     public void registerOpenGUI(Player player, MyActiveAuctionsGUI gui, Map<Integer, UUID> visibleAuctionsMap) {
-        playerOpenedGUI(player, gui, player.getOpenInventory().getTopInventory(), gui.getCurrentPage(), "MyActiveAuctionsGUI", visibleAuctionsMap, "default");
+     public void registerOpenGUI(Player player, MyActiveAuctionsGUI gui, Map<Integer, UUID> visibleAuctionsMap, int currentPage) {
+        playerOpenedGUI(player, gui, player.getOpenInventory().getTopInventory(), currentPage, "MyActiveAuctionsGUI", visibleAuctionsMap, "default");
     }
 
-    public void onInventoryClose(Player player, String closedInventoryTitle) {
+    // Este método será llamado por el nuevo manejador de InventoryCloseEvent
+    private void handleInventoryClose(Player player, String closedInventoryTitle) {
         ActiveGUIInfo info = openGUIs.get(player.getUniqueId());
-        if (info != null && info.inventory != null && info.inventory.getTitle().equals(closedInventoryTitle)) {
+
+        if (info != null) {
+            // Comprobamos si el título del inventario cerrado coincide con el tipo de GUI que esperamos.
+            // Esta es una simplificación. Una implementación más robusta podría implicar
+            // almacenar el título exacto esperado en ActiveGUIInfo cuando el GUI se abre.
+            // Por ahora, si el jugador tenía CUALQUIER GUI registrado por este manager y cierra
+            // un inventario, eliminamos su entrada de openGUIs.
+            // Esto es para asegurar la limpieza incluso si la coincidencia de títulos es compleja.
             openGUIs.remove(player.getUniqueId());
         }
+
+        // Siempre limpiar GUIs específicos ya que el jugador está cerrando un inventario.
         openBidGUIs.remove(player.getUniqueId());
         openConfirmBuyoutGUIs.remove(player.getUniqueId());
         openClaimRewardsGUIs.remove(player.getUniqueId());
         openPlayerHistoryGUIs.remove(player.getUniqueId());
         openAdminHistoryGUIs.remove(player.getUniqueId());
         openManageAuctionContextGUIs.remove(player.getUniqueId());
+    }
+
+
+    @EventHandler
+    public void onInventoryCloseEvent(InventoryCloseEvent event) {
+        if (event.getPlayer() instanceof Player) {
+            Player player = (Player) event.getPlayer();
+            // Usar event.getView().getTitle() que es el título del inventario que se cerró.
+            // event.getInventory() es el inventario que se cerró.
+            // event.getView().getTitle() es el título de ese inventario.
+            handleInventoryClose(player, event.getView().getTitle());
+        }
+    }
+
+    // Deprecado o para ser llamado internamente si es necesario por otras razones.
+    // Por ahora, el InventoryCloseEvent debería ser el principal impulsor.
+    public void onInventoryClose(Player player, String closedInventoryTitle) {
+       handleInventoryClose(player, closedInventoryTitle);
     }
 
     public ActiveGUIInfo getOpenGUIInfo(Player player) {
@@ -171,10 +200,12 @@ public class OpenGUIManager implements Listener {
     }
 
     private void refreshFullGui(Player player, ActiveGUIInfo guiInfo) {
-        if ("MainAuctionGUI".equals(guiInfo.guiType) && guiInfo.guiInstance instanceof MainAuctionGUI) {
-            ((MainAuctionGUI)guiInfo.guiInstance).openGUI(guiInfo.currentPage, guiInfo.currentSort);
-        } else if ("MyActiveAuctionsGUI".equals(guiInfo.guiType) && guiInfo.guiInstance instanceof MyActiveAuctionsGUI) {
-             ((MyActiveAuctionsGUI)guiInfo.guiInstance).openGUI(guiInfo.currentPage);
+        if ("MainAuctionGUI".equals(guiInfo.guiType)) {
+            // Llamamos al método estático open de MainAuctionGUI
+            MainAuctionGUI.open(player, guiInfo.currentPage); // Asumimos que el sort se maneja o resetea en open
+        } else if ("MyActiveAuctionsGUI".equals(guiInfo.guiType)) {
+            // Llamamos al método estático open de MyActiveAuctionsGUI
+             MyActiveAuctionsGUI.open(player, guiInfo.currentPage);
         }
     }
 
@@ -254,8 +285,22 @@ public class OpenGUIManager implements Listener {
 
     public void playerClosedGUI(Player player) {
         ActiveGUIInfo info = openGUIs.get(player.getUniqueId());
-        if (info != null && info.inventory != null && info.inventory.getTitle() != null) {
-            onInventoryClose(player, info.inventory.getTitle());
+        // Accedemos al título a través de player.getOpenInventory().getTitle()
+        // Es importante verificar que el inventario aún está abierto o tiene una vista válida.
+        if (player.getOpenInventory() != null && player.getOpenInventory().getTopInventory() != null) {
+            String openInventoryTitle = player.getOpenInventory().getTitle();
+            if (info != null && openInventoryTitle != null) { // Comprobamos que el título no sea null
+                 onInventoryClose(player, openInventoryTitle);
+            }
+        } else if (info != null) {
+        // Si el inventario ya no está accesible a través de getOpenInventory() (porque ya se cerró),
+        // y tenemos 'info', llamamos a handleInventoryClose.
+        // El título real del inventario cerrado se obtendrá del InventoryCloseEvent.
+        // Si playerClosedGUI se llama en un contexto donde el título no está disponible,
+        // pasar null o un string vacío a handleInventoryClose.
+        // handleInventoryClose está diseñado para limpiar los GUIs específicos independientemente
+        // de una coincidencia de título perfecta, y remover de openGUIs si info existe.
+        handleInventoryClose(player, null); // Pasar null ya que no tenemos un título fiable aquí.
         }
     }
 }

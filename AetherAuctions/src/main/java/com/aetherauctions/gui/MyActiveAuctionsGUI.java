@@ -18,6 +18,8 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.Map; // Importación añadida
+import java.util.HashMap; // Importación añadida
 
 public class MyActiveAuctionsGUI {
 
@@ -113,5 +115,18 @@ public class MyActiveAuctionsGUI {
             }
         }
         player.openInventory(gui);
+
+        // Registrar el GUI abierto con OpenGUIManager
+        Map<java.util.UUID, Integer> auctionSlots = new HashMap<>(); // Necesitamos mapear UUID de subasta a slot
+        Map<Integer, java.util.UUID> visibleAuctionsMap = new HashMap<>();
+        int currentSlot = 0;
+        for (int i = startIndex; i < endIndex; i++) {
+            if (currentSlot >= itemsPerPage || currentSlot >= MyActiveAuctionsGUI.PREVIOUS_PAGE_SLOT) break;
+            Auction auction = playerActiveAuctions.get(i);
+            visibleAuctionsMap.put(currentSlot, java.util.UUID.fromString(auction.getId()));
+            currentSlot++;
+        }
+        final Map<Integer, java.util.UUID> finalVisibleAuctionsMap = new HashMap<>(visibleAuctionsMap);
+        plugin.getOpenGUIManager().playerOpenedGUI(player, null, gui, page, "MyActiveAuctionsGUI", finalVisibleAuctionsMap, "default");
     }
 }
