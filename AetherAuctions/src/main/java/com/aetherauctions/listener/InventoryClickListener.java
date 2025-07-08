@@ -439,7 +439,7 @@ public class InventoryClickListener implements Listener {
                 }
 
                 long durationSeconds = prepareGui.getDurationHours() * 3600;
-                plugin.getAuctionManager().createMysteryAuction(
+                boolean success = plugin.getAuctionManager().createMysteryAuction( // Declarar y asignar 'success'
                         player,
                         lotItems,
                         prepareGui.getStartPrice(),
