@@ -47,11 +47,17 @@ public class AetherAuctions extends JavaPlugin {
         }
         getLogger().info("Vault Economy hookeado exitosamente.");
 
+        // 1. Inicializar ConfigManager
+        configManager = new ConfigManager(this);
+        // 2. Cargar la configuración INMEDIATAMENTE
+        configManager.loadConfig(); // ¡Llamada crucial que faltaba aquí!
+
+        // 3. Ahora inicializar SoundManager (que depende de la config cargada)
         soundManager = new SoundManager(this);
 
-        configManager = new ConfigManager(this);
+        // 4. Ahora inicializar MessageManager (que depende de ConfigManager con config cargada)
         messageManager = new MessageManager(this);
-        getLogger().info("ConfigManager y MessageManager inicializados.");
+        getLogger().info("ConfigManager, SoundManager y MessageManager inicializados.");
 
         auctionStorage = new AuctionStorage(this);
         try {
