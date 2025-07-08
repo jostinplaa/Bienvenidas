@@ -113,7 +113,7 @@ public class AuctionStorage {
                                       + "id TEXT PRIMARY KEY NOT NULL,"
                                       + "seller_id TEXT NOT NULL,"
                                       + "seller_name TEXT NOT NULL,"
-                                      + "itemstack_data TEXT NOT NULL,"
+                                      + "itemstack_data TEXT," // Permitir NULL para subastas misteriosas
                                       + "current_bid REAL NOT NULL,"
                                       + "highest_bidder_id TEXT,"
                                       + "highest_bidder_name TEXT,"

@@ -29,6 +29,7 @@ auction_create_error_fee_charge_failed: "&cNo se pudo cobrar la tarifa de creaci
 auction_create_fee_charged: "&eSe te ha cobrado %fee% por crear la subasta."
 auction_create_success: "&a¡Subasta #%id% creada exitosamente!"
 auction_create_error_database: "&cError al guardar la subasta en la base de datos."
+auction_create_fee_refunded_on_error: "&eLa tarifa de creación de %fee% te ha sido devuelta debido a un error."
 
 # Pujas (AuctionManager)
 auction_bid_error_not_active: "&cEsta subasta ya no está activa o no existe."

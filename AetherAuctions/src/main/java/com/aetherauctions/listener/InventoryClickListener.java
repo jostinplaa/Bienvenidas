@@ -447,9 +447,23 @@ public class InventoryClickListener implements Listener {
                         durationSeconds,
                         prepareGui.getDescription()
                 );
-                // El AuctionManager.createMysteryAuction ya envía mensaje de éxito/error y sonido
-                prepareGui.setConfirmed(true); // Marcar como confirmada para que onInventoryClose no devuelva ítems
-                player.closeInventory(); // OpenGUIManager se encargará de la limpieza
+
+                if (success) {
+                    // El AuctionManager.createMysteryAuction ya envía mensaje de éxito/error y sonido
+                    prepareGui.setConfirmed(true); // Marcar como confirmada SOLO si la creación fue exitosa
+                    player.closeInventory(); // OpenGUIManager se encargará de la limpieza
+                } else {
+                    // Si falló, NO se marca como confirmada.
+                    // El mensaje de error ya fue enviado por AuctionManager.
+                    // Los ítems se devolverán automáticamente por onInventoryClose porque isConfirmed es false.
+                    // Opcionalmente, se puede cerrar la GUI aquí también si no se cierra automáticamente por el flujo de error.
+                    // Si AuctionManager no cierra la GUI en error, ciérrala aquí.
+                    // Por ahora, asumimos que el jugador puede querer reintentar o la GUI se cierra.
+                    // Si no se cierra, el onInventoryClose al final devolverá los ítems.
+                    // Si se cierra aquí, onInventoryClose se activará.
+                    plugin.getSoundManager().playSound(player, "error"); // Sonido de error adicional desde la GUI
+                    // player.closeInventory(); // Descomentar si se quiere forzar cierre inmediato y devolución por onInventoryClose
+                }
             }
         } else if (clickedInventory.equals(player.getInventory())) { // Clic en el inventario del jugador
             if (currentItem != null && currentItem.getType() != Material.AIR) {

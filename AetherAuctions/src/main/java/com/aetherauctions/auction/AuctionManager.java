@@ -196,7 +196,7 @@ public class AuctionManager {
             return true;
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Error al guardar la nueva subasta ID: " + auction.getAuctionId(), e);
-            messageManager.sendMessage(seller, configManager.getPluginPrefix() + messageManager.getMessage("auction_create_error_database"));
+            messageManager.sendMessage(seller, "auction_create_error_database"); // Corregido
             if (creationFee > 0) econ.depositPlayer(seller, creationFee);
             seller.getInventory().addItem(item.clone());
             return false;
@@ -1025,17 +1025,19 @@ public class AuctionManager {
         return null;
     }
 
-    public void createMysteryAuction(Player seller, List<ItemStack> lotItems, double startPrice, double buyNowPrice, long durationSeconds, String mysteryDescription) {
+    public boolean createMysteryAuction(Player seller, List<ItemStack> lotItems, double startPrice, double buyNowPrice, long durationSeconds, String mysteryDescription) {
         if (lotItems == null || lotItems.isEmpty()) {
-            messageManager.sendMessage(seller, configManager.getPluginPrefix() + messageManager.getMessage("prepare_mystery_gui_error_no_items"));
-            return;
+            messageManager.sendMessage(seller, configManager.getPluginPrefix() + messageManager.getMessage("prepare_mystery_gui_error_no_items_on_confirm")); // Usar la clave más específica
+            return false;
         }
-        if (startPrice <= 0) { messageManager.sendMessage(seller, configManager.getPluginPrefix() + messageManager.getMessage("auction_create_error_invalid_start_price")); return; }
-        if (buyNowPrice > 0 && buyNowPrice <= startPrice) { messageManager.sendMessage(seller, configManager.getPluginPrefix() + messageManager.getMessage("auction_create_error_buy_now_too_low")); return; }
-        if (durationSeconds <= 0) { messageManager.sendMessage(seller, configManager.getPluginPrefix() + messageManager.getMessage("auction_create_error_invalid_duration")); return; }
-        if (getPlayerActiveAuctions(seller.getUniqueId()).size() >= configManager.getMaxActiveAuctionsPerPlayer(seller)) {
-            messageManager.sendMessage(seller, configManager.getPluginPrefix() + messageManager.getMessage("auction_create_error_max_auctions_reached", "%limit%", String.valueOf(configManager.getMaxActiveAuctionsPerPlayer(seller))));
-            return;
+        if (startPrice <= 0) { messageManager.sendMessage(seller, configManager.getPluginPrefix() + messageManager.getMessage("auction_create_error_invalid_start_price")); return false; }
+        if (buyNowPrice > 0 && buyNowPrice <= startPrice) { messageManager.sendMessage(seller, configManager.getPluginPrefix() + messageManager.getMessage("auction_create_error_buy_now_too_low")); return false; }
+        if (durationSeconds <= 0) { messageManager.sendMessage(seller, configManager.getPluginPrefix() + messageManager.getMessage("auction_create_error_invalid_duration")); return false; }
+
+        int maxAuctions = configManager.getMaxActiveAuctionsPerPlayer(seller);
+        if (getPlayerActiveAuctions(seller.getUniqueId()).size() >= maxAuctions) {
+            messageManager.sendMessage(seller, configManager.getPluginPrefix() + messageManager.getMessage("auction_create_error_max_auctions_reached", "%limit%", String.valueOf(maxAuctions)));
+            return false;
         }
 
         Economy econ = AetherAuctions.getEconomy();
@@ -1043,14 +1045,14 @@ public class AuctionManager {
         if (creationFee > 0) {
             if (!econ.has(seller, creationFee)) {
                 messageManager.sendMessage(seller, configManager.getPluginPrefix() + messageManager.getMessage("auction_create_error_insufficient_funds_fee", "%fee%", String.valueOf(creationFee)));
-                return;
+                return false;
             }
             EconomyResponse feeTx = econ.withdrawPlayer(seller, creationFee);
             if (!feeTx.transactionSuccess()) {
                 messageManager.sendMessage(seller, configManager.getPluginPrefix() + messageManager.getMessage("auction_create_error_fee_charge_failed"));
-                return;
+                return false; // No devolver la tarifa aquí, se hace en el catch si falla el guardado de la subasta
             }
-            messageManager.sendMessage(seller, configManager.getPluginPrefix() + messageManager.getMessage("auction_create_fee_charged", "%fee%", String.valueOf(creationFee)));
+            // Mensaje de tarifa cobrada se envía solo si la subasta se crea con éxito.
         }
 
         UUID auctionId = UUID.randomUUID();
@@ -1071,7 +1073,13 @@ public class AuctionManager {
             auctionStorage.saveMysteryAuctionContents(auctionId, lotItems);
 
             activeAuctionsCache.put(auction.getAuctionId(), auction);
+
+            if (creationFee > 0) { // Enviar mensaje de tarifa solo si todo fue bien
+                messageManager.sendMessage(seller, configManager.getPluginPrefix() + messageManager.getMessage("auction_create_fee_charged", "%fee%", String.valueOf(creationFee)));
+            }
             messageManager.sendMessage(seller, configManager.getPluginPrefix() + messageManager.getMessage("mystery_auction_create_success", "%id%", auction.getAuctionId().toString()));
+            plugin.getSoundManager().playSound(seller, "auction_created");
+
 
             if (plugin.getConfigManager().isHistoryEnabled()) {
                 AuctionHistoryEvent historyEvent = new AuctionHistoryEvent(
@@ -1086,10 +1094,15 @@ public class AuctionManager {
                 auctionStorage.purgeOldPlayerHistory(seller.getUniqueId(), plugin.getConfigManager().getHistoryRecordsPerPlayer());
             }
             Bukkit.getPluginManager().callEvent(new AuctionUpdateEvent(auction, AuctionUpdateEvent.UpdateType.NEW_AUCTION_LISTED));
+            return true; // Éxito
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Error al guardar la nueva subasta misteriosa ID: " + auction.getAuctionId(), e);
-            messageManager.sendMessage(seller, configManager.getPluginPrefix() + messageManager.getMessage("auction_create_error_database"));
-            if (creationFee > 0) econ.depositPlayer(seller, creationFee);
+            messageManager.sendMessage(seller, "auction_create_error_database"); // Corregido
+            if (creationFee > 0) {
+                econ.depositPlayer(seller, creationFee); // Devolver tarifa si el guardado falló
+                messageManager.sendMessage(seller, "auction_create_fee_refunded_on_error", "%fee%", String.valueOf(creationFee)); // Corregido (asumiendo que esta clave es para un mensaje completo)
+            }
+            return false; // Fallo
         }
     }
 
