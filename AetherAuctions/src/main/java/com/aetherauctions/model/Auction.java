@@ -1,4 +1,4 @@
-package com.aetherauctions; // Changed
+package com.aetherauctions.model; // Changed
 
 // import com.aetherauctions.auction.AuctionStatus; // Will be in same package
 import org.bukkit.inventory.ItemStack;
@@ -6,6 +6,7 @@ import org.bukkit.inventory.ItemStack;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import com.aetherauctions.auction.AuctionStatus;
 
 public class Auction {
     private final UUID id;
@@ -110,5 +111,17 @@ public class Auction {
                ", currentBid=" + currentBid +
                ", status=" + status +
                '}';
+    }
+
+    public boolean hasBuyNow() {
+        return buyNowPrice > 0;
+    }
+
+    public double getBuyNowPrice() {
+        return buyNowPrice;
+    }
+
+    public String getId() {
+        return id.toString();
     }
 }

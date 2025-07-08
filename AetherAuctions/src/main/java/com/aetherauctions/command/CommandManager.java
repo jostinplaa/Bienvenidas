@@ -127,7 +127,7 @@ public class CommandManager implements CommandExecutor, TabCompleter {
                 msgManager.sendMessage(canceller, "auction_cancel_error_not_found", "%id%", idToCancelStr);
                 return true;
             }
-            auctionManager.cancelAuction(canceller, auctionToCancel.getId());
+            auctionManager.cancelAuction(canceller, UUID.fromString(auctionToCancel.getId()));
             return true;
         } else if (subCommand.equals("mis")) {
             if (!(sender instanceof Player)) {
@@ -232,12 +232,12 @@ public class CommandManager implements CommandExecutor, TabCompleter {
                 }
                 if (auctionToView != null) {
                     msgManager.sendMessage(sender, "command_admin_ver_details_header", "%id%", auctionToView.getId().toString());
-                    msgManager.sendMessage(sender, "command_admin_ver_seller", "%name%", auctionToView.getSellerName(), "%uuid%", auctionToView.getSellerId().toString());
+                    msgManager.sendMessage(sender, "command_admin_ver_seller", "%name%", auctionToView.getSellerName(), "%uuid%", auctionToView.getSellerUUID().toString());
                     msgManager.sendMessage(sender, "command_admin_ver_item", "%item%", InventoryUtil.formatMaterialName(auctionToView.getItemStack().getType()), "%amount%", String.valueOf(auctionToView.getItemStack().getAmount()));
                     msgManager.sendMessage(sender, "command_admin_ver_status", "%status%", auctionToView.getStatus().name());
                     msgManager.sendMessage(sender, "command_admin_ver_bid", "%bid%", String.format("%.2f %s", auctionToView.getCurrentBid(), cfgManager.getCurrencySymbol()));
                     if(auctionToView.getHighestBidderName() != null) {
-                        msgManager.sendMessage(sender, "command_admin_ver_hb", "%name%", auctionToView.getHighestBidderName(), "%uuid%", auctionToView.getHighestBidderId().toString());
+                        msgManager.sendMessage(sender, "command_admin_ver_hb", "%name%", auctionToView.getHighestBidderName(), "%uuid%", auctionToView.getHighestBidderUUID().toString());
                     }
                     if(auctionToView.hasBuyNow()){
                         msgManager.sendMessage(sender, "command_admin_ver_buynow", "%price%", String.format("%.2f %s", auctionToView.getBuyNowPrice(), cfgManager.getCurrencySymbol()));

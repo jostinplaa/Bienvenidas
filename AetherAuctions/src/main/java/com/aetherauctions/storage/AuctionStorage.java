@@ -185,7 +185,7 @@ public class AuctionStorage {
         Connection conn = getConnection();
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, auction.getId().toString());
-            pstmt.setString(2, auction.getSellerId().toString());
+            pstmt.setString(2, auction.getSellerUUID().toString());
             pstmt.setString(3, auction.getSellerName());
 
             // Para subastas misteriosas, el itemstack_data principal puede ser null o un placeholder
@@ -197,11 +197,11 @@ public class AuctionStorage {
             }
 
             pstmt.setDouble(5, auction.getCurrentBid());
-            pstmt.setString(6, auction.getHighestBidderId() != null ? auction.getHighestBidderId().toString() : null);
+            pstmt.setString(6, auction.getHighestBidderUUID() != null ? auction.getHighestBidderUUID().toString() : null);
             pstmt.setString(7, auction.getHighestBidderName());
             pstmt.setDouble(8, auction.getBuyNowPrice());
-            pstmt.setLong(9, auction.getCreationTimestamp());
-            pstmt.setLong(10, auction.getExpirationTimestamp());
+            pstmt.setLong(9, auction.getTimeCreated());
+            pstmt.setLong(10, auction.getEndTimeMillis());
             pstmt.setString(11, auction.getStatus().name());
             pstmt.setString(12, SerializationUtil.bidListToJson(auction.getBidHistory()));
             pstmt.setInt(13, auction.isMystery() ? 1 : 0); // Guardar estado de misterio
@@ -258,7 +258,7 @@ public class AuctionStorage {
             isMystery, mysteryDescription
         );
         auction.setCurrentBid(currentBid); // currentBid se setea después, ya que puede cambiar.
-        auction.setHighestBidderId(highestBidderId);
+        auction.setHighestBidderUUID(highestBidderId);
         auction.setHighestBidderName(highestBidderName);
         auction.setStatus(status);
         auction.setBidHistory(bidHistory);
@@ -514,7 +514,7 @@ public class AuctionStorage {
                         if (item != null) {
                             items.add(item);
                         }
-                    } catch (IOException | ClassNotFoundException e) {
+                    } catch (IOException e) {
                         plugin.getLogger().log(Level.SEVERE, "Error deserializing item for mystery auction ID: " + auctionId, e);
                     }
                 }

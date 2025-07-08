@@ -7,11 +7,11 @@ import com.aetherauctions.model.Auction;
 import com.aetherauctions.gui.AuctionDetailsGUI; // Puede que se necesite si MyActiveAuctionsGUI lo abre
 import com.aetherauctions.gui.GUIManager;
 import com.aetherauctions.gui.MainAuctionGUI;
-import com.aetherauctions.guis.ClaimRewardsGUI;
-import com.aetherauctions.guis.MyActiveAuctionsGUI;
-import com.aetherauctions.guis.PlayerHistoryGUI;
-import com.aetherauctions.guis.ManageAuctionContextGUI;
-import com.aetherauctions.guis.AdminHistoryGUI; // Añadido
+import com.aetherauctions.gui.ClaimRewardsGUI;
+import com.aetherauctions.gui.MyActiveAuctionsGUI;
+import com.aetherauctions.gui.PlayerHistoryGUI;
+import com.aetherauctions.gui.ManageAuctionContextGUI;
+import com.aetherauctions.gui.AdminHistoryGUI; // Añadido
 import com.aetherauctions.config.MessageManager;
 import com.aetherauctions.config.ConfigManager;
 
@@ -132,7 +132,7 @@ public class InventoryClickListener implements Listener {
                 String auctionIdString = getIdStringFromLore(clickedItem.getItemMeta().getLore(), "my_auctions_gui_lore_id");
                 if (auctionIdString != null) {
                     Auction auction = auctionManager.getAuctionById(UUID.fromString(auctionIdString));
-                    if (auction != null && auction.getSellerId().equals(player.getUniqueId()) && auction.getStatus() == AuctionStatus.ACTIVE) {
+                    if (auction != null && auction.getSellerUUID().equals(player.getUniqueId()) && auction.getStatus() == AuctionStatus.ACTIVE) {
                         plugin.getSoundManager().playSound(player, "click"); // Sonido para abrir contexto
                         ManageAuctionContextGUI.open(player, auction);
                     } else if (auction != null) {
@@ -206,7 +206,7 @@ public class InventoryClickListener implements Listener {
             } else if (slot == ManageAuctionContextGUI.VIEW_DETAILS_SLOT) {
                 GUIManager.openAuctionInfoGui(player, auctionToManage, playerReturnPageMap.getOrDefault(player.getUniqueId(),0));
             } else if (slot == ManageAuctionContextGUI.CANCEL_AUCTION_SLOT) {
-                if (auctionManager.cancelAuction(player, auctionToManage.getId())) {
+                if (auctionManager.cancelAuction(player, UUID.fromString(auctionToManage.getId()))) {
                     // Mensaje de éxito ya enviado por cancelAuction
                     MyActiveAuctionsGUI.open(player, 0); // Refrescar
                 } else {
@@ -289,11 +289,11 @@ public class InventoryClickListener implements Listener {
 
         if (slot == AuctionDetailsGUI.BID_BUTTON_SLOT && clickedItem.getType() == Material.EMERALD) {
             player.closeInventory();
-            playerPendingBidAuctionId.put(player.getUniqueId(), auction.getId());
+            playerPendingBidAuctionId.put(player.getUniqueId(), UUID.fromString(auction.getId()));
             player.sendMessage(msgManager.getMessage("chat_prompt_enter_bid_amount", "%id%", auction.getId().toString()));
         } else if (slot == AuctionDetailsGUI.BUY_NOW_BUTTON_SLOT && clickedItem.getType() == Material.GOLD_INGOT) {
             if (auction.hasBuyNow() && cfgManager.isBuyNowAllowed()) {
-                if (auctionManager.buyNow(player, auction.getId())) {
+                if (auctionManager.buyNow(player, UUID.fromString(auction.getId()))) {
                     player.closeInventory();
                 }
             } else {

@@ -1,0 +1,616 @@
+[ERROR] COMPILATION ERROR : 
+[INFO] -------------------------------------------------------------
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/gui/AuctionDetailsGUI.java:[5,32] cannot find symbol
+  symbol:   class Auction
+  location: package com.aetherauctions.model
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/gui/AuctionDetailsGUI.java:[28,44] cannot find symbol
+  symbol:   class Auction
+  location: class com.aetherauctions.gui.AuctionDetailsGUI
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/gui/MainAuctionGUI.java:[4,32] cannot find symbol
+  symbol:   class Auction
+  location: package com.aetherauctions.model
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/gui/MainAuctionGUI.java:[129,54] cannot find symbol
+  symbol:   class Auction
+  location: class com.aetherauctions.gui.MainAuctionGUI
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/storage/AuctionStorage.java:[4,32] cannot find symbol
+  symbol:   class Auction
+  location: package com.aetherauctions.model
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[4,32] cannot find symbol
+  symbol:   class Auction
+  location: package com.aetherauctions.model
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/command/CommandManager.java:[8,32] cannot find symbol
+  symbol:   class Auction
+  location: package com.aetherauctions.model
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/listener/InventoryClickListener.java:[6,32] cannot find symbol
+  symbol:   class Auction
+  location: package com.aetherauctions.model
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[44,29] cannot find symbol
+  symbol:   class Auction
+  location: class com.aetherauctions.auction.AuctionManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[483,29] cannot find symbol
+  symbol:   class Auction
+  location: class com.aetherauctions.auction.AuctionManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[856,39] cannot find symbol
+  symbol:   class Auction
+  location: class com.aetherauctions.auction.AuctionManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[993,22] cannot find symbol
+  symbol:   class Auction
+  location: class com.aetherauctions.auction.AuctionManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[997,17] cannot find symbol
+  symbol:   class Auction
+  location: class com.aetherauctions.auction.AuctionManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[1003,12] cannot find symbol
+  symbol:   class Auction
+  location: class com.aetherauctions.auction.AuctionManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[1007,17] cannot find symbol
+  symbol:   class Auction
+  location: class com.aetherauctions.auction.AuctionManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[1013,12] cannot find symbol
+  symbol:   class Auction
+  location: class com.aetherauctions.auction.AuctionManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/storage/AuctionStorage.java:[175,29] cannot find symbol
+  symbol:   class Auction
+  location: class com.aetherauctions.storage.AuctionStorage
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/storage/AuctionStorage.java:[220,13] cannot find symbol
+  symbol:   class Auction
+  location: class com.aetherauctions.storage.AuctionStorage
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/storage/AuctionStorage.java:[270,12] cannot find symbol
+  symbol:   class Auction
+  location: class com.aetherauctions.storage.AuctionStorage
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/storage/AuctionStorage.java:[293,17] cannot find symbol
+  symbol:   class Auction
+  location: class com.aetherauctions.storage.AuctionStorage
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/storage/AuctionStorage.java:[323,12] cannot find symbol
+  symbol:   class Auction
+  location: class com.aetherauctions.storage.AuctionStorage
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/listener/PlayerChatListener.java:[5,32] cannot find symbol
+  symbol:   class Auction
+  location: package com.aetherauctions.model
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/guis/ManageAuctionContextGUI.java:[4,32] cannot find symbol
+  symbol:   class Auction
+  location: package com.aetherauctions.model
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/guis/ManageAuctionContextGUI.java:[22,44] cannot find symbol
+  symbol:   class Auction
+  location: class com.aetherauctions.guis.ManageAuctionContextGUI
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/gui/GUIManager.java:[4,32] cannot find symbol
+  symbol:   class Auction
+  location: package com.aetherauctions.model
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/gui/GUIManager.java:[20,58] cannot find symbol
+  symbol:   class Auction
+  location: class com.aetherauctions.gui.GUIManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/listeners/PlayerChatListener.java:[5,32] cannot find symbol
+  symbol:   class Auction
+  location: package com.aetherauctions.model
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/events/AuctionUpdateEvent.java:[3,32] cannot find symbol
+  symbol:   class Auction
+  location: package com.aetherauctions.model
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/events/AuctionUpdateEvent.java:[9,19] cannot find symbol
+  symbol:   class Auction
+  location: class com.aetherauctions.events.AuctionUpdateEvent
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/events/AuctionUpdateEvent.java:[22,31] cannot find symbol
+  symbol:   class Auction
+  location: class com.aetherauctions.events.AuctionUpdateEvent
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/events/AuctionUpdateEvent.java:[27,12] cannot find symbol
+  symbol:   class Auction
+  location: class com.aetherauctions.events.AuctionUpdateEvent
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/managers/OpenGUIManager.java:[5,31] cannot find symbol
+  symbol:   class MainAuctionGUI
+  location: package com.aetherauctions.guis
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/managers/OpenGUIManager.java:[7,32] cannot find symbol
+  symbol:   class Auction
+  location: package com.aetherauctions.model
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/managers/OpenGUIManager.java:[31,31] cannot find symbol
+  symbol:   class BidGUI
+  location: package com.aetherauctions.guis
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/managers/OpenGUIManager.java:[32,31] cannot find symbol
+  symbol:   class ConfirmBuyoutGUI
+  location: package com.aetherauctions.guis
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/managers/OpenGUIManager.java:[44,29] cannot find symbol
+  symbol:   class BidGUI
+  location: class com.aetherauctions.managers.OpenGUIManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/managers/OpenGUIManager.java:[45,29] cannot find symbol
+  symbol:   class ConfirmBuyoutGUI
+  location: class com.aetherauctions.managers.OpenGUIManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/managers/OpenGUIManager.java:[86,48] cannot find symbol
+  symbol:   class MainAuctionGUI
+  location: class com.aetherauctions.managers.OpenGUIManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/guis/MyActiveAuctionsGUI.java:[4,32] cannot find symbol
+  symbol:   class Auction
+  location: package com.aetherauctions.model
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/managers/OpenGUIManager.java:[110,12] cannot find symbol
+  symbol:   class MainAuctionGUI
+  location: class com.aetherauctions.managers.OpenGUIManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/managers/OpenGUIManager.java:[120,12] cannot find symbol
+  symbol:   class BidGUI
+  location: class com.aetherauctions.managers.OpenGUIManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/managers/OpenGUIManager.java:[121,12] cannot find symbol
+  symbol:   class ConfirmBuyoutGUI
+  location: class com.aetherauctions.managers.OpenGUIManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/managers/OpenGUIManager.java:[181,50] cannot find symbol
+  symbol:   class Auction
+  location: class com.aetherauctions.managers.OpenGUIManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/Auction.java:[22,18] cannot find symbol
+  symbol:   class Bid
+  location: class com.aetherauctions.Auction
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/AuctionStatus.java:[3,8] duplicate class: com.aetherauctions.auction.AuctionStatus
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/Auction.java:[23,13] cannot access com.aetherauctions.AuctionStatus
+  bad source file: /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/AuctionStatus.java
+    file does not contain class com.aetherauctions.AuctionStatus
+    Please remove or make sure it appears in the correct subdirectory of the sourcepath.
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/Auction.java:[31,25] cannot find symbol
+  symbol:   class Bid
+  location: class com.aetherauctions.Auction
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/Auction.java:[77,17] cannot find symbol
+  symbol:   class Bid
+  location: class com.aetherauctions.Auction
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/Auction.java:[91,33] cannot find symbol
+  symbol:   class Bid
+  location: class com.aetherauctions.Auction
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/Auction.java:[98,36] cannot find symbol
+  symbol:   class Bid
+  location: class com.aetherauctions.Auction
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/gui/MainAuctionGUI.java:[43,14] cannot find symbol
+  symbol:   class Auction
+  location: class com.aetherauctions.gui.MainAuctionGUI
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/gui/MainAuctionGUI.java:[66,17] cannot find symbol
+  symbol:   class Auction
+  location: class com.aetherauctions.gui.MainAuctionGUI
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/gui/MainAuctionGUI.java:[124,23] cannot find symbol
+  symbol:   method getOpenGUIManager()
+  location: variable plugin of type com.aetherauctions.AetherAuctions
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/storage/AuctionStorage.java:[255,9] cannot find symbol
+  symbol:   class Auction
+  location: class com.aetherauctions.storage.AuctionStorage
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/storage/AuctionStorage.java:[255,31] cannot find symbol
+  symbol:   class Auction
+  location: class com.aetherauctions.storage.AuctionStorage
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/storage/AuctionStorage.java:[273,9] cannot find symbol
+  symbol:   class Auction
+  location: class com.aetherauctions.storage.AuctionStorage
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/storage/AuctionStorage.java:[294,14] cannot find symbol
+  symbol:   class Auction
+  location: class com.aetherauctions.storage.AuctionStorage
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/storage/AuctionStorage.java:[304,29] cannot find symbol
+  symbol:   class Auction
+  location: class com.aetherauctions.storage.AuctionStorage
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/storage/AuctionStorage.java:[325,9] cannot find symbol
+  symbol:   class Auction
+  location: class com.aetherauctions.storage.AuctionStorage
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[58,14] cannot find symbol
+  symbol:   class Auction
+  location: class com.aetherauctions.auction.AuctionManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[59,14] cannot find symbol
+  symbol:   class Auction
+  location: class com.aetherauctions.auction.AuctionManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[94,14] cannot find symbol
+  symbol:   class Auction
+  location: class com.aetherauctions.auction.AuctionManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[95,14] cannot find symbol
+  symbol:   class Auction
+  location: class com.aetherauctions.auction.AuctionManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[103,18] cannot find symbol
+  symbol:   class Auction
+  location: class com.aetherauctions.auction.AuctionManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[152,9] cannot find symbol
+  symbol:   class Auction
+  location: class com.aetherauctions.auction.AuctionManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[152,31] cannot find symbol
+  symbol:   class Auction
+  location: class com.aetherauctions.auction.AuctionManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[207,9] cannot find symbol
+  symbol:   class Auction
+  location: class com.aetherauctions.auction.AuctionManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[255,23] cannot find symbol
+  symbol:   method getSoundManager()
+  location: variable plugin of type com.aetherauctions.AetherAuctions
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[274,23] cannot find symbol
+  symbol:   method getSoundManager()
+  location: variable plugin of type com.aetherauctions.AetherAuctions
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[276,19] cannot find symbol
+  symbol:   method getSoundManager()
+  location: variable plugin of type com.aetherauctions.AetherAuctions
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[310,9] cannot find symbol
+  symbol:   class Auction
+  location: class com.aetherauctions.auction.AuctionManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[473,19] cannot find symbol
+  symbol:   method getSoundManager()
+  location: variable plugin of type com.aetherauctions.AetherAuctions
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[475,19] cannot find symbol
+  symbol:   method getSoundManager()
+  location: variable plugin of type com.aetherauctions.AetherAuctions
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[478,20] cannot find symbol
+  symbol:   method getSoundManager()
+  location: variable plugin of type com.aetherauctions.AetherAuctions
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[517,31] cannot find symbol
+  symbol:   method getSoundManager()
+  location: variable plugin of type com.aetherauctions.AetherAuctions
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[539,31] cannot find symbol
+  symbol:   method getSoundManager()
+  location: variable plugin of type com.aetherauctions.AetherAuctions
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[585,35] cannot find symbol
+  symbol:   method getSoundManager()
+  location: variable plugin of type com.aetherauctions.AetherAuctions
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[588,36] cannot find symbol
+  symbol:   method getSoundManager()
+  location: variable plugin of type com.aetherauctions.AetherAuctions
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[712,9] cannot find symbol
+  symbol:   class Auction
+  location: class com.aetherauctions.auction.AuctionManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[1019,18] cannot find symbol
+  symbol:   class Auction
+  location: class com.aetherauctions.auction.AuctionManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[1060,9] cannot find symbol
+  symbol:   class Auction
+  location: class com.aetherauctions.auction.AuctionManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[1060,31] cannot find symbol
+  symbol:   class Auction
+  location: class com.aetherauctions.auction.AuctionManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/command/CommandManager.java:[124,13] cannot find symbol
+  symbol:   class Auction
+  location: class com.aetherauctions.command.CommandManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/command/CommandManager.java:[142,18] cannot find symbol
+  symbol:   class Auction
+  location: class com.aetherauctions.command.CommandManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/command/CommandManager.java:[147,22] cannot find symbol
+  symbol:   class Auction
+  location: class com.aetherauctions.command.CommandManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/command/CommandManager.java:[229,17] cannot find symbol
+  symbol:   class Auction
+  location: class com.aetherauctions.command.CommandManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/command/CommandManager.java:[258,17] cannot find symbol
+  symbol:   class Auction
+  location: class com.aetherauctions.command.CommandManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/listener/InventoryClickListener.java:[82,23] cannot find symbol
+  symbol:   method getSoundManager()
+  location: variable plugin of type com.aetherauctions.AetherAuctions
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/listener/InventoryClickListener.java:[85,23] cannot find symbol
+  symbol:   method getSoundManager()
+  location: variable plugin of type com.aetherauctions.AetherAuctions
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/listener/InventoryClickListener.java:[88,23] cannot find symbol
+  symbol:   method getSoundManager()
+  location: variable plugin of type com.aetherauctions.AetherAuctions
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/listener/InventoryClickListener.java:[91,23] cannot find symbol
+  symbol:   method getSoundManager()
+  location: variable plugin of type com.aetherauctions.AetherAuctions
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/listener/InventoryClickListener.java:[95,27] cannot find symbol
+  symbol:   method getSoundManager()
+  location: variable plugin of type com.aetherauctions.AetherAuctions
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/listener/InventoryClickListener.java:[100,27] cannot find symbol
+  symbol:   method getSoundManager()
+  location: variable plugin of type com.aetherauctions.AetherAuctions
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/listener/InventoryClickListener.java:[104,23] cannot find symbol
+  symbol:   method getSoundManager()
+  location: variable plugin of type com.aetherauctions.AetherAuctions
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/listener/InventoryClickListener.java:[107,23] cannot find symbol
+  symbol:   method getSoundManager()
+  location: variable plugin of type com.aetherauctions.AetherAuctions
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/listener/InventoryClickListener.java:[118,23] cannot find symbol
+  symbol:   method getSoundManager()
+  location: variable plugin of type com.aetherauctions.AetherAuctions
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/listener/InventoryClickListener.java:[121,23] cannot find symbol
+  symbol:   method getSoundManager()
+  location: variable plugin of type com.aetherauctions.AetherAuctions
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/listener/InventoryClickListener.java:[124,23] cannot find symbol
+  symbol:   method getSoundManager()
+  location: variable plugin of type com.aetherauctions.AetherAuctions
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/listener/InventoryClickListener.java:[128,27] cannot find symbol
+  symbol:   method getSoundManager()
+  location: variable plugin of type com.aetherauctions.AetherAuctions
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/listener/InventoryClickListener.java:[134,21] cannot find symbol
+  symbol:   class Auction
+  location: class com.aetherauctions.listener.InventoryClickListener
+[INFO] 100 errors 
+[INFO] -------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  6.010 s
+[INFO] Finished at: 2025-07-07T18:12:01Z
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.8.1:compile (default-compile) on project AetherAuctions: Compilation failure: Compilation failure: 
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/gui/AuctionDetailsGUI.java:[5,32] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: package com.aetherauctions.model
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/gui/AuctionDetailsGUI.java:[28,44] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: class com.aetherauctions.gui.AuctionDetailsGUI
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/gui/MainAuctionGUI.java:[4,32] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: package com.aetherauctions.model
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/gui/MainAuctionGUI.java:[129,54] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: class com.aetherauctions.gui.MainAuctionGUI
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/storage/AuctionStorage.java:[4,32] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: package com.aetherauctions.model
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[4,32] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: package com.aetherauctions.model
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/command/CommandManager.java:[8,32] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: package com.aetherauctions.model
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/listener/InventoryClickListener.java:[6,32] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: package com.aetherauctions.model
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[44,29] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: class com.aetherauctions.auction.AuctionManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[483,29] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: class com.aetherauctions.auction.AuctionManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[856,39] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: class com.aetherauctions.auction.AuctionManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[993,22] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: class com.aetherauctions.auction.AuctionManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[997,17] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: class com.aetherauctions.auction.AuctionManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[1003,12] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: class com.aetherauctions.auction.AuctionManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[1007,17] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: class com.aetherauctions.auction.AuctionManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[1013,12] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: class com.aetherauctions.auction.AuctionManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/storage/AuctionStorage.java:[175,29] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: class com.aetherauctions.storage.AuctionStorage
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/storage/AuctionStorage.java:[220,13] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: class com.aetherauctions.storage.AuctionStorage
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/storage/AuctionStorage.java:[270,12] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: class com.aetherauctions.storage.AuctionStorage
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/storage/AuctionStorage.java:[293,17] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: class com.aetherauctions.storage.AuctionStorage
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/storage/AuctionStorage.java:[323,12] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: class com.aetherauctions.storage.AuctionStorage
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/listener/PlayerChatListener.java:[5,32] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: package com.aetherauctions.model
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/guis/ManageAuctionContextGUI.java:[4,32] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: package com.aetherauctions.model
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/guis/ManageAuctionContextGUI.java:[22,44] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: class com.aetherauctions.guis.ManageAuctionContextGUI
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/gui/GUIManager.java:[4,32] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: package com.aetherauctions.model
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/gui/GUIManager.java:[20,58] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: class com.aetherauctions.gui.GUIManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/listeners/PlayerChatListener.java:[5,32] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: package com.aetherauctions.model
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/events/AuctionUpdateEvent.java:[3,32] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: package com.aetherauctions.model
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/events/AuctionUpdateEvent.java:[9,19] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: class com.aetherauctions.events.AuctionUpdateEvent
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/events/AuctionUpdateEvent.java:[22,31] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: class com.aetherauctions.events.AuctionUpdateEvent
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/events/AuctionUpdateEvent.java:[27,12] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: class com.aetherauctions.events.AuctionUpdateEvent
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/managers/OpenGUIManager.java:[5,31] cannot find symbol
+[ERROR]   symbol:   class MainAuctionGUI
+[ERROR]   location: package com.aetherauctions.guis
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/managers/OpenGUIManager.java:[7,32] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: package com.aetherauctions.model
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/managers/OpenGUIManager.java:[31,31] cannot find symbol
+[ERROR]   symbol:   class BidGUI
+[ERROR]   location: package com.aetherauctions.guis
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/managers/OpenGUIManager.java:[32,31] cannot find symbol
+[ERROR]   symbol:   class ConfirmBuyoutGUI
+[ERROR]   location: package com.aetherauctions.guis
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/managers/OpenGUIManager.java:[44,29] cannot find symbol
+[ERROR]   symbol:   class BidGUI
+[ERROR]   location: class com.aetherauctions.managers.OpenGUIManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/managers/OpenGUIManager.java:[45,29] cannot find symbol
+[ERROR]   symbol:   class ConfirmBuyoutGUI
+[ERROR]   location: class com.aetherauctions.managers.OpenGUIManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/managers/OpenGUIManager.java:[86,48] cannot find symbol
+[ERROR]   symbol:   class MainAuctionGUI
+[ERROR]   location: class com.aetherauctions.managers.OpenGUIManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/guis/MyActiveAuctionsGUI.java:[4,32] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: package com.aetherauctions.model
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/managers/OpenGUIManager.java:[110,12] cannot find symbol
+[ERROR]   symbol:   class MainAuctionGUI
+[ERROR]   location: class com.aetherauctions.managers.OpenGUIManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/managers/OpenGUIManager.java:[120,12] cannot find symbol
+[ERROR]   symbol:   class BidGUI
+[ERROR]   location: class com.aetherauctions.managers.OpenGUIManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/managers/OpenGUIManager.java:[121,12] cannot find symbol
+[ERROR]   symbol:   class ConfirmBuyoutGUI
+[ERROR]   location: class com.aetherauctions.managers.OpenGUIManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/managers/OpenGUIManager.java:[181,50] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: class com.aetherauctions.managers.OpenGUIManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/Auction.java:[22,18] cannot find symbol
+[ERROR]   symbol:   class Bid
+[ERROR]   location: class com.aetherauctions.Auction
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/AuctionStatus.java:[3,8] duplicate class: com.aetherauctions.auction.AuctionStatus
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/Auction.java:[23,13] cannot access com.aetherauctions.AuctionStatus
+[ERROR]   bad source file: /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/AuctionStatus.java
+[ERROR]     file does not contain class com.aetherauctions.AuctionStatus
+[ERROR]     Please remove or make sure it appears in the correct subdirectory of the sourcepath.
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/Auction.java:[31,25] cannot find symbol
+[ERROR]   symbol:   class Bid
+[ERROR]   location: class com.aetherauctions.Auction
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/Auction.java:[77,17] cannot find symbol
+[ERROR]   symbol:   class Bid
+[ERROR]   location: class com.aetherauctions.Auction
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/Auction.java:[91,33] cannot find symbol
+[ERROR]   symbol:   class Bid
+[ERROR]   location: class com.aetherauctions.Auction
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/Auction.java:[98,36] cannot find symbol
+[ERROR]   symbol:   class Bid
+[ERROR]   location: class com.aetherauctions.Auction
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/gui/MainAuctionGUI.java:[43,14] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: class com.aetherauctions.gui.MainAuctionGUI
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/gui/MainAuctionGUI.java:[66,17] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: class com.aetherauctions.gui.MainAuctionGUI
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/gui/MainAuctionGUI.java:[124,23] cannot find symbol
+[ERROR]   symbol:   method getOpenGUIManager()
+[ERROR]   location: variable plugin of type com.aetherauctions.AetherAuctions
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/storage/AuctionStorage.java:[255,9] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: class com.aetherauctions.storage.AuctionStorage
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/storage/AuctionStorage.java:[255,31] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: class com.aetherauctions.storage.AuctionStorage
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/storage/AuctionStorage.java:[273,9] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: class com.aetherauctions.storage.AuctionStorage
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/storage/AuctionStorage.java:[294,14] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: class com.aetherauctions.storage.AuctionStorage
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/storage/AuctionStorage.java:[304,29] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: class com.aetherauctions.storage.AuctionStorage
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/storage/AuctionStorage.java:[325,9] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: class com.aetherauctions.storage.AuctionStorage
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[58,14] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: class com.aetherauctions.auction.AuctionManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[59,14] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: class com.aetherauctions.auction.AuctionManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[94,14] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: class com.aetherauctions.auction.AuctionManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[95,14] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: class com.aetherauctions.auction.AuctionManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[103,18] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: class com.aetherauctions.auction.AuctionManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[152,9] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: class com.aetherauctions.auction.AuctionManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[152,31] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: class com.aetherauctions.auction.AuctionManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[207,9] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: class com.aetherauctions.auction.AuctionManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[255,23] cannot find symbol
+[ERROR]   symbol:   method getSoundManager()
+[ERROR]   location: variable plugin of type com.aetherauctions.AetherAuctions
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[274,23] cannot find symbol
+[ERROR]   symbol:   method getSoundManager()
+[ERROR]   location: variable plugin of type com.aetherauctions.AetherAuctions
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[276,19] cannot find symbol
+[ERROR]   symbol:   method getSoundManager()
+[ERROR]   location: variable plugin of type com.aetherauctions.AetherAuctions
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[310,9] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: class com.aetherauctions.auction.AuctionManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[473,19] cannot find symbol
+[ERROR]   symbol:   method getSoundManager()
+[ERROR]   location: variable plugin of type com.aetherauctions.AetherAuctions
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[475,19] cannot find symbol
+[ERROR]   symbol:   method getSoundManager()
+[ERROR]   location: variable plugin of type com.aetherauctions.AetherAuctions
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[478,20] cannot find symbol
+[ERROR]   symbol:   method getSoundManager()
+[ERROR]   location: variable plugin of type com.aetherauctions.AetherAuctions
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[517,31] cannot find symbol
+[ERROR]   symbol:   method getSoundManager()
+[ERROR]   location: variable plugin of type com.aetherauctions.AetherAuctions
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[539,31] cannot find symbol
+[ERROR]   symbol:   method getSoundManager()
+[ERROR]   location: variable plugin of type com.aetherauctions.AetherAuctions
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[585,35] cannot find symbol
+[ERROR]   symbol:   method getSoundManager()
+[ERROR]   location: variable plugin of type com.aetherauctions.AetherAuctions
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[588,36] cannot find symbol
+[ERROR]   symbol:   method getSoundManager()
+[ERROR]   location: variable plugin of type com.aetherauctions.AetherAuctions
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[712,9] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: class com.aetherauctions.auction.AuctionManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[1019,18] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: class com.aetherauctions.auction.AuctionManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[1060,9] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: class com.aetherauctions.auction.AuctionManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/auction/AuctionManager.java:[1060,31] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: class com.aetherauctions.auction.AuctionManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/command/CommandManager.java:[124,13] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: class com.aetherauctions.command.CommandManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/command/CommandManager.java:[142,18] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: class com.aetherauctions.command.CommandManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/command/CommandManager.java:[147,22] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: class com.aetherauctions.command.CommandManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/command/CommandManager.java:[229,17] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: class com.aetherauctions.command.CommandManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/command/CommandManager.java:[258,17] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: class com.aetherauctions.command.CommandManager
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/listener/InventoryClickListener.java:[82,23] cannot find symbol
+[ERROR]   symbol:   method getSoundManager()
+[ERROR]   location: variable plugin of type com.aetherauctions.AetherAuctions
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/listener/InventoryClickListener.java:[85,23] cannot find symbol
+[ERROR]   symbol:   method getSoundManager()
+[ERROR]   location: variable plugin of type com.aetherauctions.AetherAuctions
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/listener/InventoryClickListener.java:[88,23] cannot find symbol
+[ERROR]   symbol:   method getSoundManager()
+[ERROR]   location: variable plugin of type com.aetherauctions.AetherAuctions
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/listener/InventoryClickListener.java:[91,23] cannot find symbol
+[ERROR]   symbol:   method getSoundManager()
+[ERROR]   location: variable plugin of type com.aetherauctions.AetherAuctions
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/listener/InventoryClickListener.java:[95,27] cannot find symbol
+[ERROR]   symbol:   method getSoundManager()
+[ERROR]   location: variable plugin of type com.aetherauctions.AetherAuctions
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/listener/InventoryClickListener.java:[100,27] cannot find symbol
+[ERROR]   symbol:   method getSoundManager()
+[ERROR]   location: variable plugin of type com.aetherauctions.AetherAuctions
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/listener/InventoryClickListener.java:[104,23] cannot find symbol
+[ERROR]   symbol:   method getSoundManager()
+[ERROR]   location: variable plugin of type com.aetherauctions.AetherAuctions
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/listener/InventoryClickListener.java:[107,23] cannot find symbol
+[ERROR]   symbol:   method getSoundManager()
+[ERROR]   location: variable plugin of type com.aetherauctions.AetherAuctions
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/listener/InventoryClickListener.java:[118,23] cannot find symbol
+[ERROR]   symbol:   method getSoundManager()
+[ERROR]   location: variable plugin of type com.aetherauctions.AetherAuctions
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/listener/InventoryClickListener.java:[121,23] cannot find symbol
+[ERROR]   symbol:   method getSoundManager()
+[ERROR]   location: variable plugin of type com.aetherauctions.AetherAuctions
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/listener/InventoryClickListener.java:[124,23] cannot find symbol
+[ERROR]   symbol:   method getSoundManager()
+[ERROR]   location: variable plugin of type com.aetherauctions.AetherAuctions
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/listener/InventoryClickListener.java:[128,27] cannot find symbol
+[ERROR]   symbol:   method getSoundManager()
+[ERROR]   location: variable plugin of type com.aetherauctions.AetherAuctions
+[ERROR] /data/data/com.termux/files/home/Bienvenidas/AetherAuctions/src/main/java/com/aetherauctions/listener/InventoryClickListener.java:[134,21] cannot find symbol
+[ERROR]   symbol:   class Auction
+[ERROR]   location: class com.aetherauctions.listener.InventoryClickListener
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

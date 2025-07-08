@@ -2,8 +2,8 @@ package com.aetherauctions.managers;
 
 import com.aetherauctions.AetherAuctions;
 import com.aetherauctions.events.AuctionUpdateEvent;
-import com.aetherauctions.guis.MainAuctionGUI;
-import com.aetherauctions.guis.MyActiveAuctionsGUI;
+import com.aetherauctions.gui.MainAuctionGUI;
+import com.aetherauctions.gui.MyActiveAuctionsGUI;
 import com.aetherauctions.model.Auction;
 import com.aetherauctions.config.ConfigManager;
 import com.aetherauctions.config.MessageManager;
@@ -28,12 +28,12 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 // GUI imports that might be needed for specific GUI tracking (add as necessary)
-import com.aetherauctions.guis.BidGUI;
-import com.aetherauctions.guis.ConfirmBuyoutGUI;
-import com.aetherauctions.guis.ClaimRewardsGUI;
-import com.aetherauctions.guis.PlayerHistoryGUI;
-import com.aetherauctions.guis.AdminHistoryGUI;
-import com.aetherauctions.guis.ManageAuctionContextGUI;
+import com.aetherauctions.gui.BidGUI;
+import com.aetherauctions.gui.ConfirmBuyoutGUI;
+import com.aetherauctions.gui.ClaimRewardsGUI;
+import com.aetherauctions.gui.PlayerHistoryGUI;
+import com.aetherauctions.gui.AdminHistoryGUI;
+import com.aetherauctions.gui.ManageAuctionContextGUI;
 
 public class OpenGUIManager implements Listener {
 
@@ -251,4 +251,12 @@ public class OpenGUIManager implements Listener {
         }
         return displayItem;
     }
+
+    public void playerClosedGUI(Player player) {
+        ActiveGUIInfo info = openGUIs.get(player.getUniqueId());
+        if (info != null && info.inventory != null && info.inventory.getTitle() != null) {
+            onInventoryClose(player, info.inventory.getTitle());
+        }
+    }
 }
+

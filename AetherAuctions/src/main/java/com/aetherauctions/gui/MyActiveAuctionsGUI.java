@@ -1,4 +1,4 @@
-package com.aetherauctions.guis;
+package com.aetherauctions.gui;
 
 import com.aetherauctions.AetherAuctions;
 import com.aetherauctions.model.Auction;

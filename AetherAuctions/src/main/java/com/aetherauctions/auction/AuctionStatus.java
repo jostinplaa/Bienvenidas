@@ -23,3 +23,4 @@ public enum AuctionStatus {
         return displayName;
     }
 }
+

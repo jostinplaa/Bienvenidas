@@ -10,6 +10,8 @@ import com.aetherauctions.listener.PlayerQuitListener;
 import com.aetherauctions.listener.PlayerJoinListener;
 import com.aetherauctions.storage.AuctionStorage;
 import com.aetherauctions.managers.RewardManager; // Corrected package
+import com.aetherauctions.managers.OpenGUIManager;
+import com.aetherauctions.managers.SoundManager;
 // No longer need com.aetherauctions.gui.GUIManager instance if it's all static
 // No longer need com.aetherauctions.gui.rework.NewGUIInventoryListener
 
@@ -30,10 +32,13 @@ public class AetherAuctions extends JavaPlugin {
     private CommandManager commandManager;
     private InventoryClickListener inventoryClickListener; // The main/consolidated listener
     private RewardManager rewardManager; // Add RewardManager field
+    private OpenGUIManager openGUIManager; // NUEVO campo para manejar las GUIs abiertas
+    private SoundManager soundManager;
 
     @Override
     public void onEnable() {
         instance = this;
+        this.openGUIManager = new OpenGUIManager(this);
 
         if (!setupEconomy()) {
             getLogger().severe("Vault no encontrado o no se pudo hookear Economy! Desactivando AetherAuctions.");
@@ -41,6 +46,8 @@ public class AetherAuctions extends JavaPlugin {
             return;
         }
         getLogger().info("Vault Economy hookeado exitosamente.");
+
+        soundManager = new SoundManager(this);
 
         configManager = new ConfigManager(this);
         messageManager = new MessageManager(this);
@@ -144,5 +151,11 @@ public class AetherAuctions extends JavaPlugin {
 
     public RewardManager getRewardManager() { // Getter for RewardManager
         return rewardManager;
+    }
+    public OpenGUIManager getOpenGUIManager() {
+        return openGUIManager;
+    }
+    public SoundManager getSoundManager() {
+        return soundManager;
     }
 }

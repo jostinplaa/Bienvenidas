@@ -69,7 +69,7 @@ public class MainAuctionGUI {
 
                 ItemStack displayItem = createAuctionDisplayItem(auction, plugin);
                 gui.setItem(guiSlot, displayItem);
-                visibleAuctionsMap.put(guiSlot, auction.getId());
+                visibleAuctionsMap.put(guiSlot, UUID.fromString(auction.getId()));
             }
         }
 
@@ -121,7 +121,7 @@ public class MainAuctionGUI {
                     }
                 }
                 player.openInventory(gui);
-                plugin.getOpenGUIManager().playerOpenedGUI(player, gui, finalPage, "MainAuctionGUI", finalVisibleAuctionsMap);
+                plugin.getOpenGUIManager().playerOpenedGUI(player, null, gui, finalPage, "MainAuctionGUI", finalVisibleAuctionsMap, "default");
             });
         });
     }
@@ -140,7 +140,7 @@ public class MainAuctionGUI {
                 meta.setDisplayName(msgManager.getRawMessage("mystery_auction_gui_item_name"));
                 lore.add(msgManager.getRawMessage("mystery_auction_gui_lore_description", "%description%", auction.getMysteryDescription()));
                 try {
-                    int itemCount = plugin.getAuctionStorage().getMysteryAuctionContentsCount(auction.getId());
+                    int itemCount = plugin.getAuctionStorage().getMysteryAuctionContentsCount(UUID.fromString(auction.getId()));
                      lore.add(msgManager.getRawMessage("mystery_auction_gui_lore_item_count", "%count%", String.valueOf(itemCount)));
                 } catch (SQLException e) { // Asegurar que SQLException está importada
                      plugin.getLogger().log(Level.WARNING, "Could not get item count for mystery auction " + auction.getId() + " for GUI display.", e);
