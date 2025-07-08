@@ -48,6 +48,7 @@ public class OpenGUIManager implements Listener {
     private final Map<UUID, PlayerHistoryGUI> openPlayerHistoryGUIs = new ConcurrentHashMap<>();
     private final Map<UUID, AdminHistoryGUI> openAdminHistoryGUIs = new ConcurrentHashMap<>();
     private final Map<UUID, ManageAuctionContextGUI> openManageAuctionContextGUIs = new ConcurrentHashMap<>();
+    private final Map<UUID, com.aetherauctions.gui.PrepareMysteryLotGUI> openPrepareMysteryLotGUIs = new ConcurrentHashMap<>(); // Nueva GUI
 
 
     public static class ActiveGUIInfo {
@@ -82,6 +83,7 @@ public class OpenGUIManager implements Listener {
         else if (guiInstance instanceof PlayerHistoryGUI) openPlayerHistoryGUIs.put(player.getUniqueId(), (PlayerHistoryGUI) guiInstance);
         else if (guiInstance instanceof AdminHistoryGUI) openAdminHistoryGUIs.put(player.getUniqueId(), (AdminHistoryGUI) guiInstance);
         else if (guiInstance instanceof ManageAuctionContextGUI) openManageAuctionContextGUIs.put(player.getUniqueId(), (ManageAuctionContextGUI) guiInstance);
+        else if (guiInstance instanceof com.aetherauctions.gui.PrepareMysteryLotGUI) openPrepareMysteryLotGUIs.put(player.getUniqueId(), (com.aetherauctions.gui.PrepareMysteryLotGUI) guiInstance);
     }
 
     public void registerOpenGUI(Player player, MainAuctionGUI gui, Map<Integer, UUID> visibleAuctionsMap, int currentPage, String currentSort) {
@@ -112,6 +114,7 @@ public class OpenGUIManager implements Listener {
         openPlayerHistoryGUIs.remove(player.getUniqueId());
         openAdminHistoryGUIs.remove(player.getUniqueId());
         openManageAuctionContextGUIs.remove(player.getUniqueId());
+        openPrepareMysteryLotGUIs.remove(player.getUniqueId()); // Limpiar la nueva GUI
     }
 
 
@@ -152,6 +155,7 @@ public class OpenGUIManager implements Listener {
     public PlayerHistoryGUI getOpenPlayerHistoryGUI(Player player) { return openPlayerHistoryGUIs.get(player.getUniqueId()); }
     public AdminHistoryGUI getOpenAdminHistoryGUI(Player player) { return openAdminHistoryGUIs.get(player.getUniqueId()); }
     public ManageAuctionContextGUI getOpenManageAuctionContextGUI(Player player) { return openManageAuctionContextGUIs.get(player.getUniqueId()); }
+    public com.aetherauctions.gui.PrepareMysteryLotGUI getOpenPrepareMysteryLotGUI(Player player) { return openPrepareMysteryLotGUIs.get(player.getUniqueId()); } // Getter para la nueva GUI
 
     public void removeBidGUI(Player player) { openBidGUIs.remove(player.getUniqueId()); }
     public void removeConfirmBuyoutGUI(Player player) { openConfirmBuyoutGUIs.remove(player.getUniqueId());}

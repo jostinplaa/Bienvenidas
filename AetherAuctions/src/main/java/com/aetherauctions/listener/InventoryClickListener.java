@@ -11,7 +11,8 @@ import com.aetherauctions.gui.ClaimRewardsGUI;
 import com.aetherauctions.gui.MyActiveAuctionsGUI;
 import com.aetherauctions.gui.PlayerHistoryGUI;
 import com.aetherauctions.gui.ManageAuctionContextGUI;
-import com.aetherauctions.gui.AdminHistoryGUI; // Añadido
+import com.aetherauctions.gui.AdminHistoryGUI;
+import com.aetherauctions.gui.PrepareMysteryLotGUI; // Importar la nueva GUI
 import com.aetherauctions.config.MessageManager;
 import com.aetherauctions.config.ConfigManager;
 
@@ -65,11 +66,17 @@ public class InventoryClickListener implements Listener {
         String detailsGuiTitle = ChatColor.stripColor(msgManager.getRawMessage("auction_details_gui_title"));
         String myAuctionsGuiTitle = ChatColor.stripColor(msgManager.getRawMessage("my_auctions_gui_title", "%player_name%", player.getName()));
         String playerHistoryGuiTitle = ChatColor.stripColor(msgManager.getRawMessage("player_history_gui_title", "%player_name%", player.getName()));
-        String adminHistoryGuiTitle = ChatColor.stripColor(msgManager.getRawMessage("admin_history_gui_title", "%player_name%", "")); // El nombre del jugador se añade dinámicamente
+        String adminHistoryGuiTitle = ChatColor.stripColor(msgManager.getRawMessage("admin_history_gui_title", "%player_name%", ""));
         String manageAuctionContextGuiTitlePrefix = ChatColor.stripColor(msgManager.getRawMessage("manage_auction_gui_title").split("%id%")[0]);
+        String prepareMysteryGuiTitle = ChatColor.stripColor(msgManager.getRawMessage("prepare_mystery_gui_title", "%player%", player.getName()));
         // ClaimRewardsGUI tiene su propio Listener.
 
-        if (inventoryTitle.startsWith(mainGuiTitlePrefix)) { // --- MainAuctionGUI ---
+        PrepareMysteryLotGUI openPrepareGui = plugin.getOpenGUIManager().getOpenPrepareMysteryLotGUI(player);
+
+        if (openPrepareGui != null && topInventory.equals(openPrepareGui.getInventory())) {
+            handlePrepareMysteryLotGUIClick(event, player, openPrepareGui);
+        }
+        else if (inventoryTitle.startsWith(mainGuiTitlePrefix)) { // --- MainAuctionGUI ---
             event.setCancelled(true);
             ItemStack clickedItem = event.getCurrentItem();
             if (clickedItem == null || clickedItem.getType() == Material.AIR) return;
@@ -369,6 +376,92 @@ public class InventoryClickListener implements Listener {
             if (isPlayerPendingBid(player.getUniqueId())) {
                 getAndRemovePlayerPendingBidAuctionId(player.getUniqueId());
                 // msgManager.sendMessage(player, "chat_bid_cancelled_gui_closed"); // Opcional
+            }
+
+            // Manejar cierre de PrepareMysteryLotGUI
+            com.aetherauctions.gui.PrepareMysteryLotGUI openPrepareGui = plugin.getOpenGUIManager().getOpenPrepareMysteryLotGUI(player);
+            if (openPrepareGui != null && event.getInventory().equals(openPrepareGui.getInventory()) && !openPrepareGui.isConfirmed()) {
+                List<ItemStack> itemsToReturn = openPrepareGui.getLotItems(); // Obtiene items de la GUI
+                for (ItemStack item : itemsToReturn) {
+                    if (player.getInventory().firstEmpty() != -1) {
+                        player.getInventory().addItem(item);
+                    } else {
+                        player.getWorld().dropItemNaturally(player.getLocation(), item);
+                        msgManager.sendMessage(player, "prepare_mystery_gui_items_dropped_on_close");
+                    }
+                }
+                if (!itemsToReturn.isEmpty()) {
+                    msgManager.sendMessage(player, "prepare_mystery_gui_items_returned_on_close");
+                }
+                // El OpenGUIManager se encargará de removerlo de sus mapas en su propio onInventoryCloseEvent -> handleInventoryClose
+            }
+        }
+    }
+
+    private void handlePrepareMysteryLotGUIClick(InventoryClickEvent event, Player player, PrepareMysteryLotGUI prepareGui) {
+        event.setCancelled(true);
+        Inventory clickedInventory = event.getClickedInventory();
+        ItemStack currentItem = event.getCurrentItem();
+        int slot = event.getSlot();
+
+        if (clickedInventory == null) return;
+
+        if (clickedInventory.equals(prepareGui.getInventory())) { // Clic en la GUI de preparación
+            plugin.getSoundManager().playSound(player, "click");
+            if (slot < PrepareMysteryLotGUI.MAX_LOT_ITEMS) { // Clic en el área de ítems
+                if (currentItem != null && currentItem.getType() != Material.AIR) {
+                    // Devolver ítem al inventario del jugador
+                    player.getInventory().addItem(currentItem.clone()); // Clonar por si acaso
+                    prepareGui.getInventory().setItem(slot, null); // Quitar de la GUI de preparación
+                    // prepareGui.removeItemFromLot(slot); // Esto modificaría la lista interna, mejor operar en la GUI directamente aquí
+                    prepareGui.renderGUI(); // Re-render para actualizar contador, etc.
+                }
+            } else if (slot == PrepareMysteryLotGUI.CANCEL_BUTTON_SLOT) {
+                plugin.getSoundManager().playSound(player, "close_gui");
+                List<ItemStack> itemsToReturn = prepareGui.getLotItems();
+                for (ItemStack item : itemsToReturn) {
+                    if (player.getInventory().firstEmpty() != -1) {
+                        player.getInventory().addItem(item);
+                    } else {
+                        player.getWorld().dropItemNaturally(player.getLocation(), item);
+                         msgManager.sendMessage(player, "prepare_mystery_gui_items_dropped_on_cancel");
+                    }
+                }
+                if(!itemsToReturn.isEmpty()) msgManager.sendMessage(player, "prepare_mystery_gui_cancelled_items_returned");
+                else msgManager.sendMessage(player, "prepare_mystery_gui_cancelled_no_items");
+                player.closeInventory(); // OpenGUIManager se encargará de la limpieza
+            } else if (slot == PrepareMysteryLotGUI.CONFIRM_BUTTON_SLOT) {
+                List<ItemStack> lotItems = prepareGui.getLotItems();
+                if (lotItems.isEmpty()) {
+                    msgManager.sendMessage(player, "prepare_mystery_gui_error_no_items_on_confirm");
+                    plugin.getSoundManager().playSound(player, "error");
+                    return;
+                }
+
+                long durationSeconds = prepareGui.getDurationHours() * 3600;
+                plugin.getAuctionManager().createMysteryAuction(
+                        player,
+                        lotItems,
+                        prepareGui.getStartPrice(),
+                        prepareGui.getBuyNowPrice(),
+                        durationSeconds,
+                        prepareGui.getDescription()
+                );
+                // El AuctionManager.createMysteryAuction ya envía mensaje de éxito/error y sonido
+                prepareGui.setConfirmed(true); // Marcar como confirmada para que onInventoryClose no devuelva ítems
+                player.closeInventory(); // OpenGUIManager se encargará de la limpieza
+            }
+        } else if (clickedInventory.equals(player.getInventory())) { // Clic en el inventario del jugador
+            if (currentItem != null && currentItem.getType() != Material.AIR) {
+                if (prepareGui.getLotItems().size() < PrepareMysteryLotGUI.MAX_LOT_ITEMS) {
+                    ItemStack toAdd = currentItem.clone(); // Clonar antes de modificar
+                    prepareGui.addItemToLot(toAdd); // addItemToLot ya clona y renderiza
+                    clickedInventory.setItem(slot, null); // Quitar del inventario del jugador
+                    plugin.getSoundManager().playSound(player, "click");
+                } else {
+                    msgManager.sendMessage(player, "prepare_mystery_gui_error_lot_full");
+                    plugin.getSoundManager().playSound(player, "error");
+                }
             }
         }
     }

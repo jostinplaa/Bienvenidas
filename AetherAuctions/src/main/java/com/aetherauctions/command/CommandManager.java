@@ -32,9 +32,10 @@ public class CommandManager implements CommandExecutor, TabCompleter {
     private final ConfigManager cfgManager;
     // RewardManager is accessed via plugin.getRewardManager() when needed
 
-    private final List<String> validUserSubCommands = Arrays.asList("ayuda", "crear", "cancelar", "mis", "historial", "reclamar"); // Added "reclamar"
-    private final List<String> validAdminSubCommands = Arrays.asList("reload", "ver", "borrar");
+    private final List<String> validUserSubCommands = Arrays.asList("ayuda", "crear", "crearmisteriosa", "cancelar", "mis", "historial", "reclamar"); // Added "crearmisteriosa"
+    private final List<String> validAdminSubCommands = Arrays.asList("reload", "ver", "borrar"); // No changes here for now
     private static final double SIMILARITY_THRESHOLD = 0.75;
+    public static final String MYSTERY_AUCTION_PERMISSION = "aetherauctions.command.crearmisteriosa";
 
     public CommandManager(AetherAuctions plugin) {
         this.plugin = plugin;
@@ -182,6 +183,83 @@ public class CommandManager implements CommandExecutor, TabCompleter {
             plugin.getRewardManager().attemptClaimNextReward(playerToClaim);
             return true;
         }
+        else if (subCommand.equals("crearmisteriosa")) {
+            if (!(sender instanceof Player)) {
+                msgManager.sendMessage(sender, "player_only_command");
+                return true;
+            }
+            Player seller = (Player) sender;
+            if (!seller.hasPermission(MYSTERY_AUCTION_PERMISSION)) {
+                msgManager.sendMessage(seller, "no_permission");
+                return true;
+            }
+            if (!cfgManager.isMysteryAuctionsAllowed()){
+                msgManager.sendMessage(seller, "mystery_auctions_disabled"); // Nueva clave de mensaje
+                return true;
+            }
+
+            // Uso: /subasta crearmisteriosa <precio_inicial> [precio_compra_directa] <duracion_horas> <descripcion...>
+            // Mínimo 4 args: crearmisteriosa, precio, duracion, desc1
+            // Con compra directa: 5 args: crearmisteriosa, precio, compradirecta, duracion, desc1
+            if (args.length < 5) { // nombre_cmd precio_inicial duracion_horas desc1 desc2 ... (sin compra directa) -> min 4 args para comando, desc
+                                   // nombre_cmd precio_inicial precio_compra_directa duracion_horas desc1 ... -> min 5 args
+                msgManager.sendMessage(seller, "command_usage_crear_misteriosa"); // Nueva clave de mensaje
+                return true;
+            }
+
+            try {
+                double startPrice = Double.parseDouble(args[1]);
+                double buyNowPrice = -1;
+                int durationArgIndex;
+                int descriptionStartIndex;
+
+                // Chequear si el segundo argumento es un número (precio compra directa) o texto (parte de duración o descripción)
+                try {
+                    buyNowPrice = Double.parseDouble(args[2]);
+                    // Si args[2] es un número, entonces es precio_compra_directa
+                    durationArgIndex = 3;
+                    descriptionStartIndex = 4;
+                } catch (NumberFormatException e) {
+                    // Si args[2] no es un número, entonces no hay precio_compra_directa
+                    // args[2] es duracion_horas
+                    durationArgIndex = 2;
+                    descriptionStartIndex = 3;
+                }
+
+                if (args.length <= descriptionStartIndex) { // No hay descripción
+                    msgManager.sendMessage(seller, "command_usage_crear_misteriosa_no_desc"); // Nueva clave
+                    return true;
+                }
+
+                long durationHours = Long.parseLong(args[durationArgIndex]);
+                if (durationHours <= 0) {
+                    msgManager.sendMessage(seller, "auction_create_error_invalid_duration");
+                    return true;
+                }
+
+                StringBuilder descBuilder = new StringBuilder();
+                for (int i = descriptionStartIndex; i < args.length; i++) {
+                    descBuilder.append(args[i]).append(" ");
+                }
+                String description = descBuilder.toString().trim();
+                if (description.isEmpty()) {
+                     msgManager.sendMessage(seller, "command_usage_crear_misteriosa_no_desc");
+                     return true;
+                }
+                if (description.length() > 255) { // Límite arbitrario para la descripción
+                    description = description.substring(0, 255);
+                }
+
+
+                // Abrir la GUI para preparar el lote
+                com.aetherauctions.gui.PrepareMysteryLotGUI prepareGui = new com.aetherauctions.gui.PrepareMysteryLotGUI(plugin, seller, startPrice, buyNowPrice, durationHours, description);
+                prepareGui.open();
+
+            } catch (NumberFormatException e) {
+                msgManager.sendMessage(seller, "command_crear_error_invalid_numbers"); // Reutilizar o crear nueva clave
+            }
+            return true;
+        }
         else {
             String inputSubCommand = args[0].toLowerCase();
             List<String> relevantCommands = new ArrayList<>(validUserSubCommands);
@@ -291,10 +369,11 @@ public class CommandManager implements CommandExecutor, TabCompleter {
         sender.sendMessage(msgManager.getRawMessage("help_header"));
         msgManager.sendMessage(sender, "help_subasta");
         if (sender.hasPermission("aetherauctions.command.crear")) msgManager.sendMessage(sender, "help_subasta_crear");
+        if (sender.hasPermission(MYSTERY_AUCTION_PERMISSION)) msgManager.sendMessage(sender, "help_subasta_crear_misteriosa"); // Nueva clave de mensaje
         if (sender.hasPermission("aetherauctions.command.cancelar")) msgManager.sendMessage(sender, "help_subasta_cancelar");
         if (sender.hasPermission("aetherauctions.command.mis")) msgManager.sendMessage(sender, "help_subasta_mis");
         if (sender.hasPermission("aetherauctions.command.historial")) msgManager.sendMessage(sender, "help_subasta_historial");
-        if (sender.hasPermission("aetherauctions.command.reclamar")) msgManager.sendMessage(sender, "help_subasta_reclamar"); // Added help for reclamar
+        if (sender.hasPermission("aetherauctions.command.reclamar")) msgManager.sendMessage(sender, "help_subasta_reclamar");
         if (sender.hasPermission("aetherauctions.admin")) {
             msgManager.sendMessage(sender, "help_subasta_admin");
         }
@@ -339,13 +418,18 @@ public class CommandManager implements CommandExecutor, TabCompleter {
         String currentArg = args[args.length - 1].toLowerCase();
 
         if (args.length == 1) {
-            // Use a copy for modification if needed, or iterate directly over validUserSubCommands
-            for (String sc : validUserSubCommands) { // Iterate directly over the updated list
-                String permissionNode = "aetherauctions.command." + sc;
-                if (sc.equals("ayuda")) permissionNode = "aetherauctions.user"; // Special case for ayuda
+            for (String sc : validUserSubCommands) {
+                String permissionNode;
+                if (sc.equals("ayuda")) {
+                    permissionNode = "aetherauctions.user";
+                } else if (sc.equals("crearmisteriosa")) {
+                    permissionNode = MYSTERY_AUCTION_PERMISSION;
+                } else {
+                    permissionNode = "aetherauctions.command." + sc;
+                }
 
                 if (sender.hasPermission(permissionNode)) {
-                     if (sc.startsWith(currentArg)) {
+                    if (sc.startsWith(currentArg)) {
                         completions.add(sc);
                     }
                 }
