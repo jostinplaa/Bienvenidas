@@ -38,34 +38,78 @@ public class AuctionDetailsGUI {
 
         String guiTitle = msgManager.getMessage("auction_details_gui_title");
         Inventory gui = Bukkit.createInventory(null, 54, guiTitle);
+        ItemStack itemToDisplay;
+        ItemMeta meta;
+        List<String> processedLore = new ArrayList<>();
 
-        // --- Ítem Subastado en el Centro ---
-        ItemStack itemToDisplay = auction.getItemStack().clone();
-        ItemMeta meta = itemToDisplay.getItemMeta();
-        if (meta == null) {
-            meta = Bukkit.getItemFactory().getItemMeta(itemToDisplay.getType());
+        if (auction.isMystery()) {
+            itemToDisplay = new ItemStack(Material.ENDER_CHEST);
+            meta = itemToDisplay.getItemMeta();
+            if (meta != null) {
+                meta.setDisplayName(msgManager.getRawMessage("mystery_auction_gui_item_name")); // Reutilizar clave de MainAuctionGUI
+                processedLore.add(msgManager.getRawMessage("mystery_auction_gui_lore_description", "%description%", auction.getMysteryDescription()));
+                try {
+                    int itemCount = plugin.getAuctionStorage().getMysteryAuctionContentsCount(auction.getAuctionId());
+                    processedLore.add(msgManager.getRawMessage("mystery_auction_gui_lore_item_count", "%count%", String.valueOf(itemCount)));
+                } catch (java.sql.SQLException e) {
+                    plugin.getLogger().log(java.util.logging.Level.WARNING, "Could not get item count for mystery auction " + auction.getId() + " for Details GUI.", e);
+                    processedLore.add(msgManager.getRawMessage("mystery_auction_gui_lore_item_count_error"));
+                }
+            }
+        } else {
+            if (auction.getItemStack() == null || auction.getItemStack().getType() == Material.AIR) {
+                itemToDisplay = new ItemStack(Material.BARRIER);
+                meta = itemToDisplay.getItemMeta();
+                if (meta != null) meta.setDisplayName(ChatColor.RED + "Error: Ítem no disponible");
+            } else {
+                itemToDisplay = auction.getItemStack().clone();
+                meta = itemToDisplay.getItemMeta();
+            }
+            if (meta == null && itemToDisplay != null) meta = Bukkit.getItemFactory().getItemMeta(itemToDisplay.getType());
+
+            if (meta != null) {
+                String originalItemName = meta.hasDisplayName() ? meta.getDisplayName() : InventoryUtil.formatMaterialName(itemToDisplay.getType());
+                meta.setDisplayName(msgManager.getMessage("item_default_name_format", "%item_name%", originalItemName));
+                // Aquí se añadiría el lore específico del ítem si es necesario,
+                // pero el lore principal se construye más abajo de forma común.
+            }
         }
 
-        String originalItemName = meta.hasDisplayName() ? meta.getDisplayName() : InventoryUtil.formatMaterialName(itemToDisplay.getType());
-        meta.setDisplayName(msgManager.getMessage("item_default_name_format", "%item_name%", originalItemName));
-
-        List<String> loreLinesRaw = msgManager.getStringList("auction_lore");
-        List<String> processedLore = new ArrayList<>();
+        // Lore común para todas las subastas (misteriosas o no) en esta GUI de detalles
+        // Este lore se añade al 'processedLore' ya iniciado (que puede tener info de misterio)
+        // o lo inicia si es una subasta normal.
+        List<String> commonLoreKeys = msgManager.getStringList("auction_details_gui_common_lore"); // Nueva clave para lore común
         String buyNowPriceString = auction.hasBuyNow() && cfgManager.isBuyNowAllowed()
                                    ? String.format("%.2f %s", auction.getBuyNowPrice(), cfgManager.getCurrencySymbol())
-                                   : msgManager.getMessage("auction_lore_buy_now_not_available");
+                                   : msgManager.getMessage("auction_lore_buy_now_not_available"); // Reutilizar clave si aplica
 
-        for (String loreLine : loreLinesRaw) {
-            processedLore.add(loreLine // MessageManager now handles color translation
-                    .replace("%id%", auction.getId().toString()) // Use full UUID for details GUI lore
+        for (String loreLineKey : commonLoreKeys) { // Iterar sobre claves de mensajes
+            processedLore.add(msgManager.getRawMessage(loreLineKey) // Obtener el mensaje crudo
+                    .replace("%id%", auction.getId().toString())
                     .replace("%seller%", auction.getSellerName())
                     .replace("%price%", String.format("%.2f %s", auction.getCurrentBid(), cfgManager.getCurrencySymbol()))
                     .replace("%buy_now%", buyNowPriceString)
                     .replace("%time%", InventoryUtil.formatTime(auction.getRemainingTimeMillis()))
             );
         }
-        meta.setLore(processedLore);
-        itemToDisplay.setItemMeta(meta);
+        // Añadir ID específico para el listener, no visible al usuario necesariamente pero útil para el código.
+        // Esto podría ir en una línea oculta o simplemente ser parte del lore si "details_auction_id" es una clave de mensaje.
+        // Por ahora, asumimos que el listener lo extrae de una línea visible formateada por una clave como "main_gui_lore_id".
+        processedLore.add(msgManager.getRawMessage("main_gui_lore_id", "%id%", auction.getId().toString()));
+
+
+        if (meta != null) {
+            meta.setLore(processedLore);
+            if (itemToDisplay != null) itemToDisplay.setItemMeta(meta);
+        }
+
+        if (itemToDisplay == null) { // Fallback si todo lo demás falla
+            itemToDisplay = new ItemStack(Material.BARRIER);
+            meta = itemToDisplay.getItemMeta();
+            if (meta != null) meta.setDisplayName(ChatColor.RED + "Error al mostrar subasta");
+            if (itemToDisplay != null && meta != null) itemToDisplay.setItemMeta(meta);
+        }
+
         gui.setItem(ITEM_DISPLAY_SLOT, itemToDisplay);
 
         // --- Botones ---

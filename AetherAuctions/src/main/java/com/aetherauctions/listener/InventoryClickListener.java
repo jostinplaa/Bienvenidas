@@ -71,7 +71,6 @@ public class InventoryClickListener implements Listener {
 
         if (inventoryTitle.startsWith(mainGuiTitlePrefix)) { // --- MainAuctionGUI ---
             event.setCancelled(true);
-            // plugin.getSoundManager().playSound(player, "click"); // Reemplazar sonido directo
             ItemStack clickedItem = event.getCurrentItem();
             if (clickedItem == null || clickedItem.getType() == Material.AIR) return;
             int slot = event.getSlot();
@@ -173,8 +172,9 @@ public class InventoryClickListener implements Listener {
             // Por ahora, la paginación de AdminHistoryGUI se manejaría pasándole los parámetros de nuevo.
             // int currentPage = getCurrentPageFromTitle(inventoryTitle);
 
-            player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.7f, 1.2f);
+            plugin.getSoundManager().playSound(player, "click"); // Usar SoundManager
             if (slot == AdminHistoryGUI.CLOSE_GUI_SLOT) {
+                plugin.getSoundManager().playSound(player, "close_gui");
                 player.closeInventory();
             }
             // Faltaría lógica de paginación si AdminHistoryGUI la implementa y necesita que este listener la maneje.
@@ -185,7 +185,7 @@ public class InventoryClickListener implements Listener {
             ItemStack clickedItem = event.getCurrentItem();
             if (clickedItem == null || clickedItem.getType() == Material.AIR) return;
             int slot = event.getSlot();
-            player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.7f, 1.0f);
+            plugin.getSoundManager().playSound(player, "click"); // Usar SoundManager
 
             // Extraer el ID de la subasta del título de la GUI de contexto
             String auctionIdFromTitle = "";
