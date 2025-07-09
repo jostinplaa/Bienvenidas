@@ -58,32 +58,69 @@ public class MyActiveAuctionsGUI {
                 int guiSlot = i - startIndex;
                  if (guiSlot >= itemsPerPage || guiSlot >= MyActiveAuctionsGUI.PREVIOUS_PAGE_SLOT) break;
 
-
-                ItemStack displayItem = auction.getItemStack().clone();
-                ItemMeta meta = displayItem.getItemMeta();
-                if (meta == null) meta = Bukkit.getItemFactory().getItemMeta(displayItem.getType());
-
-                String itemName = meta.hasDisplayName() ? meta.getDisplayName() : InventoryUtil.formatMaterialName(displayItem.getType());
-                meta.setDisplayName(msgManager.getRawMessage("my_auctions_gui_item_name_format", "%item_name%", itemName)); // Puede reutilizar o tener formato propio
-
+                ItemStack displayItem;
+                ItemMeta meta;
                 List<String> lore = new ArrayList<>();
-                lore.add(msgManager.getRawMessage("my_auctions_gui_lore_status", "%status%", auction.getStatus().getDisplayName())); // Nueva clave para estado
-                lore.add(msgManager.getRawMessage("my_auctions_gui_lore_price", // Reutilizar o clave nueva
-                    "%price%", String.format("%.2f", auction.getCurrentBid()),
-                    "%currency%", cfgManager.getCurrencySymbol()
-                ));
-                if (auction.hasBuyNow() && cfgManager.isBuyNowAllowed()) {
-                    lore.add(msgManager.getRawMessage("my_auctions_gui_lore_buy_now", // Reutilizar o clave nueva
-                        "%buy_now_price%", String.format("%.2f", auction.getBuyNowPrice()),
+
+                if (auction.isMystery()) {
+                    displayItem = new ItemStack(Material.ENDER_CHEST);
+                    meta = displayItem.getItemMeta();
+                    if (meta != null) {
+                        meta.setDisplayName(msgManager.getRawMessage("mystery_auction_gui_item_name")); // Reutilizar clave
+                        lore.add(msgManager.getRawMessage("mystery_auction_gui_lore_description", "%description%", auction.getMysteryDescription()));
+                        try {
+                            int itemCount = plugin.getAuctionStorage().getMysteryAuctionContentsCount(auction.getAuctionId());
+                            lore.add(msgManager.getRawMessage("mystery_auction_gui_lore_item_count", "%count%", String.valueOf(itemCount)));
+                        } catch (java.sql.SQLException e) {
+                            plugin.getLogger().log(java.util.logging.Level.WARNING, "Could not get item count for mystery auction " + auction.getId() + " for MyActiveAuctionsGUI.", e);
+                            lore.add(msgManager.getRawMessage("mystery_auction_gui_lore_item_count_error"));
+                        }
+                    }
+                } else {
+                    if (auction.getItemStack() == null || auction.getItemStack().getType() == Material.AIR) {
+                        displayItem = new ItemStack(Material.BARRIER);
+                        meta = displayItem.getItemMeta();
+                        if (meta != null) meta.setDisplayName(ChatColor.RED + msgManager.getRawMessage("error_item_not_available"));
+                    } else {
+                        displayItem = auction.getItemStack().clone();
+                        meta = displayItem.getItemMeta();
+                    }
+                    if (meta == null && displayItem != null) meta = Bukkit.getItemFactory().getItemMeta(displayItem.getType());
+
+                    if (meta != null) {
+                        String itemName = meta.hasDisplayName() ? meta.getDisplayName() : InventoryUtil.formatMaterialName(displayItem.getType());
+                        meta.setDisplayName(msgManager.getRawMessage("my_auctions_gui_item_name_format", "%item_name%", itemName));
+                        // Podríamos añadir material si no es misteriosa:
+                        // lore.add(msgManager.getRawMessage("main_gui_lore_item_material", "%material%", displayItem.getType().toString()));
+                    }
+                }
+
+                if (meta != null) {
+                    lore.add(msgManager.getRawMessage("my_auctions_gui_lore_status", "%status%", auction.getStatus().getDisplayName()));
+                    lore.add(msgManager.getRawMessage("my_auctions_gui_lore_price",
+                        "%price%", String.format("%.2f", auction.getCurrentBid()),
                         "%currency%", cfgManager.getCurrencySymbol()
                     ));
-                }
-                lore.add(msgManager.getRawMessage("my_auctions_gui_lore_time_remaining", "%time%", InventoryUtil.formatTime(auction.getRemainingTimeMillis())));
-                lore.add(msgManager.getRawMessage("my_auctions_gui_lore_id", "%id%", auction.getId().toString()));
-                lore.add(msgManager.getRawMessage("my_auctions_gui_lore_instruction_cancel")); // Nueva clave: "&cClic para intentar cancelar"
+                    if (auction.hasBuyNow() && cfgManager.isBuyNowAllowed()) {
+                        lore.add(msgManager.getRawMessage("my_auctions_gui_lore_buy_now",
+                            "%buy_now_price%", String.format("%.2f", auction.getBuyNowPrice()),
+                            "%currency%", cfgManager.getCurrencySymbol()
+                        ));
+                    }
+                    lore.add(msgManager.getRawMessage("my_auctions_gui_lore_time_remaining", "%time%", InventoryUtil.formatTime(auction.getRemainingTimeMillis())));
+                    lore.add(msgManager.getRawMessage("my_auctions_gui_lore_id", "%id%", auction.getId().toString())); // Usar ID completo aquí
+                    lore.add(msgManager.getRawMessage("my_auctions_gui_lore_instruction_cancel"));
 
-                meta.setLore(lore);
-                displayItem.setItemMeta(meta);
+                    meta.setLore(lore);
+                    if (displayItem != null) displayItem.setItemMeta(meta);
+                }
+
+                if (displayItem == null) { // Fallback final
+                    displayItem = new ItemStack(Material.BARRIER);
+                    meta = displayItem.getItemMeta();
+                    if (meta != null) meta.setDisplayName(ChatColor.RED + "Error");
+                    if (displayItem != null && meta != null) displayItem.setItemMeta(meta);
+                }
                 gui.setItem(guiSlot, displayItem);
             }
         }

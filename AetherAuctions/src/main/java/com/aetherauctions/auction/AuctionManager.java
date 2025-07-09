@@ -1075,9 +1075,9 @@ public class AuctionManager {
             activeAuctionsCache.put(auction.getAuctionId(), auction);
 
             if (creationFee > 0) { // Enviar mensaje de tarifa solo si todo fue bien
-                messageManager.sendMessage(seller, configManager.getPluginPrefix() + messageManager.getMessage("auction_create_fee_charged", "%fee%", String.valueOf(creationFee)));
+                messageManager.sendMessage(seller, "auction_create_fee_charged", "%fee%", String.valueOf(creationFee)); // Corregido
             }
-            messageManager.sendMessage(seller, configManager.getPluginPrefix() + messageManager.getMessage("mystery_auction_create_success", "%id%", auction.getAuctionId().toString()));
+            messageManager.sendMessage(seller, "mystery_auction_create_success", "%id%", auction.getAuctionId().toString().substring(0,8)); // Corregido y ID acortado
             plugin.getSoundManager().playSound(seller, "auction_created");
 
 
