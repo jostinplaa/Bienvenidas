@@ -467,10 +467,22 @@ public class InventoryClickListener implements Listener {
             }
         } else if (clickedInventory.equals(player.getInventory())) { // Clic en el inventario del jugador
             if (currentItem != null && currentItem.getType() != Material.AIR) {
+                // Si es doble clic, y sigue dando problemas, podríamos intentar
+                // tratarlo como un clic normal aquí o simplemente confiar en la cancelación.
+                // Por ahora, nos enfocaremos en el orden de operaciones.
+
                 if (prepareGui.getLotItems().size() < PrepareMysteryLotGUI.MAX_LOT_ITEMS) {
-                    ItemStack toAdd = currentItem.clone(); // Clonar antes de modificar
-                    prepareGui.addItemToLot(toAdd); // addItemToLot ya clona y renderiza
-                    clickedInventory.setItem(slot, null); // Quitar del inventario del jugador
+                    ItemStack itemToAdd = currentItem.clone(); // Clonamos el ítem para añadirlo a la GUI
+
+                    // 1. Eliminar el ítem del inventario del jugador PRIMERO
+                    event.setCurrentItem(null); // o clickedInventory.setItem(slot, null);
+
+                    // 2. Añadir el clon a la GUI de preparación
+                    prepareGui.addItemToLot(itemToAdd); // addItemToLot clona de nuevo internamente y llama a renderGUI()
+
+                    // 3. Opcional: Forzar una actualización del inventario del jugador
+                    // player.updateInventory(); // Probar sin esto primero.
+
                     plugin.getSoundManager().playSound(player, "click");
                 } else {
                     msgManager.sendMessage(player, "prepare_mystery_gui_error_lot_full");
