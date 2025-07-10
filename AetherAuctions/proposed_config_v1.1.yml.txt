@@ -1,0 +1,241 @@
+# ============================================================================================================================== #
+#                                       AetherAuctions Configuration File                                                      #
+# ============================================================================================================================== #
+# Plugin Version: Reemplazado por el build (ej. 1.0.0)
+# Config Version: 1.1
+#
+# Guía Rápida:
+# - Los valores de Material deben ser nombres válidos de Material de Bukkit (https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Material.html)
+# - Los colores en strings se especifican con '&' (ej. "&6Texto Naranja")
+# - Las duraciones en horas se convierten internamente a segundos o milisegundos según sea necesario.
+# - Para los sonidos, consulta la lista de sonidos de Bukkit y usa los nombres en mayúsculas.
+#
+# ============================================================================================================================== #
+
+# --- General Plugin Settings ---
+general:
+  # Prefijo visual que se antepone a la mayoría de los mensajes del plugin.
+  plugin_prefix: "&6[&eAetherAuctions&6] &r"
+  # Símbolo de la moneda utilizada en las transacciones de subastas.
+  currency_symbol: "$"
+  # Nombre del archivo de mensajes (ubicado en la carpeta del plugin). Permite cambiar el nombre si se desea.
+  language_file: "messages.yml"
+
+# --- Database Configuration ---
+database:
+  # Tipo de base de datos a utilizar.
+  # Actualmente solo "sqlite" está implementado y soportado.
+  type: "sqlite"
+  # Nombre del archivo para la base de datos SQLite. Se creará en la carpeta 'database' dentro de la carpeta del plugin.
+  sqlite_filename: "auctions_data.db"
+
+# --- Auction Core Mechanics ---
+auctions:
+  behavior:
+    # Duración por defecto de una subasta en horas, si el jugador no especifica una al crearla.
+    default_duration_hours: 24
+    # Permitir que los jugadores establezcan un precio de "Comprar Ahora" para sus subastas.
+    allow_buy_now: true
+    # Permitir la creación y el funcionamiento de "Subastas Misteriosas" (lotes de ítems ocultos).
+    allow_mystery_auctions: true
+    # Cantidad mínima que una nueva puja debe superar sobre la puja actual.
+    # Ayuda a evitar incrementos de puja demasiado pequeños.
+    min_bid_increment: 10.0
+    # Intervalo (en segundos) con el que el plugin revisará y procesará las subastas expiradas.
+    expired_check_interval_seconds: 60 # Cada minuto
+
+  limits_and_restrictions:
+    # Número máximo de subastas que un jugador puede tener activas al mismo tiempo.
+    # (Futura mejora: Límites basados en permisos).
+    max_active_per_player: 5
+    # Lista de materiales (ítems) que NO pueden ser subastados.
+    # Utiliza los nombres oficiales de Material de Bukkit.
+    item_blacklist:
+      - "BEDROCK"
+      - "COMMAND_BLOCK"
+      - "STRUCTURE_VOID"
+      - "BARRIER"
+      - "KNOWLEDGE_BOOK"
+      - "DEBUG_STICK"
+      - "AIR" # Aunque el código ya previene esto, es bueno tenerlo explícito.
+
+  fees_and_commissions:
+    # Tarifa fija que se cobra al jugador por crear cualquier tipo de subasta.
+    # Establecer en 0.0 para no cobrar ninguna tarifa de creación.
+    creation_fee: 0.0 # Ejemplo: 50.0 para cobrar 50 de la moneda del servidor.
+
+    commission:
+      # Define cómo se calcula la comisión del servidor sobre las ventas exitosas.
+      # Tipos disponibles:
+      #   "flat_percentage": Un porcentaje fijo sobre el precio de venta final.
+      #   "per_category_percentage": Diferentes porcentajes basados en el material del ítem vendido.
+      #   "tiered_percentage": Porcentajes que varían según rangos del precio de venta.
+      type: "flat_percentage"
+
+      # Porcentaje de comisión por defecto (0-100).
+      # Utilizado para "flat_percentage" y como fallback si una categoría o tramo no está definido.
+      default_percentage: 5.0 # Representa una comisión del 5%
+
+      # Configuración para el tipo "per_category_percentage".
+      # Asocia nombres de Material de Bukkit (en mayúsculas) a un porcentaje de comisión.
+      categories:
+        DIAMOND_SWORD: 10.0
+        ELYTRA: 15.0
+        NETHERITE_INGOT: 7.5
+        ENCHANTED_GOLDEN_APPLE: 12.0
+        # Comisión para todos los demás ítems no listados específicamente.
+        DEFAULT_OTHER: 4.0 # Fallback para ítems sin categoría específica
+
+      # Configuración para el tipo "tiered_percentage".
+      # Lista de tramos de precios. La comisión se basa en el primer tramo cuyo 'max_price' sea
+      # igual o superior al precio de venta. El orden de los tramos es importante (de menor a mayor 'max_price').
+      # Usa 'max_price: -1' para el último tramo, que cubrirá todos los precios superiores al tramo anterior.
+      tiers:
+        - { max_price: 100.0, percentage: 7.0 }    # Para ventas <= 100
+        - { max_price: 1000.0, percentage: 5.0 }   # Para ventas > 100 y <= 1000
+        - { max_price: 10000.0, percentage: 3.0 }  # Para ventas > 1000 y <= 10000
+        - { max_price: -1, percentage: 1.5 }       # Para ventas > 10000
+
+# --- Graphical User Interface (GUI) Settings ---
+gui:
+  general_appearance:
+    # Número de ítems de subasta a mostrar por página en las GUIs de listado (ej. /subasta, /subasta mis).
+    items_per_page: 36 # Valores comunes: 27, 36, 45 (total_slots - slots_de_navegacion)
+    # Material para los paneles de relleno/decorativos en las GUIs principales.
+    main_decorative_pane: "GRAY_STAINED_GLASS_PANE"
+    # Material para los paneles de relleno/decorativos en GUIs secundarias o de detalles.
+    details_decorative_pane: "BLACK_STAINED_GLASS_PANE"
+    # Material del ítem que se muestra cuando una lista en la GUI (ej. subastas, historial) está vacía.
+    no_results_item: "GLASS_BOTTLE"
+
+  # Configuración específica para la GUI principal de la casa de subastas (/subasta)
+  main_auction_house:
+    # Intervalo en segundos para el refresco automático de la GUI si el número total de subastas cambia.
+    # Esto NO actualiza pujas en tiempo real en ítems individuales. Poner en 0 para desactivar.
+    auto_refresh_on_count_change_interval_seconds: 10
+    # Configuración de botones (material y slot donde aparece, 0-53 para un inventario de 6 filas)
+    buttons:
+      previous_page: { material: "ARROW", slot: 45 }
+      next_page: { material: "ARROW", slot: 53 }
+      close: { material: "BARRIER", slot: 49 }
+      my_auctions: { material: "WRITABLE_BOOK", slot: 47 }
+      player_history: { material: "CLOCK", slot: 51 }
+      claim_rewards: { material: "CHEST", slot: 52 }
+
+  # Configuración para la GUI de "Mis Subastas Activas" (/subasta mis)
+  my_active_auctions_gui:
+    buttons:
+      previous_page: { material: "ARROW", slot: 45 }
+      next_page: { material: "ARROW", slot: 53 }
+      back_to_main_auctions: { material: "NETHER_STAR", slot: 49 } # Botón para volver a /subasta
+      player_history: { material: "CLOCK", slot: 51 } # Acceso directo al historial del jugador
+
+  # Configuración para la GUI de Detalles de Subasta (cuando se hace clic en un ítem)
+  auction_details_gui:
+    item_display_slot: 22 # Slot central para mostrar el ítem principal
+    buttons:
+      bid: { material: "EMERALD", slot: 38 }
+      buy_now: { material: "GOLD_INGOT", slot: 40 }
+      back_to_listing: { material: "BARRIER", slot: 49 } # Botón para volver al listado anterior
+
+  # Configuración para la GUI de Preparación de Lote Misterioso
+  prepare_mystery_lot_gui:
+    max_items_in_lot: 36 # Slots disponibles para añadir ítems al lote (0-35)
+    buttons:
+      cancel_preparation: { material: "BARRIER", slot: 47 }
+      info_display_item: { material: "PAPER", slot: 49 } # Ítem para mostrar información del lote
+      confirm_and_create: { material: "EMERALD_BLOCK", slot: 51 }
+
+  # Configuración para la GUI de Reclamar Recompensas
+  claim_rewards_gui:
+    buttons:
+      claim_all_rewards: { material: "CHEST_MINECART", slot: 49 } # Slot central en la última fila
+
+  # Configuración para la GUI de Historial del Jugador
+  player_history_gui:
+    buttons:
+      previous_page: { material: "ARROW", slot: 45 }
+      next_page: { material: "ARROW", slot: 53 }
+      back_to_main_auctions: { material: "NETHER_STAR", slot: 49 }
+
+  # Configuración para la GUI de Historial de Admin
+  admin_history_gui:
+    buttons:
+      previous_page: { material: "ARROW", slot: 45 }
+      next_page: { material: "ARROW", slot: 53 }
+      close: { material: "BARRIER", slot: 49 }
+
+  # Configuración para la GUI de Gestión de Subasta (para el vendedor)
+  manage_auction_context_gui:
+    item_display_slot: 13 # Slot central para el ítem de la subasta
+    buttons:
+      cancel_this_auction: { material: "RED_WOOL", slot: 11 }
+      view_auction_details: { material: "BOOK", slot: 15 } # Para verla como otros jugadores
+      back_to_my_auctions: { material: "ARROW", slot: 22 } # Centro inferior
+
+# --- Sonidos de la Interfaz Gráfica ---
+sounds:
+  # Activar o desactivar globalmente todos los sonidos personalizados del plugin.
+  enabled: true
+  # Define sonidos para diversas acciones dentro del plugin.
+  # Formato: clave_descriptiva: { sound: "BUKKIT_SOUND_NAME", volume: 1.0, pitch: 1.0 }
+  # 'volume' y 'pitch' son opcionales; si no se especifican, se usarán los valores por defecto del SoundManager.
+  # Lista de sonidos de Bukkit: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Sound.html
+  # Interacciones Generales de GUI
+  click: { sound: "UI_BUTTON_CLICK", volume: 1.0, pitch: 1.0 }
+  open_gui: { sound: "BLOCK_CHEST_OPEN", volume: 0.8, pitch: 1.1 }
+  close_gui: { sound: "BLOCK_CHEST_CLOSE", volume: 0.8, pitch: 1.1 }
+  page_turn: { sound: "ITEM_BOOK_PAGE_TURN", volume: 0.8, pitch: 1.0 }
+  # Eventos de Subasta
+  auction_created: { sound: "ENTITY_ITEM_FRAME_ADD_ITEM", volume: 1.0, pitch: 1.0 }
+  auction_cancelled: { sound: "BLOCK_LEVER_CLICK", volume: 1.0, pitch: 0.8 }
+  bid_placed_success: { sound: "ENTITY_EXPERIENCE_ORB_PICKUP", volume: 0.8, pitch: 1.2 }
+  bid_outbid_notification: { sound: "ENTITY_VILLAGER_NO", volume: 1.0, pitch: 0.9 }
+  bid_new_on_own_item: { sound: "ENTITY_ARROW_HIT_PLAYER", volume: 0.8, pitch: 1.2 }
+  auction_won_by_bidder: { sound: "ENTITY_PLAYER_LEVELUP", volume: 0.9, pitch: 1.0 } # Para el ganador
+  auction_sold_to_seller: { sound: "ENTITY_VILLAGER_YES", volume: 1.0, pitch: 1.0 } # Para el vendedor
+  # Recompensas y Errores
+  reward_item_claimed: { sound: "ENTITY_ITEM_PICKUP", volume: 0.8, pitch: 1.1 }
+  reward_money_claimed: { sound: "ENTITY_PLAYER_LEVELUP", volume: 0.7, pitch: 1.5 } # Similar a auction_won
+  reward_pending_join_notification: { sound: "ENTITY_EXPERIENCE_ORB_PICKUP", volume: 0.7, pitch: 1.5 }
+  general_error: { sound: "BLOCK_NOTE_BLOCK_PLING", volume: 1.0, pitch: 0.7 }
+  inventory_full_error: { sound: "ENTITY_VILLAGER_NO", volume: 1.0, pitch: 0.8 }
+
+# --- Manejo de Recompensas Pendientes ---
+rewards:
+  # Modo de entrega para ítems/dinero de subastas finalizadas (vendidas, expiradas, canceladas).
+  # "auto": Intenta entregar directamente al inventario/cuenta. Si falla (ej. inventario lleno), crea una recompensa pendiente.
+  # "gui": Todas las recompensas deben ser reclamadas manualmente por el jugador vía /subasta reclamar o la GUI de recompensas.
+  delivery_mode: "auto"
+  # Si delivery_mode es "gui", notificar al jugador al unirse si tiene recompensas pendientes.
+  notify_on_join_if_gui_mode: true
+  # Días a mantener los registros de recompensas ya entregadas en la base de datos antes de eliminarlos.
+  # 0 o negativo para deshabilitar la limpieza automática.
+  cleanup_delivered_rewards_after_days: 30
+
+# --- Historial de Subastas ---
+history:
+  # Habilitar o deshabilitar el sistema de registro de historial de subastas.
+  enabled: true
+  # Número máximo de registros de historial a mantener por jugador. Los más antiguos se eliminarán.
+  max_records_per_player: 50
+  # Para /subasta admin historial <jugador>: Días de historial a mostrar por defecto si no se especifica un rango de fechas.
+  # 0 o negativo para intentar mostrar todos los registros disponibles para ese jugador.
+  admin_view_default_days_past: 7
+
+# --- Integración de GUI "Mis Subastas" ---
+my_auctions_gui_integration: # Nombre de sección más descriptivo
+  # Habilitar o deshabilitar la GUI específica para que los jugadores vean y gestionen sus propias subastas activas.
+  # Si es false, el comando /subasta mis podría estar deshabilitado o mostrar la información en el chat (actualmente la deshabilita).
+  enabled: true
+
+# --- Logging y Debugging ---
+# Estas opciones son principalmente para desarrolladores o para diagnóstico avanzado de problemas.
+logging_debug:
+  # Habilita mensajes de depuración más detallados en la consola del servidor.
+  # Se recomienda mantener en 'false' en entornos de producción para evitar spam en la consola.
+  verbose_console_logging: false
+  # Ejemplo de futuras flags de debug:
+  # log_database_queries: false
+  # log_gui_event_processing: false
+```
