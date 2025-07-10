@@ -25,9 +25,10 @@ import org.bukkit.ChatColor; // Añadido
 
 public class AdminHistoryGUI {
 
-    public static final int PREVIOUS_PAGE_SLOT = 45;
-    public static final int CLOSE_GUI_SLOT = 49;
-    public static final int NEXT_PAGE_SLOT = 53;
+    // Las constantes de slot se leerán de config.yml
+    // public static final int PREVIOUS_PAGE_SLOT = 45;
+    // public static final int CLOSE_GUI_SLOT = 49;
+    // public static final int NEXT_PAGE_SLOT = 53;
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
 
     @SuppressWarnings("deprecation") // For Bukkit.getOfflinePlayer(String)
@@ -35,6 +36,7 @@ public class AdminHistoryGUI {
         AetherAuctions plugin = AetherAuctions.getInstance();
         MessageManager msgManager = plugin.getMessageManager();
         ConfigManager cfgManager = plugin.getConfigManager();
+        String guiKey = "admin_history_gui"; // Clave base para esta GUI en config
 
         if (!cfgManager.isHistoryEnabled()) {
             msgManager.sendMessage(admin, "history_disabled");
@@ -43,14 +45,14 @@ public class AdminHistoryGUI {
 
         OfflinePlayer targetPlayer = Bukkit.getOfflinePlayer(targetPlayerName);
         if (targetPlayer == null || (!targetPlayer.hasPlayedBefore() && !targetPlayer.isOnline())) {
-            msgManager.sendMessage(admin, "admin_player_not_found", "%player%", targetPlayerName); // Nueva clave
+            msgManager.sendMessage(admin, "admin_player_not_found", "%player%", targetPlayerName);
             return;
         }
         UUID targetUuid = targetPlayer.getUniqueId();
 
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             try {
-                int itemsPerPage = cfgManager.getGuiItemsPerPage();
+                int itemsPerPage = cfgManager.getGuiItemsPerPage(); // gui.general_appearance.items_per_page
                 int totalItems = plugin.getAuctionStorage().getHistoryCountForAdmin(targetUuid, startDate, endDate);
                 List<AuctionHistoryEvent> historyEvents = plugin.getAuctionStorage().getAuctionHistoryForAdmin(targetUuid, startDate, endDate, page, itemsPerPage);
 
@@ -63,12 +65,14 @@ public class AdminHistoryGUI {
                     Inventory gui = Bukkit.createInventory(admin, 54, title);
 
                     if (historyEvents.isEmpty()) {
-                        gui.setItem(22, ItemUtil.createItemStack(Material.GLASS_BOTTLE, msgManager.getRawMessage("admin_history_gui_no_events", "%player_name%", targetPlayerName)));
+                        gui.setItem(22, ItemUtil.createItemStack(cfgManager.getNoResultsItemMaterial(), // gui.general_appearance.no_results_item
+                                                                 msgManager.getRawMessage("admin_history_gui_no_events", "%player_name%", targetPlayerName)));
                     } else {
                         for (int i = 0; i < historyEvents.size(); i++) {
                             AuctionHistoryEvent event = historyEvents.get(i);
                             int guiSlot = i;
-                             if (guiSlot >= itemsPerPage || guiSlot >= AdminHistoryGUI.PREVIOUS_PAGE_SLOT) break;
+                            // La comprobación de si guiSlot >= PREVIOUS_PAGE_SLOT ya no es necesaria aquí
+                             if (guiSlot >= itemsPerPage) break;
 
 
                             Material itemMat = Material.PAPER;
@@ -107,14 +111,20 @@ public class AdminHistoryGUI {
                     }
 
                     if (currentPage > 0) {
-                        gui.setItem(PREVIOUS_PAGE_SLOT, ItemUtil.createItemStack(Material.ARROW, msgManager.getRawMessage("main_gui_button_previous_page")));
+                        gui.setItem(cfgManager.getButtonSlot(guiKey, "previous_page", 45),
+                                    ItemUtil.createItemStack(cfgManager.getButtonMaterial(guiKey, "previous_page", "ARROW"),
+                                                             msgManager.getRawMessage("main_gui_button_previous_page")));
                     }
-                    gui.setItem(CLOSE_GUI_SLOT, ItemUtil.createItemStack(Material.BARRIER, msgManager.getRawMessage("main_gui_button_close")));
+                    gui.setItem(cfgManager.getButtonSlot(guiKey, "close", 49),
+                                ItemUtil.createItemStack(cfgManager.getButtonMaterial(guiKey, "close", "BARRIER"),
+                                                         msgManager.getRawMessage("main_gui_button_close")));
                     if (currentPage < totalPages - 1) {
-                        gui.setItem(NEXT_PAGE_SLOT, ItemUtil.createItemStack(Material.ARROW, msgManager.getRawMessage("main_gui_button_next_page")));
+                        gui.setItem(cfgManager.getButtonSlot(guiKey, "next_page", 53),
+                                    ItemUtil.createItemStack(cfgManager.getButtonMaterial(guiKey, "next_page", "ARROW"),
+                                                             msgManager.getRawMessage("main_gui_button_next_page")));
                     }
 
-                    Material decoMat = cfgManager.getMainDecorativePaneMaterial();
+                    Material decoMat = cfgManager.getMainDecorativePaneMaterial(); // gui.general_appearance.main_decorative_pane
                     ItemStack decorativePane = ItemUtil.createItemStack(decoMat, msgManager.getRawMessage("main_gui_decorative_pane_name"));
                     for (int i = 0; i < gui.getSize(); i++) {
                         if (gui.getItem(i) == null) {

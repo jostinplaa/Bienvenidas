@@ -23,12 +23,11 @@ import java.util.HashMap; // Importación añadida
 
 public class MyActiveAuctionsGUI {
 
-    // Similar a MainAuctionGUI pero filtrado
-    public static final int ITEMS_PER_PAGE_CONFIGURABLE = 36; // Podría leerse de config si se desea diferente a Main GUI
-    public static final int PREVIOUS_PAGE_SLOT = 45;
-    public static final int CLOSE_GUI_SLOT = 49; // O un botón de "Volver a Subastas"
-    public static final int NEXT_PAGE_SLOT = 53;
-    public static final int HISTORY_BUTTON_SLOT = 51; // Si se decide añadir acceso directo al historial
+    // Las constantes de slot se leerán de config.yml
+    // public static final int PREVIOUS_PAGE_SLOT = 45;
+    // public static final int CLOSE_GUI_SLOT = 49; // Renombrado a BACK_TO_MAIN_SLOT
+    // public static final int NEXT_PAGE_SLOT = 53;
+    // public static final int HISTORY_BUTTON_SLOT = 51;
 
     public static void open(Player player, int page) {
         AetherAuctions plugin = AetherAuctions.getInstance();
@@ -38,7 +37,7 @@ public class MyActiveAuctionsGUI {
 
         List<Auction> playerActiveAuctions = auctionManager.getPlayerActiveAuctions(player.getUniqueId());
 
-        int itemsPerPage = cfgManager.getGuiItemsPerPage(); // Usar la misma config que Main GUI o una nueva
+        int itemsPerPage = cfgManager.getGuiItemsPerPage(); // gui.general_appearance.items_per_page
         int totalItems = playerActiveAuctions.size();
         int totalPages = Math.max(1, (int) Math.ceil((double) totalItems / itemsPerPage));
         page = Math.max(0, Math.min(page, totalPages - 1));
@@ -49,14 +48,17 @@ public class MyActiveAuctionsGUI {
 
         int startIndex = page * itemsPerPage;
         int endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+        String guiKey = "my_active_auctions_gui"; // Clave base para esta GUI en config
 
         if (playerActiveAuctions.isEmpty()) {
-            gui.setItem(22, ItemUtil.createItemStack(Material.GLASS_BOTTLE, msgManager.getRawMessage("my_auctions_gui_no_auctions")));
+            gui.setItem(22, ItemUtil.createItemStack(cfgManager.getNoResultsItemMaterial(), // gui.general_appearance.no_results_item
+                                                     msgManager.getRawMessage("my_auctions_gui_no_auctions")));
         } else {
             for (int i = startIndex; i < endIndex; i++) {
                 Auction auction = playerActiveAuctions.get(i);
                 int guiSlot = i - startIndex;
-                 if (guiSlot >= itemsPerPage || guiSlot >= MyActiveAuctionsGUI.PREVIOUS_PAGE_SLOT) break;
+                 // La comprobación de si guiSlot >= PREVIOUS_PAGE_SLOT ya no es necesaria aquí
+                if (guiSlot >= itemsPerPage) break;
 
                 ItemStack displayItem;
                 ItemMeta meta;
@@ -126,25 +128,29 @@ public class MyActiveAuctionsGUI {
         }
 
         if (page > 0) {
-            gui.setItem(PREVIOUS_PAGE_SLOT, ItemUtil.createItemStack(Material.ARROW, msgManager.getRawMessage("main_gui_button_previous_page")));
+            gui.setItem(cfgManager.getButtonSlot(guiKey, "previous_page", 45),
+                        ItemUtil.createItemStack(cfgManager.getButtonMaterial(guiKey, "previous_page", "ARROW"),
+                                                 msgManager.getRawMessage("main_gui_button_previous_page")));
         }
 
-        // Botón para volver a la GUI Principal de Subastas en lugar de "Cerrar"
-        gui.setItem(CLOSE_GUI_SLOT, ItemUtil.createItemStack(Material.NETHER_STAR, msgManager.getRawMessage("my_auctions_gui_button_back_to_main"))); // Nueva Clave
+        gui.setItem(cfgManager.getButtonSlot(guiKey, "back_to_main_auctions", 49),
+                    ItemUtil.createItemStack(cfgManager.getButtonMaterial(guiKey, "back_to_main_auctions", "NETHER_STAR"),
+                                             msgManager.getRawMessage("my_auctions_gui_button_back_to_main")));
 
         if (page < totalPages - 1) {
-            gui.setItem(NEXT_PAGE_SLOT, ItemUtil.createItemStack(Material.ARROW, msgManager.getRawMessage("main_gui_button_next_page")));
+            gui.setItem(cfgManager.getButtonSlot(guiKey, "next_page", 53),
+                        ItemUtil.createItemStack(cfgManager.getButtonMaterial(guiKey, "next_page", "ARROW"),
+                                                 msgManager.getRawMessage("main_gui_button_next_page")));
         }
 
-        // Botón Historial (opcional, si se quiere acceso directo desde aquí también)
         if (cfgManager.isHistoryEnabled()) {
-            gui.setItem(HISTORY_BUTTON_SLOT, ItemUtil.createItemStack(Material.CLOCK,
-                msgManager.getRawMessage("main_gui_history_button_name"), // Reutilizar clave
-                msgManager.getStringList("main_gui_history_button_lore")  // Reutilizar clave
-            ));
+            gui.setItem(cfgManager.getButtonSlot(guiKey, "player_history", 51),
+                        ItemUtil.createItemStack(cfgManager.getButtonMaterial(guiKey, "player_history", "CLOCK"),
+                                                 msgManager.getRawMessage("main_gui_history_button_name"),
+                                                 msgManager.getStringList("main_gui_history_button_lore")));
         }
 
-        Material decoMat = cfgManager.getMainDecorativePaneMaterial(); // Podría tener su propio material decorativo
+        Material decoMat = cfgManager.getMainDecorativePaneMaterial(); // gui.general_appearance.main_decorative_pane
         ItemStack decorativePane = ItemUtil.createItemStack(decoMat, msgManager.getRawMessage("main_gui_decorative_pane_name"));
         for (int i = 0; i < gui.getSize(); i++) {
             if (gui.getItem(i) == null) {

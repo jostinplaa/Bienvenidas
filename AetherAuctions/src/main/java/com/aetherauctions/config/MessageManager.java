@@ -32,29 +32,32 @@ public class MessageManager {
     }
 
     public void loadMessages() {
+        String langFileName = plugin.getConfigManager().getLanguageFile();
         if (messagesFile == null) {
-            messagesFile = new File(plugin.getDataFolder(), "messages.yml");
+            messagesFile = new File(plugin.getDataFolder(), langFileName);
         }
         if (!messagesFile.exists()) {
-            plugin.saveResource("messages.yml", false);
+            plugin.saveResource(langFileName, false);
         }
         messagesConfig = YamlConfiguration.loadConfiguration(messagesFile);
 
-        try (InputStream defaultConfigStream = plugin.getResource("messages.yml")){
+        try (InputStream defaultConfigStream = plugin.getResource(langFileName)){
             if (defaultConfigStream != null) {
                  YamlConfiguration defaultConfig = YamlConfiguration.loadConfiguration(new InputStreamReader(defaultConfigStream, StandardCharsets.UTF_8));
                 messagesConfig.setDefaults(defaultConfig);
-                messagesConfig.options().copyDefaults(true);
-                messagesConfig.save(messagesFile);
+                messagesConfig.options().copyDefaults(true); // Copia los defaults al archivo si no existen
+                messagesConfig.save(messagesFile); // Guarda para persistir los defaults copiados
+            } else {
+                plugin.getLogger().warning("El archivo de mensajes por defecto '" + langFileName + "' no se encontró en el JAR.");
             }
         } catch (IOException e) {
-            plugin.getLogger().log(Level.SEVERE, "No se pudo guardar messages.yml con los valores por defecto.", e);
+            plugin.getLogger().log(Level.SEVERE, "No se pudo guardar " + langFileName + " con los valores por defecto.", e);
         }
 
-        if (plugin.getConfigManager() != null) {
-             this.prefix = plugin.getConfigManager().getPluginPrefix();
-        } else {
-            this.prefix = ChatColor.translateAlternateColorCodes('&', "&6[&eAetherAuctions&6] &r");
+        // El prefijo se carga después de que ConfigManager esté completamente inicializado y haya cargado config.yml
+        this.prefix = plugin.getConfigManager().getPluginPrefix();
+        if (this.prefix == null || this.prefix.isEmpty()){
+            this.prefix = ChatColor.translateAlternateColorCodes('&', "&6[&eAetherAuctions&6] &r"); // Fallback por si acaso
             plugin.getLogger().warning("ConfigManager no estaba disponible al cargar prefijo en MessageManager. Usando prefijo por defecto.");
         }
         plugin.getLogger().info("Mensajes cargados/recargados.");
@@ -105,8 +108,9 @@ public class MessageManager {
     public String getMessage(String key, String... placeholderPairs) {
         String rawMessage = messagesConfig.getString(key);
         if (rawMessage == null) {
-            plugin.getLogger().warning("[MessageManager] Clave de mensaje no encontrada en messages.yml: '" + key + "'.");
-            String errorFormat = plugin.getConfigManager().getMessagesMissingKeyFormat();
+            plugin.getLogger().warning("[MessageManager] Clave de mensaje no encontrada en " + plugin.getConfigManager().getLanguageFile() + ": '" + key + "'.");
+            // Usar un formato de error por defecto interno o una clave específica de messages.yml para este error
+            String errorFormat = messagesConfig.getString("internal_error_format.missing_key", "&cError: Clave de mensaje '%key%' no encontrada.");
             return ChatColor.translateAlternateColorCodes('&', errorFormat.replace("%key%", key));
         }
         // Asegurarse de que los placeholders como "#id_short%" que podrían haber quedado en messages.yml
@@ -117,9 +121,11 @@ public class MessageManager {
 
     public String getPrefixedMessage(String key, String... placeholderPairs) {
         String message = getMessage(key, placeholderPairs);
-        String missingKeyErrorFormat = ChatColor.translateAlternateColorCodes('&', plugin.getConfigManager().getMessagesMissingKeyFormat().replace("%key%", key));
-        if (message.equals(missingKeyErrorFormat)) {
-            return message;
+        // Comprobar si el mensaje devuelto ES el mensaje de error por clave no encontrada.
+        // Esto es un poco frágil si el formato del mensaje de error cambia.
+        String missingKeyErrorMsg = ChatColor.translateAlternateColorCodes('&', messagesConfig.getString("internal_error_format.missing_key", "&cError: Clave de mensaje '%key%' no encontrada.").replace("%key%", key));
+        if (message.equals(missingKeyErrorMsg)) {
+            return message; // No añadir prefijo al mensaje de "clave no encontrada"
         }
         return this.prefix + message;
     }
@@ -132,10 +138,10 @@ public class MessageManager {
     public List<String> getStringList(String key, String... placeholderPairs) {
         List<String> rawList = messagesConfig.getStringList(key);
         if (rawList == null || rawList.isEmpty()) {
-            plugin.getLogger().warning("[MessageManager] Lista de mensajes no encontrada o vacía para la clave: '" + key + "'.");
+            plugin.getLogger().warning("[MessageManager] Lista de mensajes no encontrada o vacía para la clave: '" + key + "' en " + plugin.getConfigManager().getLanguageFile());
             List<String> errorList = new ArrayList<>();
-            String errorFormat = plugin.getConfigManager().getMessagesMissingKeyFormat();
-            errorList.add(ChatColor.translateAlternateColorCodes('&', errorFormat.replace("%key%", "lista:" + key)));
+            String errorFormat = messagesConfig.getString("internal_error_format.missing_list_key", "&cError: Lista de mensajes '%key%' no encontrada.");
+            errorList.add(ChatColor.translateAlternateColorCodes('&', errorFormat.replace("%key%", key)));
             return errorList;
         }
 

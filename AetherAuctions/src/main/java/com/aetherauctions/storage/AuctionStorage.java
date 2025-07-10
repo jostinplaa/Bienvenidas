@@ -25,22 +25,25 @@ import java.util.logging.Level;
 public class AuctionStorage {
     private final AetherAuctions plugin;
     private Connection connection;
-    private final String dbName = "auctions.db";
+    // private final String dbName = "auctions.db"; // Ya no se usa, se obtiene de ConfigManager
 
     public AuctionStorage(AetherAuctions plugin) {
         this.plugin = plugin;
     }
 
     public void initDatabase() throws SQLException {
-        File dataFolder = plugin.getDataFolder();
-        if (!dataFolder.exists()) {
-            if (!dataFolder.mkdirs()) {
-                plugin.getLogger().severe("Could not create plugin data folder!");
-                throw new SQLException("Could not create data folder.");
+        // Crear el subdirectorio 'database' si no existe
+        File pluginDataFolder = plugin.getDataFolder();
+        File databaseFolder = new File(pluginDataFolder, "database");
+        if (!databaseFolder.exists()) {
+            if (!databaseFolder.mkdirs()) {
+                plugin.getLogger().severe("Could not create database directory: " + databaseFolder.getPath());
+                throw new SQLException("Could not create database directory.");
             }
         }
 
-        File dbFile = new File(dataFolder, dbName);
+        String dbFileName = plugin.getConfigManager().getSQLiteFileName();
+        File dbFile = new File(databaseFolder, dbFileName); // Usar el subdirectorio
         boolean firstTime = !dbFile.exists();
 
         if (firstTime) {
@@ -88,10 +91,11 @@ public class AuctionStorage {
     public Connection getConnection() throws SQLException {
         if (this.connection == null || this.connection.isClosed()) {
             plugin.getLogger().warning("Conexión a SQLite es null o está cerrada. Intentando reestablecer...");
-            File dbFile = new File(plugin.getDataFolder(), dbName);
+            String dbFileName = plugin.getConfigManager().getSQLiteFileName();
+            File dbFile = new File(new File(plugin.getDataFolder(), "database"), dbFileName); // Usar subdirectorio
             if (!dbFile.exists()) {
-                plugin.getLogger().severe("El archivo de la base de datos no existe. No se puede reconectar.");
-                throw new SQLException("El archivo de la base de datos no existe al intentar reconectar.");
+                plugin.getLogger().severe("El archivo de la base de datos ("+ dbFile.getPath() +") no existe. No se puede reconectar.");
+                throw new SQLException("El archivo de la base de datos no existe al intentar reconectar: " + dbFile.getPath());
             }
             try {
                 Class.forName("org.sqlite.JDBC");

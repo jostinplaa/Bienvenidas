@@ -26,13 +26,14 @@ import java.util.logging.Level; // Asegurar esta importación
 
 public class MainAuctionGUI {
 
-    public static final int AUCTION_ITEMS_START_SLOT = 0;
-    public static final int PREVIOUS_PAGE_SLOT = 45;
-    public static final int MY_AUCTIONS_SLOT = 47;
-    public static final int CLOSE_GUI_SLOT = 49;
-    public static final int HISTORY_SLOT = 51;
-    public static final int REWARDS_BUTTON_SLOT = 52;
-    public static final int NEXT_PAGE_SLOT = 53;
+    // Las constantes de slot ya no son necesarias aquí si se leen de config.yml
+    // public static final int AUCTION_ITEMS_START_SLOT = 0; // Implícito
+    // public static final int PREVIOUS_PAGE_SLOT = 45; // Configurable
+    // public static final int MY_AUCTIONS_SLOT = 47; // Configurable
+    // public static final int CLOSE_GUI_SLOT = 49; // Configurable
+    // public static final int HISTORY_SLOT = 51; // Configurable
+    // public static final int REWARDS_BUTTON_SLOT = 52; // Configurable
+    // public static final int NEXT_PAGE_SLOT = 53; // Configurable
 
     public static void open(Player player, int page) {
         AetherAuctions plugin = AetherAuctions.getInstance();
@@ -42,14 +43,14 @@ public class MainAuctionGUI {
 
         List<Auction> activeAuctions = auctionManager.getActiveAuctions();
 
-        int itemsPerPage = cfgManager.getGuiItemsPerPage();
+        int itemsPerPage = cfgManager.getGuiItemsPerPage(); // Ruta: gui.general_appearance.items_per_page
         int totalItems = activeAuctions.size();
         int totalPages = Math.max(1, (int) Math.ceil((double) totalItems / itemsPerPage));
-        final int finalPage = Math.max(0, Math.min(page, totalPages - 1)); // Hacerla final para la lambda
+        final int finalPage = Math.max(0, Math.min(page, totalPages - 1));
 
         String title = msgManager.getMessage("main_gui_title_prefix") +
                        (totalPages > 1 ? " &7(Pág. " + (finalPage + 1) + "/" + totalPages + ")" : "");
-        Inventory gui = Bukkit.createInventory(player, 54, title); // Usar el player como owner
+        Inventory gui = Bukkit.createInventory(player, 54, title);
 
         Map<Integer, UUID> visibleAuctionsMap = new HashMap<>();
         int startIndex = finalPage * itemsPerPage;
@@ -57,15 +58,17 @@ public class MainAuctionGUI {
 
         if (activeAuctions.isEmpty()) {
             ItemStack noAuctionsItem = InventoryUtil.createGuiItem(
-                Material.GLASS_BOTTLE,
+                cfgManager.getNoResultsItemMaterial(), // Ruta: gui.general_appearance.no_results_item
                 msgManager.getMessage("main_gui_no_auctions")
             );
-            gui.setItem(22, noAuctionsItem);
+            gui.setItem(22, noAuctionsItem); // Slot 22 para "no hay subastas"
         } else {
             for (int i = startIndex; i < endIndex; i++) {
                 Auction auction = activeAuctions.get(i);
-                int guiSlot = i - startIndex;
-                if (guiSlot >= itemsPerPage || guiSlot >= MainAuctionGUI.PREVIOUS_PAGE_SLOT) break;
+                int guiSlot = i - startIndex; // Slots 0 hasta itemsPerPage-1
+                // La comprobación de si guiSlot >= PREVIOUS_PAGE_SLOT ya no es necesaria aquí
+                // porque los items de subasta no deberían llegar a esos slots.
+                if (guiSlot >= itemsPerPage) break;
 
                 ItemStack displayItem = createAuctionDisplayItem(auction, plugin);
                 gui.setItem(guiSlot, displayItem);
@@ -73,22 +76,31 @@ public class MainAuctionGUI {
             }
         }
 
+        // Botones de Navegación y Acción desde config.yml
+        String guiKey = "main_auction_house"; // Clave base para esta GUI en config
+
         if (finalPage > 0) {
-            gui.setItem(PREVIOUS_PAGE_SLOT, InventoryUtil.createGuiItem(Material.ARROW, msgManager.getMessage("main_gui_button_previous_page")));
+            gui.setItem(cfgManager.getButtonSlot(guiKey, "previous_page", 45),
+                        InventoryUtil.createGuiItem(cfgManager.getButtonMaterial(guiKey, "previous_page", "ARROW"),
+                                                    msgManager.getMessage("main_gui_button_previous_page")));
         }
-        gui.setItem(CLOSE_GUI_SLOT, InventoryUtil.createGuiItem(Material.BARRIER, msgManager.getMessage("main_gui_button_close")));
+        gui.setItem(cfgManager.getButtonSlot(guiKey, "close", 49),
+                    InventoryUtil.createGuiItem(cfgManager.getButtonMaterial(guiKey, "close", "BARRIER"),
+                                                msgManager.getMessage("main_gui_button_close")));
         if (finalPage < totalPages - 1) {
-            gui.setItem(NEXT_PAGE_SLOT, InventoryUtil.createGuiItem(Material.ARROW, msgManager.getMessage("main_gui_button_next_page")));
+            gui.setItem(cfgManager.getButtonSlot(guiKey, "next_page", 53),
+                        InventoryUtil.createGuiItem(cfgManager.getButtonMaterial(guiKey, "next_page", "ARROW"),
+                                                    msgManager.getMessage("main_gui_button_next_page")));
         }
 
-        final Map<Integer, UUID> finalVisibleAuctionsMap = new HashMap<>(visibleAuctionsMap); // Copia final para la lambda
+        final Map<Integer, UUID> finalVisibleAuctionsMap = new HashMap<>(visibleAuctionsMap);
 
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             int pendingRewardCount = 0;
             try {
                  pendingRewardCount = plugin.getAuctionStorage().getPendingRewardsByOwner(player.getUniqueId())
                                     .stream().filter(r -> !r.isDelivered()).toList().size();
-            } catch (Exception e){ //SQLException e) {
+            } catch (Exception e){
                  plugin.getLogger().log(Level.SEVERE, "Error al obtener conteo de recompensas pendientes para GUI: " + player.getName(), e);
             }
             final int finalPendingRewardCount = pendingRewardCount;
@@ -97,22 +109,24 @@ public class MainAuctionGUI {
                 List<String> rewardsLore = new ArrayList<>();
                 rewardsLore.add(msgManager.getRawMessage("main_gui_rewards_button_lore_count", "%pending_count%", String.valueOf(finalPendingRewardCount)));
                 rewardsLore.add(msgManager.getRawMessage("main_gui_rewards_button_lore_action"));
-                gui.setItem(REWARDS_BUTTON_SLOT, InventoryUtil.createGuiItem(Material.CHEST, msgManager.getRawMessage("main_gui_rewards_button_name"), rewardsLore));
+                gui.setItem(cfgManager.getButtonSlot(guiKey, "claim_rewards", 52),
+                            InventoryUtil.createGuiItem(cfgManager.getButtonMaterial(guiKey, "claim_rewards", "CHEST"),
+                                                        msgManager.getRawMessage("main_gui_rewards_button_name"), rewardsLore));
 
-                if (cfgManager.isMyAuctionsGuiEnabled()) {
-                    gui.setItem(MY_AUCTIONS_SLOT, InventoryUtil.createGuiItem(Material.WRITABLE_BOOK,
-                        msgManager.getRawMessage("main_gui_my_auctions_button_name"),
-                        msgManager.getStringList("main_gui_my_auctions_button_lore")
-                    ));
+                if (cfgManager.isMyAuctionsGuiIntegrationEnabled()) { // Usar nuevo getter
+                    gui.setItem(cfgManager.getButtonSlot(guiKey, "my_auctions", 47),
+                                InventoryUtil.createGuiItem(cfgManager.getButtonMaterial(guiKey, "my_auctions", "WRITABLE_BOOK"),
+                                                            msgManager.getRawMessage("main_gui_my_auctions_button_name"),
+                                                            msgManager.getStringList("main_gui_my_auctions_button_lore")));
                 }
                 if (cfgManager.isHistoryEnabled()) {
-                    gui.setItem(HISTORY_SLOT, InventoryUtil.createGuiItem(Material.CLOCK,
-                        msgManager.getRawMessage("main_gui_history_button_name"),
-                        msgManager.getStringList("main_gui_history_button_lore")
-                    ));
+                    gui.setItem(cfgManager.getButtonSlot(guiKey, "player_history", 51),
+                                InventoryUtil.createGuiItem(cfgManager.getButtonMaterial(guiKey, "player_history", "CLOCK"),
+                                                            msgManager.getRawMessage("main_gui_history_button_name"),
+                                                            msgManager.getStringList("main_gui_history_button_lore")));
                 }
 
-                Material decoMat = cfgManager.getMainDecorativePaneMaterial();
+                Material decoMat = cfgManager.getMainDecorativePaneMaterial(); // Ruta: gui.general_appearance.main_decorative_pane
                 String decoName = msgManager.getMessage("main_gui_decorative_pane_name");
                 ItemStack decorativePane = InventoryUtil.createGuiItem(decoMat, decoName);
                 for (int i = 0; i < gui.getSize(); i++) {

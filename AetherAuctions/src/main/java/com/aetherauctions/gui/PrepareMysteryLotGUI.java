@@ -24,10 +24,13 @@ public class PrepareMysteryLotGUI {
     private final String description;
     private final Inventory gui;
 
-    public static final int MAX_LOT_ITEMS = 36; // Filas 1-4
-    public static final int CANCEL_BUTTON_SLOT = 47; // Ajustado, era 48
-    public static final int INFO_SLOT = 49;          // Slot central para info
-    public static final int CONFIRM_BUTTON_SLOT = 51; // Ajustado, era 50
+    // Las constantes de slot y MAX_LOT_ITEMS se leerán de config.yml
+    // public static final int MAX_LOT_ITEMS = 36;
+    // public static final int CANCEL_BUTTON_SLOT = 47;
+    // public static final int INFO_SLOT = 49;
+    // public static final int CONFIRM_BUTTON_SLOT = 51;
+
+    private final int maxLotItems; // Para almacenar el valor de config
 
     // Mapa para almacenar temporalmente los items que el jugador añade al lote.
     // No es estático, cada instancia de GUI tiene su propio conjunto de ítems.
@@ -41,11 +44,12 @@ public class PrepareMysteryLotGUI {
         this.buyNowPrice = buyNowPrice;
         this.durationHours = durationHours;
         this.description = description;
-        this.lotItems = new ArrayList<>(); // Inicializar la lista de ítems del lote
+        this.lotItems = new ArrayList<>();
+        this.maxLotItems = plugin.getConfigManager().getMysteryLotMaxItems(); // Leer de ConfigManager
 
         MessageManager msgManager = plugin.getMessageManager();
         String title = msgManager.getMessage("prepare_mystery_gui_title", "%player%", player.getName());
-        this.gui = Bukkit.createInventory(player, 54, title); // Player como owner
+        this.gui = Bukkit.createInventory(player, 54, title);
     }
 
     public void open() {
@@ -58,45 +62,48 @@ public class PrepareMysteryLotGUI {
     }
 
     public void renderGUI() {
-        gui.clear(); // Limpiar la GUI antes de volver a renderizar
+        gui.clear();
+        String guiKey = "prepare_mystery_lot_gui"; // Clave base para esta GUI en config
 
-        // Área de ítems del lote (slots 0-35)
-        for (int i = 0; i < lotItems.size() && i < MAX_LOT_ITEMS; i++) {
+        // Área de ítems del lote (slots 0 hasta maxLotItems - 1)
+        for (int i = 0; i < lotItems.size() && i < this.maxLotItems; i++) {
             gui.setItem(i, lotItems.get(i));
         }
 
         MessageManager msgManager = plugin.getMessageManager();
-        ConfigManager cfgManager = plugin.getConfigManager(); // No se usa directamente aquí, pero podría ser útil
+        ConfigManager cfgManager = plugin.getConfigManager();
 
         // Botón de Cancelar
-        ItemStack cancelButton = InventoryUtil.createGuiItem(Material.BARRIER,
+        ItemStack cancelButton = InventoryUtil.createGuiItem(
+                cfgManager.getButtonMaterial(guiKey, "cancel_preparation", "BARRIER"),
                 msgManager.getMessage("prepare_mystery_gui_button_cancel_name"),
                 msgManager.getStringList("prepare_mystery_gui_button_cancel_lore"));
-        gui.setItem(CANCEL_BUTTON_SLOT, cancelButton);
+        gui.setItem(cfgManager.getButtonSlot(guiKey, "cancel_preparation", 47), cancelButton);
 
-        // Slot de Información (ej. contador de ítems)
+        // Slot de Información
         List<String> infoLore = new ArrayList<>();
-        infoLore.add(msgManager.getMessage("prepare_mystery_gui_info_item_count", "%count%", String.valueOf(lotItems.size()), "%max%", String.valueOf(MAX_LOT_ITEMS)));
+        infoLore.add(msgManager.getMessage("prepare_mystery_gui_info_item_count", "%count%", String.valueOf(lotItems.size()), "%max%", String.valueOf(this.maxLotItems)));
         infoLore.add(msgManager.getMessage("prepare_mystery_gui_info_description_label"));
-        infoLore.add(ChatColor.GRAY + description); // Mostrar la descripción del lote
-        // Podría añadir más info como precio, duración aquí si se desea.
-        ItemStack infoItem = InventoryUtil.createGuiItem(Material.PAPER, // O BOOK, etc.
+        infoLore.add(ChatColor.GRAY + description);
+        ItemStack infoItem = InventoryUtil.createGuiItem(
+                cfgManager.getButtonMaterial(guiKey, "info_display_item", "PAPER"),
                 msgManager.getMessage("prepare_mystery_gui_info_title"),
                 infoLore);
-        gui.setItem(INFO_SLOT, infoItem);
-
+        gui.setItem(cfgManager.getButtonSlot(guiKey, "info_display_item", 49), infoItem);
 
         // Botón de Confirmar
-        ItemStack confirmButton = InventoryUtil.createGuiItem(Material.EMERALD_BLOCK, // O GREEN_STAINED_GLASS_PANE, etc.
+        ItemStack confirmButton = InventoryUtil.createGuiItem(
+                cfgManager.getButtonMaterial(guiKey, "confirm_and_create", "EMERALD_BLOCK"),
                 msgManager.getMessage("prepare_mystery_gui_button_confirm_name"),
                 msgManager.getStringList("prepare_mystery_gui_button_confirm_lore"));
-        gui.setItem(CONFIRM_BUTTON_SLOT, confirmButton);
+        gui.setItem(cfgManager.getButtonSlot(guiKey, "confirm_and_create", 51), confirmButton);
 
-        // Rellenar slots vacíos restantes en la última fila si se desea
-        Material decoMat = cfgManager.getMainDecorativePaneMaterial(); // Reutilizar material decorativo
+        // Rellenar slots vacíos restantes en la última fila
+        Material decoMat = cfgManager.getMainDecorativePaneMaterial();
         ItemStack decorativePane = InventoryUtil.createGuiItem(decoMat, " ");
-        for (int i = 45; i < 54; i++) {
-            if (gui.getItem(i) == null) {
+        // Los slots específicos de botones ya están definidos, rellenar el resto de la fila inferior
+        for (int i = 45; i < 54; i++) { // Fila inferior
+            if (gui.getItem(i) == null) { // Solo rellenar si está vacío
                 gui.setItem(i, decorativePane.clone());
             }
         }
@@ -125,24 +132,26 @@ public class PrepareMysteryLotGUI {
     }
 
     public void addItemToLot(ItemStack item) {
-        if (lotItems.size() < MAX_LOT_ITEMS) {
-            lotItems.add(item.clone()); // Clonar para seguridad
-            renderGUI(); // Actualizar la GUI para mostrar el nuevo ítem
+        if (lotItems.size() < this.maxLotItems) { // Usar this.maxLotItems
+            lotItems.add(item.clone());
+            renderGUI();
         } else {
-            // Enviar mensaje de que el lote está lleno
             plugin.getMessageManager().sendMessage(player, "prepare_mystery_gui_error_lot_full");
         }
     }
 
-    public void removeItemFromLot(int slot) {
-        if (slot >= 0 && slot < MAX_LOT_ITEMS && slot < lotItems.size()) {
-            ItemStack removed = lotItems.remove(slot);
-            if (removed != null) {
-                 // No es necesario devolverlo aquí, el InventoryClickListener lo hará
-                 // player.getInventory().addItem(removed);
-            }
-            renderGUI(); // Actualizar la GUI
+    public void removeItemFromLot(int guiSlotIndex) { // El slot de la GUI es el índice de la lista
+        if (guiSlotIndex >= 0 && guiSlotIndex < lotItems.size()) { // No MAX_LOT_ITEMS aquí, sino el tamaño actual de la lista
+            lotItems.remove(guiSlotIndex);
+            renderGUI();
+        } else if (guiSlotIndex >= lotItems.size() && guiSlotIndex < this.maxLotItems) {
+            // Clic en un slot vacío del área de ítems, no hacer nada o loguear si es inesperado.
+            // No debería llegar aquí si currentItem es null en el listener.
         }
+    }
+
+    public int getMaxLotItems() { // Getter para que el listener lo use si es necesario
+        return this.maxLotItems;
     }
 
     public double getStartPrice() { return startPrice; }

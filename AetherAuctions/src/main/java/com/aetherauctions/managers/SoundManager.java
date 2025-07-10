@@ -53,17 +53,24 @@ public class SoundManager {
         soundMap.clear();
         volumeMap.clear();
         pitchMap.clear();
-        // Acceder a FileConfiguration a través del plugin
-        soundsEnabled = plugin.getConfig().getBoolean("gui.sounds.enabled", true);
+
+        com.aetherauctions.config.ConfigManager cfgManager = plugin.getConfigManager();
+        soundsEnabled = cfgManager.isGuiSoundsEnabled(); // Usar ConfigManager
 
         if (!soundsEnabled) {
             plugin.getLogger().info("GUI sounds are disabled in config.yml.");
             return;
         }
 
-        ConfigurationSection soundsSection = plugin.getConfig().getConfigurationSection("gui.sounds");
+        // ConfigManager debería idealmente exponer un método para obtener esta sección,
+        // o SoundManager podría seguir accediendo directamente a plugin.getConfig() para esta sección específica
+        // si se considera que la estructura de sonidos es demasiado compleja para getters individuales.
+        // Por ahora, mantendremos el acceso directo a la sección, pero a través de la instancia de config de ConfigManager.
+        FileConfiguration currentConfig = plugin.getConfig(); // O idealmente cfgManager.getRawConfig().
+        ConfigurationSection soundsSection = currentConfig.getConfigurationSection("sounds"); // Ruta actualizada
+
         if (soundsSection == null) {
-            plugin.getLogger().warning("gui.sounds section is missing in config.yml. Using default sounds.");
+            plugin.getLogger().warning("'sounds' section is missing in config.yml. Using default sounds.");
             for (Map.Entry<String, DefaultSound> entry : defaultSounds.entrySet()) {
                 try {
                     soundMap.put(entry.getKey(), Sound.valueOf(entry.getValue().bukkitSound.toUpperCase()));

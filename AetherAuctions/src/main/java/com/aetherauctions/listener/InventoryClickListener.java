@@ -83,30 +83,38 @@ public class InventoryClickListener implements Listener {
             int slot = event.getSlot();
 
             int currentPage = getCurrentPageFromTitle(inventoryTitle);
+            String guiKey = "main_auction_house"; // Clave para MainAuctionGUI en config
 
-            if (slot == MainAuctionGUI.CLOSE_GUI_SLOT) {
+            // Usar cfgManager.getButtonSlot y cfgManager.getButtonMaterial
+            if (slot == cfgManager.getButtonSlot(guiKey, "close", 49) &&
+                clickedItem.getType() == cfgManager.getButtonMaterial(guiKey, "close", "BARRIER")) {
                 plugin.getSoundManager().playSound(player, "close_gui");
                 player.closeInventory();
-            } else if (slot == MainAuctionGUI.PREVIOUS_PAGE_SLOT && clickedItem.getType() == Material.ARROW) {
+            } else if (slot == cfgManager.getButtonSlot(guiKey, "previous_page", 45) &&
+                       clickedItem.getType() == cfgManager.getButtonMaterial(guiKey, "previous_page", "ARROW")) {
                 plugin.getSoundManager().playSound(player, "page_turn");
                 MainAuctionGUI.open(player, currentPage - 1);
-            } else if (slot == MainAuctionGUI.NEXT_PAGE_SLOT && clickedItem.getType() == Material.ARROW) {
+            } else if (slot == cfgManager.getButtonSlot(guiKey, "next_page", 53) &&
+                       clickedItem.getType() == cfgManager.getButtonMaterial(guiKey, "next_page", "ARROW")) {
                 plugin.getSoundManager().playSound(player, "page_turn");
                 MainAuctionGUI.open(player, currentPage + 1);
-            } else if (slot == MainAuctionGUI.REWARDS_BUTTON_SLOT && clickedItem.getType() == Material.CHEST) {
+            } else if (slot == cfgManager.getButtonSlot(guiKey, "claim_rewards", 52) &&
+                       clickedItem.getType() == cfgManager.getButtonMaterial(guiKey, "claim_rewards", "CHEST")) {
                 plugin.getSoundManager().playSound(player, "open_gui");
                 new ClaimRewardsGUI(plugin).open(player);
-            } else if (slot == MainAuctionGUI.MY_AUCTIONS_SLOT && clickedItem.getType() == Material.WRITABLE_BOOK) {
-                if (cfgManager.isMyAuctionsGuiEnabled()) {
+            } else if (slot == cfgManager.getButtonSlot(guiKey, "my_auctions", 47) &&
+                       clickedItem.getType() == cfgManager.getButtonMaterial(guiKey, "my_auctions", "WRITABLE_BOOK")) {
+                if (cfgManager.isMyAuctionsGuiIntegrationEnabled()) { // Usa el nuevo getter
                     plugin.getSoundManager().playSound(player, "open_gui");
                     MyActiveAuctionsGUI.open(player, 0);
                 }
-            } else if (slot == MainAuctionGUI.HISTORY_SLOT && clickedItem.getType() == Material.CLOCK) {
+            } else if (slot == cfgManager.getButtonSlot(guiKey, "player_history", 51) &&
+                       clickedItem.getType() == cfgManager.getButtonMaterial(guiKey, "player_history", "CLOCK")) {
                 if (cfgManager.isHistoryEnabled()) {
                     plugin.getSoundManager().playSound(player, "open_gui");
                     PlayerHistoryGUI.open(player, 0);
                 }
-            } else if (slot >= MainAuctionGUI.AUCTION_ITEMS_START_SLOT && slot < cfgManager.getGuiItemsPerPage()) {
+            } else if (slot >= 0 && slot < cfgManager.getGuiItemsPerPage()) { // AUCTION_ITEMS_START_SLOT es 0
                 plugin.getSoundManager().playSound(player, "click");
                 handleAuctionItemClick(player, clickedItem, currentPage, event);
             } else {
@@ -119,23 +127,28 @@ public class InventoryClickListener implements Listener {
             if (clickedItem == null || clickedItem.getType() == Material.AIR) return;
             int slot = event.getSlot();
             int currentPage = getCurrentPageFromTitle(inventoryTitle);
+            String guiKey = "my_active_auctions_gui";
 
-            if (slot == MyActiveAuctionsGUI.CLOSE_GUI_SLOT) {
-                plugin.getSoundManager().playSound(player, "close_gui"); // O un sonido de "volver"
+            if (slot == cfgManager.getButtonSlot(guiKey, "back_to_main_auctions", 49) &&
+                clickedItem.getType() == cfgManager.getButtonMaterial(guiKey, "back_to_main_auctions", "NETHER_STAR")) {
+                plugin.getSoundManager().playSound(player, "close_gui");
                 MainAuctionGUI.open(player, 0);
-            } else if (slot == MyActiveAuctionsGUI.PREVIOUS_PAGE_SLOT && clickedItem.getType() == Material.ARROW) {
+            } else if (slot == cfgManager.getButtonSlot(guiKey, "previous_page", 45) &&
+                       clickedItem.getType() == cfgManager.getButtonMaterial(guiKey, "previous_page", "ARROW")) {
                 plugin.getSoundManager().playSound(player, "page_turn");
                 MyActiveAuctionsGUI.open(player, currentPage - 1);
-            } else if (slot == MyActiveAuctionsGUI.NEXT_PAGE_SLOT && clickedItem.getType() == Material.ARROW) {
+            } else if (slot == cfgManager.getButtonSlot(guiKey, "next_page", 53) &&
+                       clickedItem.getType() == cfgManager.getButtonMaterial(guiKey, "next_page", "ARROW")) {
                 plugin.getSoundManager().playSound(player, "page_turn");
                 MyActiveAuctionsGUI.open(player, currentPage + 1);
-            } else if (slot == MyActiveAuctionsGUI.HISTORY_BUTTON_SLOT && clickedItem.getType() == Material.CLOCK) {
+            } else if (slot == cfgManager.getButtonSlot(guiKey, "player_history", 51) &&
+                       clickedItem.getType() == cfgManager.getButtonMaterial(guiKey, "player_history", "CLOCK")) {
                  if (cfgManager.isHistoryEnabled()) {
                     plugin.getSoundManager().playSound(player, "open_gui");
                     PlayerHistoryGUI.open(player,0);
                  }
             } else if (slot < cfgManager.getGuiItemsPerPage()) {
-                String auctionIdString = getIdStringFromLore(clickedItem.getItemMeta().getLore(), "my_auctions_gui_lore_id");
+                String auctionIdString = getIdStringFromLore(clickedItem.getItemMeta().getLore(), "my_auctions_gui_lore_id"); // Clave de message
                 if (auctionIdString != null) {
                     Auction auction = auctionManager.getAuctionById(UUID.fromString(auctionIdString));
                     if (auction != null && auction.getSellerUUID().equals(player.getUniqueId()) && auction.getStatus() == AuctionStatus.ACTIVE) {
@@ -156,14 +169,18 @@ public class InventoryClickListener implements Listener {
             if (clickedItem == null || clickedItem.getType() == Material.AIR) return;
             int slot = event.getSlot();
             int currentPage = getCurrentPageFromTitle(inventoryTitle);
+            String guiKey = "player_history_gui";
 
-            if (slot == PlayerHistoryGUI.CLOSE_GUI_SLOT) {
-                plugin.getSoundManager().playSound(player, "close_gui"); // O "volver"
+            if (slot == cfgManager.getButtonSlot(guiKey, "back_to_main_auctions", 49) &&
+                clickedItem.getType() == cfgManager.getButtonMaterial(guiKey, "back_to_main_auctions", "NETHER_STAR")) {
+                plugin.getSoundManager().playSound(player, "close_gui");
                 MainAuctionGUI.open(player, 0);
-            } else if (slot == PlayerHistoryGUI.PREVIOUS_PAGE_SLOT && clickedItem.getType() == Material.ARROW) {
+            } else if (slot == cfgManager.getButtonSlot(guiKey, "previous_page", 45) &&
+                       clickedItem.getType() == cfgManager.getButtonMaterial(guiKey, "previous_page", "ARROW")) {
                 plugin.getSoundManager().playSound(player, "page_turn");
                 PlayerHistoryGUI.open(player, currentPage - 1);
-            } else if (slot == PlayerHistoryGUI.NEXT_PAGE_SLOT && clickedItem.getType() == Material.ARROW) {
+            } else if (slot == cfgManager.getButtonSlot(guiKey, "next_page", 53) &&
+                       clickedItem.getType() == cfgManager.getButtonMaterial(guiKey, "next_page", "ARROW")) {
                 plugin.getSoundManager().playSound(player, "page_turn");
                 PlayerHistoryGUI.open(player, currentPage + 1);
             } else {
@@ -176,49 +193,54 @@ public class InventoryClickListener implements Listener {
             if (clickedItem == null || clickedItem.getType() == Material.AIR) return;
             int slot = event.getSlot();
             // No se extrae targetPlayerName del título aquí, se necesitaría pasar de otra forma si se requiere para paginación
-            // Por ahora, la paginación de AdminHistoryGUI se manejaría pasándole los parámetros de nuevo.
-            // int currentPage = getCurrentPageFromTitle(inventoryTitle);
+            // La paginación de AdminHistoryGUI requiere parámetros adicionales (targetPlayerName, startDate, endDate)
+            // que no están fácilmente disponibles aquí solo con el título.
+            // Por lo tanto, los botones de paginación en AdminHistoryGUI.java deberían reabrir la GUI
+            // con los parámetros correctos, en lugar de que este listener los maneje directamente.
+            String guiKey = "admin_history_gui";
 
-            plugin.getSoundManager().playSound(player, "click"); // Usar SoundManager
-            if (slot == AdminHistoryGUI.CLOSE_GUI_SLOT) {
+            plugin.getSoundManager().playSound(player, "click");
+            if (slot == cfgManager.getButtonSlot(guiKey, "close", 49) &&
+                clickedItem.getType() == cfgManager.getButtonMaterial(guiKey, "close", "BARRIER")) {
                 plugin.getSoundManager().playSound(player, "close_gui");
                 player.closeInventory();
             }
-            // Faltaría lógica de paginación si AdminHistoryGUI la implementa y necesita que este listener la maneje.
-            // Por ahora, se asume que si hay paginación en AdminHistoryGUI, se reabre con nuevos parámetros.
+            // Los botones Previous/Next Page para AdminHistoryGUI deberían ser manejados por AdminHistoryGUI.open()
+            // si se implementan, ya que necesitan el contexto de targetPlayerName, startDate, endDate.
         }
          else if (inventoryTitle.startsWith(manageAuctionContextGuiTitlePrefix)) { // --- ManageAuctionContextGUI ---
             event.setCancelled(true);
             ItemStack clickedItem = event.getCurrentItem();
             if (clickedItem == null || clickedItem.getType() == Material.AIR) return;
             int slot = event.getSlot();
-            plugin.getSoundManager().playSound(player, "click"); // Usar SoundManager
+            plugin.getSoundManager().playSound(player, "click");
+            String guiKey = "manage_auction_context_gui";
 
-            // Extraer el ID de la subasta del título de la GUI de contexto
-            String auctionIdFromTitle = "";
+            String auctionIdFromTitle = ""; // Esta extracción de ID del título es frágil.
             if(inventoryTitle.length() > manageAuctionContextGuiTitlePrefix.length()) {
                 auctionIdFromTitle = inventoryTitle.substring(manageAuctionContextGuiTitlePrefix.length()).trim();
             }
-            Auction auctionToManage = auctionManager.getAuctionByIdFuzzy(auctionIdFromTitle); // Usar fuzzy por si el título acorta el ID
+            Auction auctionToManage = auctionManager.getAuctionByIdFuzzy(auctionIdFromTitle);
 
             if (auctionToManage == null) {
-                player.sendMessage(msgManager.getPrefixedMessage("auction_bid_error_not_active")); // O un error más específico
+                player.sendMessage(msgManager.getPrefixedMessage("auction_bid_error_not_active"));
                 player.closeInventory();
-                MyActiveAuctionsGUI.open(player, 0); // Volver a "mis subastas"
+                MyActiveAuctionsGUI.open(player, 0);
                 return;
             }
 
-            if (slot == ManageAuctionContextGUI.BACK_BUTTON_SLOT) {
-                MyActiveAuctionsGUI.open(player, 0); // Asumiendo que la página 0 es la correcta
-            } else if (slot == ManageAuctionContextGUI.VIEW_DETAILS_SLOT) {
+            if (slot == cfgManager.getButtonSlot(guiKey, "back_to_my_auctions", 22) &&
+                clickedItem.getType() == cfgManager.getButtonMaterial(guiKey, "back_to_my_auctions", "ARROW")) {
+                MyActiveAuctionsGUI.open(player, 0);
+            } else if (slot == cfgManager.getButtonSlot(guiKey, "view_auction_details", 15) &&
+                       clickedItem.getType() == cfgManager.getButtonMaterial(guiKey, "view_auction_details", "BOOK")) {
                 GUIManager.openAuctionInfoGui(player, auctionToManage, playerReturnPageMap.getOrDefault(player.getUniqueId(),0));
-            } else if (slot == ManageAuctionContextGUI.CANCEL_AUCTION_SLOT) {
+            } else if (slot == cfgManager.getButtonSlot(guiKey, "cancel_this_auction", 11) &&
+                       clickedItem.getType() == cfgManager.getButtonMaterial(guiKey, "cancel_this_auction", "RED_WOOL")) {
                 if (auctionManager.cancelAuction(player, UUID.fromString(auctionToManage.getId()))) {
-                    // Mensaje de éxito ya enviado por cancelAuction
-                    MyActiveAuctionsGUI.open(player, 0); // Refrescar
+                    MyActiveAuctionsGUI.open(player, 0);
                 } else {
-                    // Mensaje de error ya enviado por cancelAuction
-                    player.closeInventory(); // Cerrar si la cancelación falla por alguna razón crítica
+                    player.closeInventory();
                 }
             }
         }
@@ -227,9 +249,9 @@ public class InventoryClickListener implements Listener {
         }
     }
 
-    private void handleAuctionItemClick(Player player, ItemStack clickedItem, int currentPage, InventoryClickEvent event) { //Añadir event
+    private void handleAuctionItemClick(Player player, ItemStack clickedItem, int currentPage, InventoryClickEvent event) {
         if (event.getClick() == ClickType.RIGHT || event.getClick() == ClickType.LEFT) {
-            String auctionUUIDString = getIdStringFromLore(clickedItem.getItemMeta().getLore(), "main_gui_lore_id");
+            String auctionUUIDString = getIdStringFromLore(clickedItem.getItemMeta().getLore(), "main_gui_lore_id"); // Clave de message
             if (auctionUUIDString != null) {
                 Auction auction = null;
                 try {
@@ -257,15 +279,16 @@ public class InventoryClickListener implements Listener {
         ItemStack clickedItem = event.getCurrentItem();
         if (clickedItem == null || clickedItem.getType() == Material.AIR) return;
         int slot = event.getSlot();
+        String guiKey = "auction_details_gui";
 
-        ItemStack centralItem = topInventory.getItem(AuctionDetailsGUI.ITEM_DISPLAY_SLOT);
+        ItemStack centralItem = topInventory.getItem(cfgManager.getButtonSlot(guiKey, "item_display_slot", 22));
         if (centralItem == null || !centralItem.hasItemMeta() || !centralItem.getItemMeta().hasLore()) {
              plugin.getLogger().severe("Item central o su lore no encontrado en AuctionDetailsGUI.");
              player.closeInventory();
              return;
         }
 
-        String auctionUUIDString = getIdStringFromLore(centralItem.getItemMeta().getLore(), "details_auction_id");
+        String auctionUUIDString = getIdStringFromLore(centralItem.getItemMeta().getLore(), "main_gui_lore_id"); // Reutilizar clave de ID del lore
         Auction auction = null;
         if(auctionUUIDString != null){
             try {
@@ -281,24 +304,27 @@ public class InventoryClickListener implements Listener {
             return;
         }
 
-        if (slot == AuctionDetailsGUI.BACK_BUTTON_SLOT) {
+        if (slot == cfgManager.getButtonSlot(guiKey, "back_to_listing", 49) &&
+            clickedItem.getType() == cfgManager.getButtonMaterial(guiKey, "back_to_listing", "BARRIER")) {
             int returnPage = playerReturnPageMap.getOrDefault(player.getUniqueId(), 0);
-            MainAuctionGUI.open(player, returnPage); // Usar MainAuctionGUI.open
+            MainAuctionGUI.open(player, returnPage);
             return;
         }
 
         if (auction.getStatus() != AuctionStatus.ACTIVE) {
             player.sendMessage(msgManager.getPrefixedMessage("auction_bid_error_not_active"));
             int returnPage = playerReturnPageMap.getOrDefault(player.getUniqueId(), 0);
-            MainAuctionGUI.open(player, returnPage); // Usar MainAuctionGUI.open
+            MainAuctionGUI.open(player, returnPage);
             return;
         }
 
-        if (slot == AuctionDetailsGUI.BID_BUTTON_SLOT && clickedItem.getType() == Material.EMERALD) {
+        if (slot == cfgManager.getButtonSlot(guiKey, "bid", 38) &&
+            clickedItem.getType() == cfgManager.getButtonMaterial(guiKey, "bid", "EMERALD")) {
             player.closeInventory();
             playerPendingBidAuctionId.put(player.getUniqueId(), UUID.fromString(auction.getId()));
             player.sendMessage(msgManager.getMessage("chat_prompt_enter_bid_amount", "%id%", auction.getId().toString()));
-        } else if (slot == AuctionDetailsGUI.BUY_NOW_BUTTON_SLOT && clickedItem.getType() == Material.GOLD_INGOT) {
+        } else if (slot == cfgManager.getButtonSlot(guiKey, "buy_now", 40) &&
+                   clickedItem.getType() == cfgManager.getButtonMaterial(guiKey, "buy_now", "GOLD_INGOT")) {
             if (auction.hasBuyNow() && cfgManager.isBuyNowAllowed()) {
                 if (auctionManager.buyNow(player, UUID.fromString(auction.getId()))) {
                     player.closeInventory();
@@ -408,17 +434,20 @@ public class InventoryClickListener implements Listener {
 
         if (clickedInventory.equals(prepareGui.getInventory())) { // Clic en la GUI de preparación
             plugin.getSoundManager().playSound(player, "click");
-            if (slot < PrepareMysteryLotGUI.MAX_LOT_ITEMS) { // Clic en el área de ítems
+            String guiKey = "prepare_mystery_lot_gui"; // Clave para config
+
+            if (slot < prepareGui.getMaxLotItems()) { // Clic en el área de ítems, usa el getter
                 if (currentItem != null && currentItem.getType() != Material.AIR) {
-                    // Devolver ítem al inventario del jugador
-                    player.getInventory().addItem(currentItem.clone()); // Clonar por si acaso
-                    prepareGui.getInventory().setItem(slot, null); // Quitar de la GUI de preparación
-                    // prepareGui.removeItemFromLot(slot); // Esto modificaría la lista interna, mejor operar en la GUI directamente aquí
-                    prepareGui.renderGUI(); // Re-render para actualizar contador, etc.
+                    player.getInventory().addItem(currentItem.clone());
+                    // La siguiente línea es crucial para la lógica de PrepareMysteryLotGUI.removeItemFromLot
+                    // que actualiza la lista interna 'lotItems'.
+                    prepareGui.removeItemFromLot(slot); // 'slot' es el índice para la lista interna
+                    // removeItemFromLot ya llama a renderGUI()
                 }
-            } else if (slot == PrepareMysteryLotGUI.CANCEL_BUTTON_SLOT) {
+            } else if (slot == cfgManager.getButtonSlot(guiKey, "cancel_preparation", 47) &&
+                       clickedItem.getType() == cfgManager.getButtonMaterial(guiKey, "cancel_preparation", "BARRIER")) {
                 plugin.getSoundManager().playSound(player, "close_gui");
-                List<ItemStack> itemsToReturn = prepareGui.getLotItems();
+                List<ItemStack> itemsToReturn = prepareGui.getLotItems(); // Esto obtiene de los slots de la GUI
                 for (ItemStack item : itemsToReturn) {
                     if (player.getInventory().firstEmpty() != -1) {
                         player.getInventory().addItem(item);
@@ -429,9 +458,10 @@ public class InventoryClickListener implements Listener {
                 }
                 if(!itemsToReturn.isEmpty()) msgManager.sendMessage(player, "prepare_mystery_gui_cancelled_items_returned");
                 else msgManager.sendMessage(player, "prepare_mystery_gui_cancelled_no_items");
-                player.closeInventory(); // OpenGUIManager se encargará de la limpieza
-            } else if (slot == PrepareMysteryLotGUI.CONFIRM_BUTTON_SLOT) {
-                List<ItemStack> lotItems = prepareGui.getLotItems();
+                player.closeInventory();
+            } else if (slot == cfgManager.getButtonSlot(guiKey, "confirm_and_create", 51) &&
+                       clickedItem.getType() == cfgManager.getButtonMaterial(guiKey, "confirm_and_create", "EMERALD_BLOCK")) {
+                List<ItemStack> lotItems = prepareGui.getLotItems(); // Esto obtiene de los slots de la GUI
                 if (lotItems.isEmpty()) {
                     msgManager.sendMessage(player, "prepare_mystery_gui_error_no_items_on_confirm");
                     plugin.getSoundManager().playSound(player, "error");
@@ -481,7 +511,7 @@ public class InventoryClickListener implements Listener {
                     prepareGui.addItemToLot(itemToAdd); // addItemToLot clona de nuevo internamente y llama a renderGUI()
 
                     // 3. Opcional: Forzar una actualización del inventario del jugador
-                    // player.updateInventory(); // Probar sin esto primero.
+                    // player.updateInventory();
 
                     plugin.getSoundManager().playSound(player, "click");
                 } else {

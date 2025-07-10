@@ -25,8 +25,11 @@ public class ClaimRewardsGUI implements Listener {
 
     private final AetherAuctions plugin;
     private final RewardManager rewardManager;
-    private static final String GUI_TITLE_KEY = "claim_gui_title"; // Necesitarás añadir esto a messages.yml
-    private static final int GUI_SIZE = 54; // 6 filas
+    private static final String GUI_TITLE_KEY = "claim_gui_title"; // Clave para el título en messages.yml
+    private static final int GUI_SIZE = 54; // Tamaño estándar de 6 filas
+
+    // No hay constantes de slot aquí porque los ítems de recompensa llenan la GUI dinámicamente,
+    // y el botón "Reclamar Todo" tiene un slot fijo que se puede configurar.
 
     public ClaimRewardsGUI(AetherAuctions plugin) {
         this.plugin = plugin;
@@ -144,19 +147,26 @@ public class ClaimRewardsGUI implements Listener {
         }
 
         // Botón "Reclamar Todo"
-        ItemStack claimAllButton = ItemUtil.createItemStack(Material.CHEST_MINECART,
-            plugin.getMessageManager().getRawMessage("claim_gui_button_claim_all_name"), // messages.yml
-            plugin.getMessageManager().getStringList("claim_gui_button_claim_all_lore") // messages.yml
+        ConfigManager cfgManager = plugin.getConfigManager();
+        String guiKey = "claim_rewards_gui"; // Clave base para esta GUI en config
+        ItemStack claimAllButton = ItemUtil.createItemStack(
+            cfgManager.getButtonMaterial(guiKey, "claim_all_rewards", "CHEST_MINECART"),
+            plugin.getMessageManager().getRawMessage("claim_gui_button_claim_all_name"),
+            plugin.getMessageManager().getStringList("claim_gui_button_claim_all_lore")
         );
-        gui.setItem(GUI_SIZE - 5, claimAllButton); // Centro de la última fila
+        gui.setItem(cfgManager.getButtonSlot(guiKey, "claim_all_rewards", GUI_SIZE - 5), claimAllButton);
 
-        // Relleno decorativo (opcional)
-        // ItemStack filler = ItemUtil.createItemStack(Material.GRAY_STAINED_GLASS_PANE, " ");
-        // for (int i = GUI_SIZE - 9; i < GUI_SIZE; i++) {
-        //     if (gui.getItem(i) == null) {
-        //         gui.setItem(i, filler);
-        //     }
-        // }
+        // Relleno decorativo
+        Material decoMat = cfgManager.getMainDecorativePaneMaterial(); // Reutilizar el principal o definir uno específico
+        ItemStack decorativePane = ItemUtil.createItemStack(decoMat, " ");
+        for (int i = 0; i < GUI_SIZE; i++) {
+            if (gui.getItem(i) == null && i < (GUI_SIZE -9)) { // Rellenar solo arriba de la última fila si hay un botón allí
+                 // No rellenar si es un slot de ítem de recompensa (aunque ya estarían puestos)
+            } else if (gui.getItem(i) == null && i >= (GUI_SIZE - 9) && i != cfgManager.getButtonSlot(guiKey, "claim_all_rewards", GUI_SIZE - 5) ) {
+                 // Rellenar la última fila excepto el botón
+                gui.setItem(i, decorativePane.clone());
+            }
+        }
     }
 
     @EventHandler
@@ -168,24 +178,23 @@ public class ClaimRewardsGUI implements Listener {
 
         String title = plugin.getMessageManager().getRawMessage(GUI_TITLE_KEY, "%player_name%", player.getName());
         if (topInventory != null && event.getView().getTitle().equals(title)) {
-            event.setCancelled(true); // Prevenir que el jugador tome ítems de la GUI
+            event.setCancelled(true);
 
             if (clickedInventory == null || clickedInventory.equals(player.getInventory())) {
-                 // Clic fuera de la GUI de recompensas o en el inventario del jugador, no hacer nada especial.
                 return;
             }
 
             ItemStack clickedItem = event.getCurrentItem();
             if (clickedItem == null || clickedItem.getType() == Material.AIR) return;
 
-            // Identificar si es el botón "Reclamar Todo"
-            if (event.getSlot() == GUI_SIZE - 5 && clickedItem.getType() == Material.CHEST_MINECART) {
+            ConfigManager cfgManager = plugin.getConfigManager();
+            String guiKey = "claim_rewards_gui";
+            int claimAllSlot = cfgManager.getButtonSlot(guiKey, "claim_all_rewards", GUI_SIZE - 5);
+            Material claimAllMaterial = cfgManager.getButtonMaterial(guiKey, "claim_all_rewards", "CHEST_MINECART");
+
+            if (event.getSlot() == claimAllSlot && clickedItem.getType() == claimAllMaterial) {
                 rewardManager.attemptClaimAllRewards(player);
-                // Se espera que attemptClaimAllRewards maneje los mensajes al jugador.
-                // La GUI se refrescará después de que el jugador cierre y vuelva a abrir, o si se llama a open(player) explícitamente.
-                // Por ahora, cerramos para forzar un refresco si el jugador vuelve a ejecutar /reclamar.
-                // Una mejor UX sería que la GUI se actualice en vivo, pero eso es más complejo.
-                open(player); // Reabrir para refrescar después del intento de reclamar todo.
+                open(player);
                 return;
             }
 

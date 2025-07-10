@@ -3,9 +3,8 @@ package com.aetherauctions.config;
 import com.aetherauctions.AetherAuctions;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.entity.Player;
-import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.ChatColor;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -20,61 +19,71 @@ public class ConfigManager {
 
     public ConfigManager(AetherAuctions plugin) {
         this.plugin = plugin;
-        // loadConfig is called by AetherAuctions main class after this instance is created.
+        // loadConfig() es llamado por AetherAuctions después de que esta instancia es creada.
     }
 
     public void loadConfig() {
-        plugin.saveDefaultConfig();
-        plugin.reloadConfig(); // Ensure latest changes from disk are loaded
-        config = plugin.getConfig();
+        plugin.saveDefaultConfig(); // Asegura que config.yml exista en la carpeta del plugin
+        plugin.reloadConfig();    // Recarga la configuración desde el disco
+        config = plugin.getConfig(); // Obtiene la instancia de FileConfiguration cargada
         plugin.getLogger().info("Configuración cargada/recargada.");
     }
 
-    public void reloadConfig() { // Public method for /subasta admin reload
+    public void reloadConfig() {
         loadConfig();
     }
 
-
+    // --- General Plugin Settings ---
     public String getPluginPrefix() {
-        return ChatColor.translateAlternateColorCodes('&', config.getString("plugin_prefix", "&6[&eAetherAuctions&6] &r"));
-    }
-
-    public String getDatabaseType() {
-        return config.getString("database.type", "sqlite");
+        return ChatColor.translateAlternateColorCodes('&', config.getString("general.plugin_prefix", "&6[&eAetherAuctions&6] &r"));
     }
 
     public String getCurrencySymbol() {
         return config.getString("general.currency_symbol", "$");
     }
 
+    public String getLanguageFile() {
+        return config.getString("general.language_file", "messages.yml");
+    }
+
+    // --- Database Configuration ---
+    public String getDatabaseType() {
+        return config.getString("database.type", "sqlite");
+    }
+
+    public String getSQLiteFileName() {
+        return config.getString("database.sqlite_filename", "auctions_data.db");
+    }
+
+    // --- Auction Core Mechanics ---
     public long getDefaultDurationHours() {
-        return config.getLong("auction.default_duration_hours", 24);
-    }
-
-    public int getMaxActiveAuctionsPerPlayer(Player player) {
-        // Placeholder for permission-based limits if needed in future
-        return config.getInt("auction.max_active_auctions_per_player", 5);
-    }
-
-    public double getMinBidIncrement() {
-        return config.getDouble("auction.min_bid_increment", 10.0);
+        return config.getLong("auctions.behavior.default_duration_hours", 24);
     }
 
     public boolean isBuyNowAllowed() {
-        return config.getBoolean("auction.allow_buy_now", true);
+        return config.getBoolean("auctions.behavior.allow_buy_now", true);
     }
 
-    public double getAuctionCreationFee(Player player) {
-        // Placeholder for permission-based fees
-        return config.getDouble("auction.creation_fee", 0.0);
+    public boolean isMysteryAuctionsAllowed() {
+        return config.getBoolean("auctions.behavior.allow_mystery_auctions", true);
+    }
+
+    public double getMinBidIncrement() {
+        return config.getDouble("auctions.behavior.min_bid_increment", 10.0);
     }
 
     public long getExpirationCheckIntervalSeconds() {
-        return config.getLong("auction.expired_check_interval_seconds", 60);
+        return config.getLong("auctions.behavior.expired_check_interval_seconds", 60);
+    }
+
+    // --- Auction Limits and Restrictions ---
+    public int getMaxActiveAuctionsPerPlayer() {
+        // Futura mejora: Límites basados en permisos. Por ahora, es global.
+        return config.getInt("auctions.limits_and_restrictions.max_active_per_player", 5);
     }
 
     public List<Material> getItemBlacklist() {
-        List<String> materialNames = config.getStringList("auction.item_blacklist");
+        List<String> materialNames = config.getStringList("auctions.limits_and_restrictions.item_blacklist");
         if (materialNames == null || materialNames.isEmpty()) {
             return Collections.emptyList();
         }
@@ -87,91 +96,30 @@ public class ConfigManager {
                         return null;
                     }
                 })
-                .filter(java.util.Objects::nonNull) // Ensure no nulls from invalid names
+                .filter(java.util.Objects::nonNull)
                 .collect(Collectors.toList());
     }
 
-    public Material getMainDecorativePaneMaterial() {
-        String materialName = config.getString("gui.main_decorative_pane_material", "GRAY_STAINED_GLASS_PANE");
-        try {
-            return Material.valueOf(materialName.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            plugin.getLogger().warning("Material inválido para 'gui.main_decorative_pane_material': " + materialName + ". Usando GRAY_STAINED_GLASS_PANE.");
-            return Material.GRAY_STAINED_GLASS_PANE;
-        }
+    // --- Auction Fees and Commissions ---
+    public double getAuctionCreationFee() {
+        return config.getDouble("auctions.fees_and_commissions.creation_fee", 0.0);
     }
 
-    public Material getDetailsDecorativePaneMaterial() {
-        String materialName = config.getString("gui.details_decorative_pane_material", "BLACK_STAINED_GLASS_PANE");
-        try {
-            return Material.valueOf(materialName.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            plugin.getLogger().warning("Material inválido para 'gui.details_decorative_pane_material': " + materialName + ". Usando BLACK_STAINED_GLASS_PANE.");
-            return Material.BLACK_STAINED_GLASS_PANE;
-        }
-    }
-
-    public int getGuiItemsPerPage() {
-        return config.getInt("gui.items_per_page", 36);
-    }
-
-    public String getMessagesMissingKeyFormat() {
-        return config.getString("messages.missing_key_format", "&cError: Clave '%key%' no encontrada.");
-    }
-
-    public int getDeliveredRewardsKeptDays() {
-        return config.getInt("pending_rewards.cleanup_days_to_keep", 30);
-    }
-
-    public String getRewardDeliveryMethod() {
-        return config.getString("rewards.delivery-mode", "auto").toLowerCase();
-    }
-
-    public boolean showMessageOnJoinForGuiMode() {
-        return config.getBoolean("rewards.message_on_join_for_gui_mode", true);
-    }
-
-    public boolean isHistoryEnabled() {
-        return config.getBoolean("history.enabled", true);
-    }
-
-    public int getHistoryRecordsPerPlayer() {
-        return config.getInt("history.records_per_player", 50);
-    }
-
-    public int getDefaultHistoryDaysToShowForAdmin() {
-        return config.getInt("history.default_days_to_show", 7);
-    }
-
-    public boolean isMyAuctionsGuiEnabled() {
-        return config.getBoolean("my_auctions_gui.enabled", true);
-    }
-
-    public boolean isGuiSoundsEnabled() {
-        return config.getBoolean("gui.sounds.enabled", true);
-    }
-
-    public boolean isMysteryAuctionsAllowed() {
-        return config.getBoolean("auction.allow_mystery_auctions", true);
-    }
-
-    // Commission Settings
     public String getCommissionType() {
-        return config.getString("auction.commission.type", "flat_percentage").toLowerCase();
+        return config.getString("auctions.fees_and_commissions.commission.type", "flat_percentage").toLowerCase();
     }
 
     public double getDefaultCommissionPercentage() {
-        double percentage = config.getDouble("auction.commission.default_percentage", 5.0);
-        return Math.max(0, Math.min(100, percentage));
+        double percentage = config.getDouble("auctions.fees_and_commissions.commission.default_percentage", 5.0);
+        return Math.max(0, Math.min(100, percentage)); // Clamp entre 0 y 100
     }
 
-    public Map<String, Double> getCategoryCommissionPercentagesMap() { // Renamed for clarity, returns Map<String, Double>
+    public Map<String, Double> getCategoryCommissionPercentagesMap() {
         Map<String, Double> categoryCommissions = new HashMap<>();
-        ConfigurationSection categorySection = config.getConfigurationSection("auction.commission.categories");
+        ConfigurationSection categorySection = config.getConfigurationSection("auctions.fees_and_commissions.commission.categories");
         if (categorySection != null) {
             for (String key : categorySection.getKeys(false)) {
                 if (key.equalsIgnoreCase("DEFAULT_OTHER")) continue;
-                // Key is already a string (Material name)
                 double percentage = categorySection.getDouble(key);
                 categoryCommissions.put(key.toUpperCase(), Math.max(0, Math.min(100, percentage)));
             }
@@ -180,17 +128,18 @@ public class ConfigManager {
     }
 
     public double getDefaultOtherCategoryCommissionPercentage() {
-        return config.getDouble("auction.commission.categories.DEFAULT_OTHER", getDefaultCommissionPercentage());
+        return config.getDouble("auctions.fees_and_commissions.commission.categories.DEFAULT_OTHER", getDefaultCommissionPercentage());
     }
 
     public List<Map<String, Object>> getTieredCommissionTiers() {
-        List<?> rawList = config.getList("auction.commission.tiers");
+        List<?> rawList = config.getList("auctions.fees_and_commissions.commission.tiers");
         List<Map<String, Object>> typedList = new ArrayList<>();
         if (rawList != null) {
             for (Object obj : rawList) {
                 if (obj instanceof Map) {
                     try {
-                        Map<?, ?> rawMap = (Map<?, ?>) obj;
+                        @SuppressWarnings("unchecked") // Bukkit API for getList returns List<?>
+                        Map<String, Object> rawMap = (Map<String, Object>) obj;
                         Map<String, Object> tierMap = new HashMap<>();
                         Object maxPriceObj = rawMap.get("max_price");
                         Object percentageObj = rawMap.get("percentage");
@@ -200,38 +149,105 @@ public class ConfigManager {
                             tierMap.put("percentage", ((Number) percentageObj).doubleValue());
                             typedList.add(tierMap);
                         } else {
-                            plugin.getLogger().warning("Skipping invalid tier in auction.commission.tiers (non-numeric max_price or percentage): " + obj.toString());
+                            plugin.getLogger().warning("Omitiendo tramo inválido en auction.commission.tiers (max_price o percentage no numéricos): " + obj.toString());
                         }
-                    } catch (Exception e) {
-                         plugin.getLogger().warning("Skipping invalid tier structure in auction.commission.tiers: " + obj.toString() + " - Error: " + e.getMessage());
+                    } catch (ClassCastException e){
+                        plugin.getLogger().warning("Error de casteo en tramo de comisión: " + obj.toString() + " - " + e.getMessage());
                     }
                 } else {
-                    plugin.getLogger().warning("Skipping non-map element in auction.commission.tiers: " + obj.toString());
+                    plugin.getLogger().warning("Omitiendo elemento no-mapa en auction.commission.tiers: " + obj.toString());
                 }
             }
         }
         return typedList;
     }
 
-    // MainAuctionGUI button configurations
-    public String getMyActiveAuctionsButtonMaterial(String defaultMaterial) {
-        return config.getString("gui.buttons.my_active_auctions.material", defaultMaterial);
-    }
-    public int getMyActiveAuctionsButtonSlot() {
-        return config.getInt("gui.buttons.my_active_auctions.slot", 47);
+    // --- GUI Settings ---
+    public int getGuiItemsPerPage() {
+        return config.getInt("gui.general_appearance.items_per_page", 36);
     }
 
-    public String getPlayerHistoryButtonMaterial(String defaultMaterial) {
-        return config.getString("gui.buttons.player_history.material", defaultMaterial);
-    }
-    public int getPlayerHistoryButtonSlot() {
-        return config.getInt("gui.buttons.player_history.slot", 51);
+    public Material getMainDecorativePaneMaterial() {
+        return getMaterial("gui.general_appearance.main_decorative_pane", "GRAY_STAINED_GLASS_PANE");
     }
 
-    public String getRewardsButtonMaterial(String defaultMaterial) {
-        return config.getString("gui.buttons.rewards.material", defaultMaterial);
+    public Material getDetailsDecorativePaneMaterial() {
+        return getMaterial("gui.general_appearance.details_decorative_pane", "BLACK_STAINED_GLASS_PANE");
     }
-    public int getRewardsButtonSlot() {
-        return config.getInt("gui.buttons.rewards.slot", 52);
+
+    public Material getNoResultsItemMaterial() {
+        return getMaterial("gui.general_appearance.no_results_item", "GLASS_BOTTLE");
+    }
+
+    public int getMainAuctionHouseRefreshIntervalSeconds() {
+        return config.getInt("gui.main_auction_house.refresh_interval_seconds", 10);
+    }
+
+    // Helper para obtener material con fallback
+    private Material getMaterial(String path, String defaultMaterialName) {
+        String materialName = config.getString(path, defaultMaterialName);
+        try {
+            return Material.valueOf(materialName.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            plugin.getLogger().warning("Material inválido para '" + path + "': " + materialName + ". Usando " + defaultMaterialName + ".");
+            return Material.valueOf(defaultMaterialName.toUpperCase());
+        }
+    }
+
+    // Helper para obtener material de botón
+    public Material getButtonMaterial(String guiName, String buttonKey, String defaultMaterial) {
+        return getMaterial("gui." + guiName + ".buttons." + buttonKey + ".material", defaultMaterial);
+    }
+
+    // Helper para obtener slot de botón
+    public int getButtonSlot(String guiName, String buttonKey, int defaultSlot) {
+        return config.getInt("gui." + guiName + ".buttons." + buttonKey + ".slot", defaultSlot);
+    }
+
+    // --- GUI Sounds ---
+    public boolean isGuiSoundsEnabled() {
+        return config.getBoolean("sounds.enabled", true);
+    }
+    // SoundManager leerá la sub-sección 'sounds' directamente.
+
+    // --- Rewards Handling ---
+    public String getRewardDeliveryMethod() {
+        return config.getString("rewards.delivery_mode", "auto").toLowerCase();
+    }
+
+    public boolean notifyOnJoinIfGuiModeRewards() {
+        return config.getBoolean("rewards.notify_on_join_if_gui_mode", true);
+    }
+
+    public int getDeliveredRewardsCleanupDays() {
+        return config.getInt("rewards.cleanup_delivered_rewards_after_days", 30);
+    }
+
+    // --- Auction History ---
+    public boolean isHistoryEnabled() {
+        return config.getBoolean("history.enabled", true);
+    }
+
+    public int getMaxHistoryRecordsPerPlayer() {
+        return config.getInt("history.max_records_per_player", 50);
+    }
+
+    public int getAdminHistoryDefaultDaysToShow() {
+        return config.getInt("history.admin_view_default_days_past", 7);
+    }
+
+    // --- My Auctions GUI ---
+    public boolean isMyAuctionsGuiIntegrationEnabled() {
+        return config.getBoolean("my_auctions_gui_integration.enabled", true);
+    }
+
+    // --- Logging & Debugging ---
+    public boolean isVerboseLoggingEnabled() {
+        return config.getBoolean("logging_debug.verbose_console_logging", false);
+    }
+
+    // --- PrepareMysteryLotGUI specific ---
+    public int getMysteryLotMaxItems() {
+        return config.getInt("gui.prepare_mystery_lot_gui.max_items", 36);
     }
 }

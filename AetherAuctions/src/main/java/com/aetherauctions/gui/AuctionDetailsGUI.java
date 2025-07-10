@@ -20,15 +20,17 @@ import java.util.List;
 
 public class AuctionDetailsGUI {
 
-    public static final int ITEM_DISPLAY_SLOT = 22; // Adjusted for a more central position in 6 rows (54 slots)
-    public static final int BID_BUTTON_SLOT = 38;
-    public static final int BUY_NOW_BUTTON_SLOT = 40;
-    public static final int BACK_BUTTON_SLOT = 49;
+    // Las constantes de slot se leerán de config.yml
+    // public static final int ITEM_DISPLAY_SLOT = 22;
+    // public static final int BID_BUTTON_SLOT = 38;
+    // public static final int BUY_NOW_BUTTON_SLOT = 40;
+    // public static final int BACK_BUTTON_SLOT = 49;
 
-    public static void open(Player player, Auction auction, int returnPage) { // returnPage currently unused by this static version
+    public static void open(Player player, Auction auction, int returnPage) {
         AetherAuctions plugin = AetherAuctions.getInstance();
         MessageManager msgManager = plugin.getMessageManager();
         ConfigManager cfgManager = plugin.getConfigManager();
+        String guiKey = "auction_details_gui"; // Clave base para esta GUI en config
 
         if (auction == null) {
             plugin.getLogger().severe("[AuctionDetailsGUI] Se intentó abrir con una subasta null para el jugador: " + player.getName());
@@ -110,33 +112,34 @@ public class AuctionDetailsGUI {
             if (itemToDisplay != null && meta != null) itemToDisplay.setItemMeta(meta);
         }
 
-        gui.setItem(ITEM_DISPLAY_SLOT, itemToDisplay);
+        gui.setItem(cfgManager.getButtonSlot(guiKey, "item_display_slot", 22), itemToDisplay);
+
 
         // --- Botones ---
         ItemStack bidButton = InventoryUtil.createGuiItem(
-            Material.EMERALD,
+            cfgManager.getButtonMaterial(guiKey, "bid", "EMERALD"),
             msgManager.getMessage("button_bid")
         );
-        gui.setItem(BID_BUTTON_SLOT, bidButton);
+        gui.setItem(cfgManager.getButtonSlot(guiKey, "bid", 38), bidButton);
 
         if (auction.hasBuyNow() && cfgManager.isBuyNowAllowed() && auction.getStatus() == AuctionStatus.ACTIVE) {
             ItemStack buyNowButton = InventoryUtil.createGuiItem(
-                Material.GOLD_INGOT,
+                cfgManager.getButtonMaterial(guiKey, "buy_now", "GOLD_INGOT"),
                 msgManager.getMessage("button_buy_now"),
                 msgManager.getMessage("button_buy_now_lore_price", "%price%", String.format("%.2f %s", auction.getBuyNowPrice(), cfgManager.getCurrencySymbol()))
             );
-            gui.setItem(BUY_NOW_BUTTON_SLOT, buyNowButton);
+            gui.setItem(cfgManager.getButtonSlot(guiKey, "buy_now", 40), buyNowButton);
         }
 
         ItemStack backButton = InventoryUtil.createGuiItem(
-            Material.BARRIER,
+            cfgManager.getButtonMaterial(guiKey, "back_to_listing", "BARRIER"), // Clave de botón actualizada
             msgManager.getMessage("button_back")
         );
-        gui.setItem(BACK_BUTTON_SLOT, backButton);
+        gui.setItem(cfgManager.getButtonSlot(guiKey, "back_to_listing", 49), backButton); // Clave de botón actualizada
 
         // --- Rellenar slots vacíos ---
-        Material decoMat = cfgManager.getDetailsDecorativePaneMaterial();
-        String decoName = msgManager.getMessage("main_gui_decorative_pane_name");
+        Material decoMat = cfgManager.getDetailsDecorativePaneMaterial(); // gui.general_appearance.details_decorative_pane
+        String decoName = msgManager.getMessage("main_gui_decorative_pane_name"); // Reutilizar si es apropiado, o nueva clave
         ItemStack decorativePane = InventoryUtil.createGuiItem(decoMat, decoName);
 
         for (int i = 0; i < gui.getSize(); i++) {

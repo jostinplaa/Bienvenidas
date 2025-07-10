@@ -124,13 +124,13 @@ public class AuctionManager {
             return false;
         }
 
-        int maxAuctions = configManager.getMaxActiveAuctionsPerPlayer(seller);
+        int maxAuctions = configManager.getMaxActiveAuctionsPerPlayer(); // No necesita 'seller'
         if (getPlayerActiveAuctions(seller.getUniqueId()).size() >= maxAuctions) {
             messageManager.sendMessage(seller, configManager.getPluginPrefix() + messageManager.getMessage("auction_create_error_max_auctions_reached", "%limit%", String.valueOf(maxAuctions)));
             return false;
         }
 
-        double creationFee = configManager.getAuctionCreationFee(seller);
+        double creationFee = configManager.getAuctionCreationFee(); // No necesita 'seller'
         Economy econ = AetherAuctions.getEconomy();
         if (creationFee > 0) {
             if (!econ.has(seller, creationFee)) {
@@ -1034,14 +1034,14 @@ public class AuctionManager {
         if (buyNowPrice > 0 && buyNowPrice <= startPrice) { messageManager.sendMessage(seller, configManager.getPluginPrefix() + messageManager.getMessage("auction_create_error_buy_now_too_low")); return false; }
         if (durationSeconds <= 0) { messageManager.sendMessage(seller, configManager.getPluginPrefix() + messageManager.getMessage("auction_create_error_invalid_duration")); return false; }
 
-        int maxAuctions = configManager.getMaxActiveAuctionsPerPlayer(seller);
+        int maxAuctions = configManager.getMaxActiveAuctionsPerPlayer(); // No necesita 'seller'
         if (getPlayerActiveAuctions(seller.getUniqueId()).size() >= maxAuctions) {
             messageManager.sendMessage(seller, configManager.getPluginPrefix() + messageManager.getMessage("auction_create_error_max_auctions_reached", "%limit%", String.valueOf(maxAuctions)));
             return false;
         }
 
         Economy econ = AetherAuctions.getEconomy();
-        double creationFee = configManager.getAuctionCreationFee(seller);
+        double creationFee = configManager.getAuctionCreationFee(); // No necesita 'seller'
         if (creationFee > 0) {
             if (!econ.has(seller, creationFee)) {
                 messageManager.sendMessage(seller, configManager.getPluginPrefix() + messageManager.getMessage("auction_create_error_insufficient_funds_fee", "%fee%", String.valueOf(creationFee)));
