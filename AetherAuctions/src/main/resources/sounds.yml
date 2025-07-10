@@ -1,0 +1,53 @@
+# === AetherAuctions: Sound Configuration ===
+# Configure sounds for various actions within the plugin.
+
+# Globally enable or disable all custom plugin sounds.
+# If false, no sounds defined below will be played by the plugin.
+enabled: true
+
+# Define specific sounds for actions.
+# Format: action_key: { sound: "BUKKIT_SOUND_NAME", volume: 1.0, pitch: 1.0 }
+# - 'action_key': A descriptive key for the sound event (e.g., gui_click, auction_created).
+# - 'sound': The official Bukkit Sound name. List: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Sound.html
+# - 'volume': (Optional) Float value for volume (e.g., 1.0 is default).
+# - 'pitch': (Optional) Float value for pitch (e.g., 1.0 is default).
+# If volume or pitch are not specified, SoundManager will use its internal defaults (usually 1.0f).
+
+# --- GUI Interaction Sounds ---
+gui_click: { sound: "UI_BUTTON_CLICK", volume: 1.0, pitch: 1.0 }
+gui_open: { sound: "BLOCK_CHEST_OPEN", volume: 0.8, pitch: 1.1 }
+gui_close: { sound: "BLOCK_CHEST_CLOSE", volume: 0.8, pitch: 1.1 }
+gui_page_turn: { sound: "ITEM_BOOK_PAGE_TURN", volume: 0.8, pitch: 1.0 }
+
+# --- Auction Event Sounds ---
+auction_created: { sound: "ENTITY_ITEM_FRAME_ADD_ITEM", volume: 1.0, pitch: 1.0 }
+auction_cancelled: { sound: "BLOCK_LEVER_CLICK", volume: 1.0, pitch: 0.8 }
+# Sound for a successful bid placed by the bidder.
+bid_placed_success: { sound: "ENTITY_EXPERIENCE_ORB_PICKUP", volume: 0.8, pitch: 1.2 }
+# Sound for a player who was outbid.
+bid_outbid_notification: { sound: "ENTITY_VILLAGER_NO", volume: 1.0, pitch: 0.9 }
+# Sound for the seller when a new bid is placed on their auction.
+bid_new_on_own_item: { sound: "ENTITY_ARROW_HIT_PLAYER", volume: 0.8, pitch: 1.2 }
+# Sound for the player who won an auction (via bidding).
+auction_won_by_bidder: { sound: "ENTITY_PLAYER_LEVELUP", volume: 0.9, pitch: 1.0 }
+# Sound for the seller when their auction is sold (either by bid or buy now).
+auction_sold_to_seller: { sound: "ENTITY_VILLAGER_YES", volume: 1.0, pitch: 1.0 }
+
+# --- Reward & Item Claim Sounds ---
+reward_item_claimed: { sound: "ENTITY_ITEM_PICKUP", volume: 0.8, pitch: 1.1 }
+reward_money_claimed: { sound: "ENTITY_PLAYER_LEVELUP", volume: 0.7, pitch: 1.5 } # Can be same as auction_won
+# Sound for the notification a player receives on join if they have pending rewards (and rewards.delivery_mode is 'gui').
+reward_pending_join_notification: { sound: "ENTITY_EXPERIENCE_ORB_PICKUP", volume: 0.7, pitch: 1.5 }
+
+# --- General Feedback Sounds ---
+# Generic error sound for failed actions or invalid input.
+general_error: { sound: "BLOCK_NOTE_BLOCK_PLING", volume: 1.0, pitch: 0.7 }
+# Sound played when an action fails due to a full inventory.
+inventory_full_error: { sound: "ENTITY_VILLAGER_NO", volume: 1.0, pitch: 0.8 }
+
+# --- Sounds for PrepareMysteryLotGUI (Example, can be expanded) ---
+# prepare_mystery_item_added: { sound: "ENTITY_CHICKEN_EGG", volume: 0.8, pitch: 1.2 }
+# prepare_mystery_item_removed: { sound: "ENTITY_CHICKEN_EGG", volume: 0.8, pitch: 0.8 }
+# prepare_mystery_confirmed: { sound: "BLOCK_END_PORTAL_FRAME_FILL", volume: 1.0, pitch: 1.0 }
+# prepare_mystery_cancelled: { sound: "UI_BUTTON_CLICK", volume: 1.0, pitch: 0.8 }
+```

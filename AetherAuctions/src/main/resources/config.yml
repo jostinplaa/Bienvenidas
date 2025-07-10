@@ -1,195 +1,51 @@
-# ============================================================================================================================== #
-#                                       AetherAuctions Configuration File                                                      #
-# ============================================================================================================================== #
-# Para asistencia o información adicional, por favor visita [URL de tu Wiki/Documentación si la tienes].
-# Versión del Plugin: (se actualiza con el plugin) - Configuración v1.0
+# === AetherAuctions: General Configuration ===
+# Config Version: 1.1 (Do not modify unless you know what you are doing)
 
-# Prefijo visual que aparecerá antes de la mayoría de los mensajes del plugin.
-# Ejemplo: "&6[Subastas] &r"
-plugin_prefix: "&6[&eAetherAuctions&6] &r"
-
-general:
-  # Símbolo de la moneda utilizada en el servidor (ej. $, €, etc.).
-  currency_symbol: "$"
+plugin_settings:
+  # Visual prefix for most plugin messages.
+  prefix: "&6[&eAetherAuctions&6] &r"
+  # Name of the language file (located in the plugin's folder).
+  language_file: "messages.yml"
+  # Interval (in seconds) for the task that checks and processes expired auctions.
+  auction_expiration_check_interval_seconds: 60
 
 database:
-  # Tipo de base de datos a utilizar. Actualmente solo "sqlite" está soportado.
-  # Futuras versiones podrían incluir soporte para "mysql".
+  # Database type. Currently, only "sqlite" is supported.
   type: "sqlite"
-  # Nombre del archivo para la base de datos SQLite. Se creará en la carpeta del plugin.
-  # Actualmente, el nombre "auctions.db" está fijado en el código y esta opción no se utiliza.
-  # sqlite_file_name: "auctions.db"
+  # Filename for the SQLite database. It will be created in 'plugins/AetherAuctions/database/'.
+  sqlite_filename: "auctions_data.db"
 
-auction:
-  # Duración por defecto de una subasta en horas, si el jugador no especifica una.
-  default_duration_hours: 24 # Ejemplo: 48 para dos días
+economy:
+  # Symbol for the currency used in auction transactions (e.g., $, €, Coins).
+  currency_symbol: "$"
+  # Future options for virtual currency could be added here.
+  # enable_virtual_currency: false
+  # virtual_currency_name: "Gems"
 
-  # Máximo número de subastas activas que un jugador puede tener simultáneamente.
-  # Considera añadir permisos para diferentes límites (ej. aetherauctions.limit.vip10).
-  max_active_auctions_per_player: 5
+# Module loading configuration.
+# Set to 'true' to load the respective .yml file, 'false' to use internal defaults (if available) or disable the feature.
+# This allows selective loading if a config file is problematic or a feature is not desired.
+load_modules:
+  gui_config: true
+  sounds_config: true
+  commissions_config: true
+  rewards_config: true
+  history_config: true
+  limits_config: true
+  announcements_config: true
+  vip_tiers_config: true
 
-  # Incremento mínimo requerido para una nueva puja sobre la puja más alta actual.
-  # Ayuda a evitar pujas muy pequeñas y prolongar innecesariamente las subastas.
-  min_bid_increment: 10.0
+command_suggestions:
+  # Enable command suggestions if a player types an unknown subcommand (e.g., /ah helo -> Did you mean /ah help?).
+  enable: true
+  # Similarity threshold (0.0 to 1.0) for a suggestion to be made. Higher is stricter.
+  similarity_threshold: 0.75
 
-  # Permitir la opción de "Comprar Ahora" en las subastas.
-  # Si es true, los jugadores pueden establecer un precio de compra directa.
-  allow_buy_now: true
-
-  # Tarifa fija que se cobra al jugador por crear una subasta.
-  # Establecer en 0.0 para desactivar las tarifas de creación.
-  creation_fee: 0.0 # Ejemplo: 100.0 (cobraría 100 de la moneda del servidor)
-
-  # Intervalo en segundos para la tarea que revisa y finaliza subastas expiradas.
-  # Un valor más bajo es más reactivo pero puede consumir más recursos.
-  expired_check_interval_seconds: 60 # Cada minuto
-
-  # Lista de materiales (ítems) que no pueden ser subastados.
-  # Usa nombres de Material de Bukkit: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Material.html
-  item_blacklist:
-    - "BEDROCK"
-    - "COMMAND_BLOCK"
-    - "STRUCTURE_VOID"
-    - "BARRIER"
-    - "KNOWLEDGE_BOOK"
-    - "DEBUG_STICK"
-
-  # Permitir la creación y funcionamiento de Subastas Misteriosas (lotes de ítems).
-  allow_mystery_auctions: true
-
-  commission:
-    # Define cómo se calcula la comisión (tarifa del servidor) sobre las ventas.
-    # Tipos disponibles:
-    #   "flat_percentage": Un porcentaje fijo sobre el precio de venta final.
-    #   "per_category_percentage": Diferentes porcentajes basados en el material del ítem.
-    #   "tiered_percentage": Porcentajes que varían según rangos de precio de venta.
-    type: "flat_percentage"
-
-    # Porcentaje de comisión por defecto.
-    # Usado para "flat_percentage" y como fallback si una categoría o tramo no está definido.
-    # Valor entre 0 y 100 (ej. 5.0 para 5%).
-    default_percentage: 5.0
-
-    # Configuración para "per_category_percentage".
-    # Asocia nombres de Material de Bukkit (en mayúsculas) a un porcentaje de comisión.
-    categories:
-      DIAMOND_SWORD: 10.0 # Comisión del 10% para espadas de diamante
-      ELYTRA: 15.0        # Comisión del 15% para elytras
-      NETHERITE_INGOT: 7.5
-      ENCHANTED_GOLDEN_APPLE: 12.0
-      # Comisión para todos los demás ítems no listados específicamente.
-      DEFAULT_OTHER: 5.0
-
-    # Configuración para "tiered_percentage".
-    # Lista de tramos de precios. La comisión se basa en el primer tramo que coincida.
-    # El orden es importante: define los tramos de menor a mayor `max_price`.
-    # Usa `max_price: -1` para el último tramo (cualquier precio superior al tramo anterior).
-    tiers:
-      - { max_price: 100.0, percentage: 7.0 }    # Ventas hasta 100: comisión del 7%
-      - { max_price: 1000.0, percentage: 5.0 }   # Ventas de 100.01 a 1000: comisión del 5%
-      - { max_price: 10000.0, percentage: 3.0 }  # Ventas de 1000.01 a 10000: comisión del 3%
-      - { max_price: -1, percentage: 1.5 }       # Ventas superiores a 10000: comisión del 1.5%
-
-gui:
-  # Material para los paneles de relleno/decorativos en la GUI principal de subastas.
-  main_decorative_pane_material: "GRAY_STAINED_GLASS_PANE"
-  # Material para los paneles de relleno/decorativos en la GUI de detalles de subasta.
-  details_decorative_pane_material: "BLACK_STAINED_GLASS_PANE"
-
-  # Número de ítems de subasta a mostrar por página en las GUIs de listado.
-  items_per_page: 36 # Valores comunes: 27, 36, 45 (total_slots - slots_de_navegacion)
-
-  # Intervalo en segundos para el refresco automático de la GUI principal si el número total de subastas cambia.
-  # Esto NO es para actualizar pujas en tiempo real en ítems individuales.
-  # Poner en 0 para desactivar este refresco automático por conteo.
-  main_auto_refresh_interval_seconds: 10
-
-  sounds:
-    # Activar o desactivar todos los sonidos de la GUI del plugin.
-    enabled: true
-    # Nombres de sonidos de Bukkit: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Sound.html
-    # Formato: clave_descriptiva: { sound: "BUKKIT_SOUND_NAME", volume: 1.0, pitch: 1.0 }
-    # Volumen y pitch son opcionales y usarán los valores por defecto de SoundManager si no se especifican.
-    click: { sound: "UI_BUTTON_CLICK", volume: 1.0, pitch: 1.0 }
-    open_gui: { sound: "BLOCK_CHEST_OPEN", volume: 0.8, pitch: 1.1 }
-    close_gui: { sound: "BLOCK_CHEST_CLOSE", volume: 0.8, pitch: 1.1 }
-    page_turn: { sound: "ITEM_BOOK_PAGE_TURN", volume: 0.8, pitch: 1.0 }
-    bid_placed_success: { sound: "ENTITY_EXPERIENCE_ORB_PICKUP", volume: 0.8, pitch: 1.2 }
-    bid_outbid_notification: { sound: "ENTITY_VILLAGER_NO", volume: 1.0, pitch: 0.9 } # Sonido para cuando te superan la puja
-    bid_new_on_own: {sound: "ENTITY_ARROW_HIT_PLAYER", volume: 0.8, pitch: 1.2} # Sonido para el vendedor cuando alguien puja en su ítem
-    auction_won: { sound: "ENTITY_PLAYER_LEVELUP", volume: 0.9, pitch: 1.0 }
-    auction_sold_for_seller: { sound: "ENTITY_VILLAGER_YES", volume: 1.0, pitch: 1.0 } # Sonido para el vendedor cuando su ítem se vende
-    auction_item_claimed: { sound: "ENTITY_ITEM_PICKUP", volume: 0.8, pitch: 1.1 }
-    auction_created: { sound: "ENTITY_ITEM_FRAME_ADD_ITEM", volume: 1.0, pitch: 1.0 }
-    auction_cancelled: { sound: "BLOCK_LEVER_CLICK", volume: 1.0, pitch: 0.8 }
-    reward_pending_notification: { sound: "ENTITY_EXPERIENCE_ORB_PICKUP", volume: 0.7, pitch: 1.5 } # Notificación de recompensa pendiente al unirse
-    error: { sound: "BLOCK_NOTE_BLOCK_PLING", volume: 1.0, pitch: 0.7 } # Sonido de error general
-    inventory_full: { sound: "ENTITY_VILLAGER_NO", volume: 1.0, pitch: 0.8 } # Cuando el inventario está lleno
-
-  buttons: # Configuración de botones en la GUI principal (MainAuctionGUI)
-    my_active_auctions:
-      material: "WRITABLE_BOOK" # Material del botón. Si se comenta, se usa el valor por defecto del código.
-      slot: 47 # Slot donde aparecerá el botón (0-53).
-    player_history:
-      material: "CLOCK"
-      slot: 51
-    rewards:
-      material: "CHEST"
-      slot: 52
-
-messages:
-  # Formato para mensajes cuando una clave no se encuentra en messages.yml.
-  # %key% será reemplazado por la clave de mensaje que faltaba.
-  missing_key_format: "&cError: Clave de mensaje '%key%' no encontrada."
-
-pending_rewards:
-  # Número de días que se conservarán los registros de recompensas ya entregadas en la base de datos antes de ser eliminados.
-  # Establecer en 0 o un número negativo para deshabilitar la limpieza automática de recompensas antiguas.
-  cleanup_days_to_keep: 30
-
-rewards:
-  # Método de entrega para las recompensas de subastas (ítems o dinero).
-  # Opciones:
-  #   "auto": Las recompensas se intentan entregar automáticamente al inventario/cuenta del jugador cuando se conecta (si es posible).
-  #           Si falla (ej. inventario lleno), se convierte en una recompensa pendiente. (Comportamiento por defecto)
-  #   "gui": Todas las recompensas (ítems y dinero) deben ser reclamadas manualmente por el jugador
-  #          usando /subasta reclamar o el botón de recompensas en la GUI principal.
-  delivery-mode: "auto"
-
-  # Si delivery-mode es "gui", ¿se debe enviar un mensaje al jugador al unirse si tiene recompensas pendientes?
-  message_on_join_for_gui_mode: true
-
-history:
-  # Habilitar o deshabilitar el sistema de historial de subastas.
-  enabled: true
-  # Número máximo de registros de historial a mantener por jugador. Los más antiguos se eliminarán.
-  records_per_player: 50
-  # Al usar /subasta admin historial <jugador> sin especificar fechas, ¿cuántos días de historial mostrar por defecto?
-  # Poner 0 o negativo para intentar mostrar todos los registros disponibles para ese jugador.
-  default_days_to_show: 7
-
-my_auctions_gui:
-  # Habilitar o deshabilitar la GUI de "Mis Subastas" accesible mediante /subasta mis.
-  # Si es false, el comando podría estar deshabilitado o mostrar la info en chat (actualmente lo deshabilita).
-  enabled: true
-
-# --- EJEMPLOS DE CONFIGURACIONES AVANZADAS O FUTURAS (actualmente no implementadas o solo ideas) ---
-# vip_settings: # Configuraciones específicas para jugadores VIP (requeriría integración con sistema de permisos/grupos)
-#   perm_group_1: # Nombre del grupo de permisos
-#     max_active_auctions: 10
-#     reduced_commission_percentage: 2.5 # Sobrescribe la comisión normal
-#     no_creation_fee: true
-#   perm_group_2:
-#     max_active_auctions: 15
-#     # ... otras configuraciones
-#
-# auction_listing_defaults: # Valores por defecto para cuando un jugador crea una subasta
-#   default_sort_order: "TIME_LEFT_ASC" # Opciones: PRICE_ASC, PRICE_DESC, TIME_LEFT_ASC, TIME_LEFT_DESC, SELLER_NAME_ASC
-#   default_filter_category: "ALL" # Podría ser WEAPONS, ARMOR, BLOCKS, etc. si se implementan categorías
-#
-# announcement_settings: # Configuración para anuncios de nuevas subastas
-#   enabled: false
-#   interval_seconds: 300 # Cada 5 minutos
-#   min_price_for_announcement: 10000 # Solo anunciar subastas de alto valor
-#   message_format: "&6[Subastas] &e¡Nueva subasta creada por %player%: %item_name% por %price%!"
-# ------------------------------------------------------------------------------------------------------------------------------
+logging_and_debug:
+  # Enables more detailed console messages for debugging. Recommended to keep 'false' on production servers.
+  verbose_console_output: false
+  # Future debug flags:
+  # log_database_queries: false
+  # log_gui_event_processing: false
+  # log_commission_calculation: false
+```

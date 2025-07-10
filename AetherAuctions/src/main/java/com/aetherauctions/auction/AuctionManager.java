@@ -43,6 +43,7 @@ public class AuctionManager {
     private final RewardManager rewardManager;
     private final Map<UUID, Auction> activeAuctionsCache;
     private BukkitTask expirationCheckTask;
+    private final Map<UUID, Long> playerLastAuctionCreationTime = new HashMap<>(); // Para cooldown
 
     public AuctionManager(AetherAuctions plugin, AuctionStorage storage) {
         this.plugin = plugin;
@@ -193,6 +194,9 @@ public class AuctionManager {
                 }
             }
             Bukkit.getPluginManager().callEvent(new AuctionUpdateEvent(auction, AuctionUpdateEvent.UpdateType.NEW_AUCTION_LISTED));
+            if (configManager.getAuctionCreationCooldownSeconds() > 0) {
+                playerLastAuctionCreationTime.put(seller.getUniqueId(), System.currentTimeMillis());
+            }
             return true;
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Error al guardar la nueva subasta ID: " + auction.getAuctionId(), e);
@@ -202,6 +206,24 @@ public class AuctionManager {
             return false;
         }
     }
+
+    // --- Métodos de Cooldown ---
+    public boolean isPlayerOnAuctionCreationCooldown(UUID playerId) {
+        long cooldownSeconds = configManager.getAuctionCreationCooldownSeconds();
+        if (cooldownSeconds <= 0) return false; // Cooldown desactivado
+        long lastCreation = playerLastAuctionCreationTime.getOrDefault(playerId, 0L);
+        long timeSinceLast = java.util.concurrent.TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - lastCreation);
+        return timeSinceLast < cooldownSeconds;
+    }
+
+    public long getAuctionCreationCooldownTimeLeft(UUID playerId) {
+        long cooldownSeconds = configManager.getAuctionCreationCooldownSeconds();
+        if (cooldownSeconds <= 0) return 0L;
+        long lastCreation = playerLastAuctionCreationTime.getOrDefault(playerId, 0L);
+        long timeSinceLast = java.util.concurrent.TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - lastCreation);
+        return Math.max(0L, cooldownSeconds - timeSinceLast);
+    }
+    // --- Fin Métodos de Cooldown ---
 
     public boolean placeBid(Player bidder, UUID auctionId, double bidAmount) {
         Auction auction = activeAuctionsCache.get(auctionId);
@@ -1094,6 +1116,9 @@ public class AuctionManager {
                 auctionStorage.purgeOldPlayerHistory(seller.getUniqueId(), plugin.getConfigManager().getHistoryRecordsPerPlayer());
             }
             Bukkit.getPluginManager().callEvent(new AuctionUpdateEvent(auction, AuctionUpdateEvent.UpdateType.NEW_AUCTION_LISTED));
+            if (configManager.getAuctionCreationCooldownSeconds() > 0) {
+                playerLastAuctionCreationTime.put(seller.getUniqueId(), System.currentTimeMillis());
+            }
             return true; // Éxito
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Error al guardar la nueva subasta misteriosa ID: " + auction.getAuctionId(), e);

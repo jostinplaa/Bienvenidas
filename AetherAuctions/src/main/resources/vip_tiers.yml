@@ -1,0 +1,64 @@
+# === AetherAuctions: VIP Tier Benefits ===
+# Define special benefits for players based on permissions.
+# Players can belong to multiple tiers; the best applicable benefit will be used (e.g., highest limit, lowest fee/commission).
+# The plugin will check permissions in the order tiers are listed here; consider this if using fallback/override logic.
+
+# Enable or disable the VIP tier system. If false, these configurations are ignored.
+enabled: true
+
+# --- Default Player Benefits (Fallback) ---
+# These settings apply to players who do not have permission for any specific tier listed below.
+# If a benefit is not defined here, the global default from other config files (limits.yml, commissions.yml) will be used.
+# Use -1 or specific values to override globals. A value of -1 for a limit often means "use global default".
+# For modifiers, 1.0 usually means no change from the global calculated value.
+default_player_benefits:
+  max_active_auctions: -1 # -1 to use value from limits.yml, or specify a number like 3
+  # creation_fee_override: -1.0 # -1.0 to use global fee, 0.0 for free, or a specific fee amount
+  # commission_percentage_modifier: 1.0 # 1.0 = 100% of normal commission, 0.9 = 90% (10% discount)
+  # can_create_mystery_auctions: true # Override global setting from config.yml if needed
+  # auction_creation_cooldown_seconds_modifier: 1.0 # 1.0 = normal cooldown, 0.5 = half cooldown
+
+# --- VIP Tiers ---
+# Define different tiers. Each tier requires a unique permission.
+# Players will receive the benefits of the BEST tier they have permission for if multiple permissions are granted.
+# (e.g., if they have perm for tier1 and tier2, and tier2 has higher max_auctions, tier2's value is used).
+# The plugin iterates through this list; for overrides, the last matching permission might take precedence depending on implementation.
+# A common approach is for the plugin to find all matching tiers and pick the "best" value for each attribute.
+tiers:
+  bronze:
+    permission: "aetherauctions.vip.bronze"
+    # (Optional) Display name for this tier, could be used in messages or GUIs.
+    display_name: "&7[BronceVIP]"
+    # Benefits for this tier. These will override 'default_player_benefits' and global settings.
+    max_active_auctions: 7
+    creation_fee_override: 25.0 # Specific fee of 25, overrides global 0.0 or other values. Use -1 for global.
+    commission_percentage_modifier: 0.95 # Player pays 95% of the normally calculated commission (5% discount).
+    # auction_creation_cooldown_seconds_modifier: 0.8 # 80% of normal cooldown (20% faster)
+
+  silver:
+    permission: "aetherauctions.vip.silver"
+    display_name: "&f[PlataVIP]"
+    max_active_auctions: 10
+    creation_fee_override: 0.0 # Free auction creation for this tier.
+    commission_percentage_modifier: 0.90 # Player pays 90% of the normally calculated commission (10% discount).
+    # auction_creation_cooldown_seconds_modifier: 0.6
+    # can_create_mystery_auctions: true # Explicitly allow if default was false
+
+  gold:
+    permission: "aetherauctions.vip.gold"
+    display_name: "&6[OroVIP]"
+    max_active_auctions: 15
+    creation_fee_override: 0.0
+    commission_percentage_modifier: 0.80 # Player pays 80% of the normally calculated commission (20% discount).
+    # auction_creation_cooldown_seconds_modifier: 0.4
+    # list_own_auctions_first_in_gui: true # Future idea: VIPs get priority listing
+
+  diamond:
+    permission: "aetherauctions.vip.diamond"
+    display_name: "&b[DiamanteVIP]"
+    max_active_auctions: 25 # Generous limit
+    creation_fee_override: 0.0
+    # No commission at all for this tier
+    commission_percentage_modifier: 0.0 # Player pays 0% commission (100% discount).
+    # auction_creation_cooldown_seconds_modifier: 0.0 # No cooldown
+```

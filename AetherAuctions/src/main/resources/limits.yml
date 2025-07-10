@@ -1,0 +1,47 @@
+# === AetherAuctions: Limits & Restrictions Configuration ===
+
+# --- Auction Creation Limits ---
+auctions:
+  # Maximum number of auctions a player can have active simultaneously.
+  # This is a global limit. For permission-based limits, see 'vip_tiers.yml'.
+  max_active_per_player: 5
+
+  # Cooldown (in seconds) between a player creating auctions.
+  # Set to 0 to disable this cooldown.
+  creation_cooldown_seconds: 60 # Player must wait 1 minute between creating auctions.
+
+# --- Item Restrictions ---
+items:
+  # List of materials (items) that are forbidden from being auctioned.
+  # Use official Bukkit Material names: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Material.html
+  blacklist:
+    - "BEDROCK"
+    - "COMMAND_BLOCK"
+    - "STRUCTURE_VOID"
+    - "BARRIER"
+    - "KNOWLEDGE_BOOK"
+    - "DEBUG_STICK"
+    - "AIR" # Redundant as code should prevent this, but good for clarity.
+    # Add other items like spawner, bedrock, etc., as needed for your server balance.
+    # - "SPAWNER"
+    # - "DRAGON_EGG"
+
+# --- Mystery Auction Specific Limits ---
+# (General enabling of mystery auctions is in config.yml -> auctions.behavior.allow_mystery_auctions)
+mystery_auctions:
+  # Maximum number of individual item stacks that can be included in a single mystery lot.
+  # This corresponds to the item slots in the PrepareMysteryLotGUI.
+  max_items_per_lot: 36 # Default matches the GUI size.
+  # (Future) Cooldown specifically for creating mystery auctions, if different from regular auctions.
+  # creation_cooldown_seconds: 300
+
+# --- Bidding Behavior Limits ---
+bidding:
+  # Minimum amount by which a new bid must exceed the current highest bid.
+  # Helps prevent spamming of very small bid increments.
+  min_bid_increment: 10.0
+  # (Future) Cooldown (in seconds) for a player to place another bid on the SAME auction.
+  # bid_on_same_auction_cooldown_seconds: 5
+  # (Future) Maximum bid amount allowed, or a percentage of server's total economy, to prevent hyperinflation.
+  # max_bid_amount: 1000000000
+```

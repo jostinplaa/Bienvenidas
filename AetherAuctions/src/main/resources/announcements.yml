@@ -1,0 +1,50 @@
+# === AetherAuctions: Auction Announcement Configuration ===
+# Configures automatic server-wide announcements for new or notable auctions.
+
+# Enable or disable the auction announcement system.
+enabled: false
+
+# Interval (in seconds) at which the system checks for auctions to announce.
+# A new announcement will only be made if there's an eligible auction and the cooldown has passed.
+# Example: 300 seconds = 5 minutes.
+check_interval_seconds: 300
+
+# Minimum value for an auction to be considered "high value" and eligible for announcement.
+# This can be based on the starting price or the buy now price.
+# Set to 0 to announce all new auctions (if 'announce_all_new_auctions' is true and not using this threshold).
+min_value_for_announcement: 10000.0
+
+# Type of value to check against 'min_value_for_announcement'.
+# Options: "START_PRICE", "BUY_NOW_PRICE", "HIGHEST_OF_BOTH"
+# If "HIGHEST_OF_BOTH", it will consider an auction if either its start price or buy now price (if set) meets the threshold.
+# If an auction has no buy now price, only start price will be considered for "HIGHEST_OF_BOTH".
+value_type_to_check: "START_PRICE"
+
+# If true, all newly listed auctions will be announced, regardless of 'min_value_for_announcement'.
+# 'min_value_for_announcement' would then only apply if this is false and you want to announce specific high-value ones.
+# It's generally recommended to use 'min_value_for_announcement' to avoid chat spam.
+announce_all_new_auctions: false
+
+# Format of the announcement message sent to chat.
+# Placeholders:
+#   %seller_name% - The name of the player who created the auction.
+#   %item_name% - The display name or material name of the item being auctioned.
+#   %item_amount% - The amount of the item stack.
+#   %start_price% - The starting bid price.
+#   %buy_now_price% - The buy now price (if available, otherwise a configurable 'not_available_text').
+#   %currency_symbol% - The currency symbol (e.g., $).
+#   %auction_id_short% - A shortened version of the auction ID.
+message_format: "&e[Subastas Mundiales] &6%seller_name% &eha listado &f%item_amount%x %item_name%&e! Puja inicial: &a%start_price%%currency_symbol%&e."
+# Example with Buy Now:
+# message_format_with_buy_now: "&e[Subastas Mundiales] &6%seller_name% &eha listado &f%item_amount%x %item_name%&e! Puja: &a%start_price%%currency_symbol%&e, Compra Ahora: &6%buy_now_price%%currency_symbol%&e!"
+buy_now_not_available_text: "N/A" # Text to use for %buy_now_price% if not set.
+
+# (Future Feature) Announce when a new high bid is placed on a notable auction.
+# announce_on_new_high_bid:
+#   enabled: false
+#   min_bid_increment_to_announce: 1000.0 # Only announce if the new bid is significantly higher.
+#   message_format: "&e[Subastas Mundiales] &6%bidder_name% &eacaba de superar la puja por &f%item_name% &e(&6%new_bid_amount%%currency_symbol%&e)!"
+
+# (Future Feature) Cooldown between individual announcements to prevent chat spam, even if multiple auctions qualify.
+# announcement_cooldown_seconds: 60
+```

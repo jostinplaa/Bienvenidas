@@ -1,0 +1,30 @@
+# === AetherAuctions: Rewards Handling Configuration ===
+
+# --- Delivery of Auction Rewards ---
+# Configures how players receive items they've won/bought or money from their sales.
+delivery_mode: "auto"
+# Options:
+#   "auto": The plugin attempts to deliver rewards (items to inventory, money to account) directly
+#           to the player, especially when they are online. If direct delivery fails (e.g.,
+#           inventory full, economy error), or if the player is offline, the reward is
+#           added to a pending queue for the player to claim later. (Default & Recommended)
+#   "gui":  All rewards (both items and money) are always sent to the pending queue.
+#           Players must manually claim them using the /subasta reclamar command or the
+#           rewards button in the main auction GUI.
+
+# --- Notifications for Pending Rewards ---
+# If 'delivery_mode' is set to "gui", or if an "auto" delivery fails and a reward becomes pending:
+notify_on_join_if_gui_mode_or_pending: true
+# If true, players will receive a chat message upon joining the server if they have
+# any rewards waiting to be claimed. The message content is in 'messages.yml' (rewards_pending_notification).
+
+# --- Cleanup of Delivered Rewards ---
+# Configuration for automatically cleaning up old, already delivered reward records from the database.
+# This helps keep the database size manageable over time.
+cleanup_delivered_rewards:
+  enabled: true
+  # How many days to keep records of DELIVERED rewards before they are eligible for purging.
+  # Set to 0 or a negative value to disable the cleanup task entirely.
+  keep_for_days: 30
+  # (Future) Interval for the cleanup task, e.g., daily, weekly. Currently runs on plugin enable.
+```

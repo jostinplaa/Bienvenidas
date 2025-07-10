@@ -1,0 +1,132 @@
+# === AetherAuctions: GUI Configuration ===
+# Configures the appearance and layout of all plugin GUIs.
+
+general_appearance:
+  # Number of auction items to display per page in listing GUIs (e.g., Main Auction House, My Auctions).
+  items_per_page: 36 # Recommended: 27, 36, or 45 for standard 6-row GUIs.
+  # Default material for decorative filler panes if a specific GUI doesn't define its own.
+  default_decorative_pane: "GRAY_STAINED_GLASS_PANE"
+  # Material for the item shown when a GUI list (auctions, history, rewards) is empty.
+  no_results_item: "GLASS_BOTTLE"
+
+main_auction_house: # Configuration for the main Auction House GUI (/ah)
+  # Title is typically set via messages.yml (e.g., main_gui_title_prefix)
+  rows: 6 # Total rows (54 slots)
+  # Specific decorative pane for this GUI, overrides general_appearance.default_decorative_pane.
+  decorative_pane: "BLUE_STAINED_GLASS_PANE"
+  # Interval in seconds for auto-refreshing the GUI if the total auction count changes.
+  # This is a basic refresh, not for live bid updates on individual items. Set to 0 to disable.
+  auto_refresh_on_count_change_interval_seconds: 10
+  # (Future Feature) Default sort order when opening the GUI.
+  # Options: TIME_LEFT_ASC, TIME_LEFT_DESC, CURRENT_BID_ASC, CURRENT_BID_DESC, SELLER_NAME_ASC
+  # default_sort_order: "TIME_LEFT_ASC"
+  # (Future Feature) Default item category filter when opening the GUI.
+  # default_filter_key: "ALL" # Key from 'filter_categories' section below
+
+  buttons: # Slot numbers are 0-indexed (0-53 for a 6-row GUI)
+    previous_page: { material: "ARROW", slot: 45 } # Message key for name: main_gui_button_previous_page
+    next_page: { material: "ARROW", slot: 53 }     # Message key for name: main_gui_button_next_page
+    close: { material: "BARRIER", slot: 49 }       # Message key for name: main_gui_button_close
+    my_auctions: { material: "WRITABLE_BOOK", slot: 47 } # Name: main_gui_my_auctions_button_name, Lore: main_gui_my_auctions_button_lore
+    player_history: { material: "CLOCK", slot: 51 }      # Name: main_gui_history_button_name, Lore: main_gui_history_button_lore
+    claim_rewards: { material: "CHEST", slot: 52 }       # Name: main_gui_rewards_button_name, Lore: main_gui_rewards_button_lore_action_list
+
+my_active_auctions_gui: # Configuration for "/ah mis" GUI
+  rows: 6
+  buttons:
+    previous_page: { material: "ARROW", slot: 45 }
+    next_page: { material: "ARROW", slot: 53 }
+    back_to_main_auctions: { material: "NETHER_STAR", slot: 49 } # Name: my_auctions_gui_button_back_to_main
+    player_history: { material: "CLOCK", slot: 51 }
+
+auction_details_gui: # Configuration for the GUI showing details of a specific auction
+  rows: 6
+  decorative_pane: "BLACK_STAINED_GLASS_PANE" # Specific pane for this GUI
+  item_display_slot: 22 # Slot to display the main auction item
+  buttons:
+    bid: { material: "EMERALD", slot: 38 }         # Name: button_bid
+    buy_now: { material: "GOLD_INGOT", slot: 40 }  # Name: button_buy_now, Lore (price): button_buy_now_lore_price
+    back_to_listing: { material: "BARRIER", slot: 49 } # Name: button_back
+
+prepare_mystery_lot_gui: # Configuration for the GUI to create mystery auction lots
+  rows: 6
+  max_items_in_lot: 36 # Number of player-configurable slots for items in the lot (typically rows 1-4)
+  buttons:
+    cancel_preparation: { material: "BARRIER", slot: 47 }       # Name: prepare_mystery_gui_button_cancel_name, Lore: prepare_mystery_gui_button_cancel_lore
+    info_display_item: { material: "PAPER", slot: 49 }          # Name: prepare_mystery_gui_info_title (Lore is dynamic)
+    confirm_and_create: { material: "EMERALD_BLOCK", slot: 51 } # Name: prepare_mystery_gui_button_confirm_name, Lore: prepare_mystery_gui_button_confirm_lore
+
+claim_rewards_gui: # Configuration for the GUI to claim pending rewards
+  rows: 6
+  buttons:
+    claim_all_rewards: { material: "CHEST_MINECART", slot: 49 } # Name: claim_gui_button_claim_all_name, Lore: claim_gui_button_claim_all_lore
+
+player_history_gui: # Configuration for the player's own auction history GUI
+  rows: 6
+  buttons:
+    previous_page: { material: "ARROW", slot: 45 }
+    next_page: { material: "ARROW", slot: 53 }
+    back_to_main_auctions: { material: "NETHER_STAR", slot: 49 } # Name: my_auctions_gui_button_back_to_main (reused)
+
+admin_history_gui: # Configuration for the admin view of player auction history
+  rows: 6
+  buttons:
+    previous_page: { material: "ARROW", slot: 45 }
+    next_page: { material: "ARROW", slot: 53 }
+    close: { material: "BARRIER", slot: 49 }
+
+manage_auction_context_gui: # Configuration for the GUI when a seller manages their own auction
+  rows: 3 # 27 slots
+  decorative_pane: "LIGHT_GRAY_STAINED_GLASS_PANE"
+  item_display_slot: 13 # Center slot for 3 rows (0-indexed)
+  buttons:
+    cancel_this_auction: { material: "RED_WOOL", slot: 11 }   # Name: manage_auction_gui_button_cancel_name, Lore: manage_auction_gui_button_cancel_lore
+    view_auction_details: { material: "BOOK", slot: 15 }     # Name: manage_auction_gui_button_details_name, Lore: manage_auction_gui_button_details_lore
+    back_to_my_auctions: { material: "ARROW", slot: 22 }      # Name: manage_auction_gui_button_back_name, Lore: manage_auction_gui_button_back_lore
+
+# (Future Feature) Item Filter Categories for Main Auction House
+# filter_categories:
+#   enabled: true
+#   # Slot for the filter button in MainAuctionGUI, or perhaps a separate GUI?
+#   filter_button_slot: 48
+#   filter_button_material: "HOPPER"
+#   filter_button_name_key: "main_gui_button_filter_name" # In messages.yml
+#
+#   # Define categories. Each key is an internal ID.
+#   # 'display_name_key' refers to a key in messages.yml for the category's name in the filter GUI.
+#   # 'materials' is a list of Bukkit Material names belonging to this category.
+#   # 'display_item' is the material to show in the filter selection GUI.
+#   categories_list:
+#     WEAPONS:
+#       display_name_key: "filter_category_display_name_weapons"
+#       display_item: "DIAMOND_SWORD"
+#       materials:
+#         - "DIAMOND_SWORD"
+#         - "NETHERITE_SWORD"
+#         - "IRON_SWORD"
+#         - "BOW"
+#         - "CROSSBOW"
+#         - "TRIDENT"
+#     ARMOR:
+#       display_name_key: "filter_category_display_name_armor"
+#       display_item: "DIAMOND_CHESTPLATE"
+#       materials:
+#         - "DIAMOND_HELMET"
+#         - "DIAMOND_CHESTPLATE"
+#         # ... other armor types
+#     BLOCKS:
+#       display_name_key: "filter_category_display_name_blocks"
+#       display_item: "GRASS_BLOCK"
+#       materials:
+#         - "STONE"
+#         - "DIRT"
+#         # ... other blocks
+#     TOOLS:
+#       display_name_key: "filter_category_display_name_tools"
+#       display_item: "DIAMOND_PICKAXE"
+#       # ...
+#     MISCELLANEOUS:
+#       display_name_key: "filter_category_display_name_misc"
+#       display_item: "ELYTRA"
+#       # ...
+```

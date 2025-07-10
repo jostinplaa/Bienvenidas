@@ -30,11 +30,11 @@ public class CommandManager implements CommandExecutor, TabCompleter {
     private final MessageManager msgManager;
     private final AuctionManager auctionManager;
     private final ConfigManager cfgManager;
-    // RewardManager is accessed via plugin.getRewardManager() when needed
+    // No se necesita mapa de cooldown aquí, AuctionManager lo gestionará.
 
-    private final List<String> validUserSubCommands = Arrays.asList("ayuda", "crear", "crearmisteriosa", "cancelar", "mis", "historial", "reclamar"); // Added "crearmisteriosa"
-    private final List<String> validAdminSubCommands = Arrays.asList("reload", "ver", "borrar"); // No changes here for now
-    private static final double SIMILARITY_THRESHOLD = 0.75;
+    private final List<String> validUserSubCommands = Arrays.asList("ayuda", "crear", "crearmisteriosa", "cancelar", "mis", "historial", "reclamar");
+    private final List<String> validAdminSubCommands = Arrays.asList("reload", "ver", "borrar");
+    // SIMILARITY_THRESHOLD se leerá de config
     public static final String MYSTERY_AUCTION_PERMISSION = "aetherauctions.command.crearmisteriosa";
 
     public CommandManager(AetherAuctions plugin) {
@@ -79,6 +79,14 @@ public class CommandManager implements CommandExecutor, TabCompleter {
                 msgManager.sendMessage(seller, "no_permission");
                 return true;
             }
+
+            // Cooldown Check
+            if (auctionManager.isPlayerOnAuctionCreationCooldown(seller.getUniqueId())) {
+                long timeLeft = auctionManager.getAuctionCreationCooldownTimeLeft(seller.getUniqueId());
+                msgManager.sendMessage(seller, "auction_creation_cooldown_active", "%time%", String.valueOf(timeLeft)); // Nueva clave de mensaje
+                return true;
+            }
+
             if (args.length < 3 || args.length > 4) {
                 msgManager.sendMessage(seller, "command_usage_crear");
                 return true;
@@ -193,8 +201,16 @@ public class CommandManager implements CommandExecutor, TabCompleter {
                 msgManager.sendMessage(seller, "no_permission");
                 return true;
             }
-            if (!cfgManager.isMysteryAuctionsAllowed()){
-                msgManager.sendMessage(seller, "mystery_auctions_disabled"); // Nueva clave de mensaje
+
+            // Cooldown Check (usa el mismo cooldown que la creación normal)
+            if (auctionManager.isPlayerOnAuctionCreationCooldown(seller.getUniqueId())) {
+                long timeLeft = auctionManager.getAuctionCreationCooldownTimeLeft(seller.getUniqueId());
+                msgManager.sendMessage(seller, "auction_creation_cooldown_active", "%time%", String.valueOf(timeLeft));
+                return true;
+            }
+
+            if (!cfgManager.isMysteryAuctionsAllowed()){ // Este getter usa la ruta nueva "auctions.behavior.allow_mystery_auctions"
+                msgManager.sendMessage(seller, "mystery_auctions_disabled");
                 return true;
             }
 
@@ -262,18 +278,20 @@ public class CommandManager implements CommandExecutor, TabCompleter {
         }
         else {
             String inputSubCommand = args[0].toLowerCase();
-            List<String> relevantCommands = new ArrayList<>(validUserSubCommands);
-            if (sender.hasPermission("aetherauctions.admin")) {
-                relevantCommands.add("admin");
-            }
-
-            String suggestion = findBestMatch(inputSubCommand, relevantCommands);
-
-            if (suggestion != null) {
-                String formattedSuggestion = msgManager.getRawMessage("command_suggestion_prefix", "&7¿Quizás quisiste decir: ") +
-                                           label + " " + suggestion +
-                                           msgManager.getRawMessage("command_suggestion_suffix", "&7?");
-                sender.sendMessage(formattedSuggestion);
+            if (cfgManager.isCommandSuggestionsEnabled()) { // Usar config
+                List<String> relevantCommands = new ArrayList<>(validUserSubCommands);
+                if (sender.hasPermission("aetherauctions.admin")) {
+                    relevantCommands.add("admin");
+                }
+                String suggestion = findBestMatch(inputSubCommand, relevantCommands, cfgManager.getCommandSuggestionSimilarityThreshold()); // Pasar umbral
+                if (suggestion != null) {
+                    String formattedSuggestion = msgManager.getRawMessage("command_suggestion_prefix") + // No necesita valor por defecto si está en messages.yml
+                                               label + " " + suggestion +
+                                               msgManager.getRawMessage("command_suggestion_suffix");
+                    sender.sendMessage(formattedSuggestion);
+                } else {
+                    msgManager.sendMessage(sender, "unknown_command");
+                }
             } else {
                 msgManager.sendMessage(sender, "unknown_command");
             }
@@ -292,8 +310,8 @@ public class CommandManager implements CommandExecutor, TabCompleter {
                 if (!sender.hasPermission("aetherauctions.admin.reload")) {
                     msgManager.sendMessage(sender, "no_permission"); return;
                 }
-                this.cfgManager.loadConfig();
-                this.msgManager.loadMessages();
+                // ConfigManager ahora tiene reloadAllConfigs() que también recarga MessageManager y SoundManager
+                this.cfgManager.reloadAllConfigs();
                 msgManager.sendMessage(sender, "admin_reload_success");
                 break;
             case "ver":
@@ -388,7 +406,8 @@ public class CommandManager implements CommandExecutor, TabCompleter {
         sender.sendMessage(msgManager.getRawMessage("help_footer"));
     }
 
-    private String findBestMatch(String input, List<String> candidates) {
+    // Modificar findBestMatch para aceptar el umbral
+    private String findBestMatch(String input, List<String> candidates, double threshold) {
         if (input == null || input.isEmpty() || candidates == null || candidates.isEmpty()) {
             return null;
         }
@@ -403,7 +422,7 @@ public class CommandManager implements CommandExecutor, TabCompleter {
                 bestMatch = candidate;
             }
         }
-        if (highestSimilarity >= SIMILARITY_THRESHOLD) {
+        if (highestSimilarity >= threshold) { // Usar el umbral de config
             return bestMatch;
         }
         return null;

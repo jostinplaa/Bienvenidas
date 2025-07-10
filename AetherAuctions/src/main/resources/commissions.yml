@@ -1,0 +1,51 @@
+# === AetherAuctions: Fees and Commissions Configuration ===
+
+# --- Auction Creation Fee ---
+# Flat fee charged to a player for creating any type of auction.
+# Set to 0.0 to disable creation fees entirely.
+# This fee is charged upfront when the auction is listed.
+auction_creation_fee: 0.0   # Example: 50.0 would charge 50 (of server's currency)
+
+# --- Server Commission on Successful Sales ---
+# Configure how the server takes a cut from completed auction sales.
+# This commission is only applied when an auction is successfully sold (either by bid or buy now).
+commission_system:
+  # Type of commission calculation to use. Valid options:
+  #   "flat_percentage": A single, fixed percentage applied to all sales.
+  #   "per_category_percentage": Different percentages based on the Material type of the item sold.
+  #   "tiered_percentage": Percentages that change based on the final sale price of the auction.
+  type: "flat_percentage"
+
+  # Default commission percentage (value between 0 and 100).
+  # - For "flat_percentage": This is the percentage used for all sales.
+  # - For "per_category_percentage": This is used as a fallback if an item's material is not in any defined category.
+  # - For "tiered_percentage": This is used if the sale price doesn't fit any defined tier (should not happen with a catch-all tier).
+  default_percentage: 5.0  # Example: 5.0 means a 5% commission
+
+  # --- Configuration for "per_category_percentage" type ---
+  # Define specific commission rates for different item Materials.
+  # Material names must be valid Bukkit Material names (e.g., DIAMOND_SWORD, ELYTRA).
+  # The system will look for an exact match; otherwise, it uses 'DEFAULT_OTHER'.
+  categories:
+    # Material_Name: Percentage
+    DIAMOND_SWORD: 10.0
+    ELYTRA: 15.0
+    NETHERITE_INGOT: 7.5
+    ENCHANTED_GOLDEN_APPLE: 12.0
+    POTION: 8.0 # Example for all potions (if not further categorized by PotionMeta)
+    # Commission for all other items not listed in a specific category above.
+    DEFAULT_OTHER: 4.0
+
+  # --- Configuration for "tiered_percentage" type ---
+  # Define commission percentages based on the final sale price.
+  # The list of tiers is processed in order. The first tier where 'max_price' is
+  # greater than or equal to the sale price will be applied.
+  # - 'max_price': The upper limit for this tier.
+  # - 'percentage': The commission percentage for this tier.
+  # It's recommended to have a final tier with 'max_price: -1' to act as a catch-all for very high prices.
+  tiers:
+    - { max_price: 100.0, percentage: 7.0 }    # For sales up to 100 (inclusive)
+    - { max_price: 1000.0, percentage: 5.0 }   # For sales > 100 and up to 1000 (inclusive)
+    - { max_price: 10000.0, percentage: 3.0 }  # For sales > 1000 and up to 10000 (inclusive)
+    - { max_price: -1, percentage: 1.5 }       # For sales greater than 10000
+```

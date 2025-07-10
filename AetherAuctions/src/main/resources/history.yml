@@ -1,0 +1,29 @@
+# === AetherAuctions: Auction History Configuration ===
+
+# --- Player Auction History ---
+# Enables or disables the auction history system for players.
+# If enabled, player actions (creating, bidding, winning, selling, etc.) are logged.
+enabled: true
+
+# Maximum number of history records to keep per player.
+# When a player exceeds this limit, their oldest history records will be automatically purged.
+# Set to 0 or a negative value to keep an unlimited number of records (not recommended for performance).
+max_records_per_player: 50
+
+# --- Admin History View ---
+# When an admin uses "/subasta admin historial <jugador>" without specifying a date range:
+# Default number of past days for which to display history records.
+# For example, 7 will show records from the last 7 days.
+# Set to 0 or a negative value to attempt to show all available records for the player (may be slow for large histories).
+admin_view_default_days_past: 7
+
+# --- Future History Features (Not Yet Implemented) ---
+# export:
+#   enabled: false
+#   # Directory within the plugin folder to save exported history files.
+#   export_directory: "history_exports"
+#   # Available formats for exporting history data.
+#   default_format: "CSV" # Options: "CSV", "JSON", "TXT"
+#   # Command for players to export their own history (if permissioned).
+#   allow_player_export_command: false
+```
