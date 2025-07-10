@@ -4,6 +4,7 @@ import com.aetherauctions.AetherAuctions;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.FileConfiguration; // Importación añadida
 
 import java.util.HashMap;
 import java.util.Map;
@@ -66,11 +67,12 @@ public class SoundManager {
         // o SoundManager podría seguir accediendo directamente a plugin.getConfig() para esta sección específica
         // si se considera que la estructura de sonidos es demasiado compleja para getters individuales.
         // Por ahora, mantendremos el acceso directo a la sección, pero a través de la instancia de config de ConfigManager.
-        FileConfiguration currentConfig = plugin.getConfig(); // O idealmente cfgManager.getRawConfig().
-        ConfigurationSection soundsSection = currentConfig.getConfigurationSection("sounds"); // Ruta actualizada
+        // FileConfiguration currentConfig = plugin.getConfig(); // Ya no se usa config.yml para esto
+        ConfigurationSection soundsSection = cfgManager.getSoundsConfigSection(); // Usar el getter que apunta a soundsConfig
 
         if (soundsSection == null) {
-            plugin.getLogger().warning("'sounds' section is missing in config.yml. Using default sounds.");
+            // Esto puede ocurrir si sounds.yml no se carga o está vacío.
+            plugin.getLogger().warning("La configuración de sonidos (sounds.yml o sección 'sounds') no está cargada o está vacía. Usando sonidos por defecto.");
             for (Map.Entry<String, DefaultSound> entry : defaultSounds.entrySet()) {
                 try {
                     soundMap.put(entry.getKey(), Sound.valueOf(entry.getValue().bukkitSound.toUpperCase()));

@@ -86,14 +86,14 @@ public class RewardManager {
             logger.info(String.format("[RewardManager] Encontradas %d recompensas pendientes para %s (%s).", rewards.size(), playerName, playerId));
 
             plugin.getServer().getScheduler().runTask(plugin, () -> {
-                if ("gui".equalsIgnoreCase(configManager.getRewardDeliveryMethod())) {
-                    if (configManager.showMessageOnJoinForGuiMode() && !rewards.isEmpty()) {
+                if ("gui".equalsIgnoreCase(configManager.getRewardDeliveryMethod())) { // Usar getter de configManager
+                    if (configManager.notifyOnJoinIfGuiModeRewards() && !rewards.isEmpty()) { // Usar nuevo getter
                         messageManager.sendMessage(player, "rewards_pending_notification", "%count%", String.valueOf(rewards.size()));
                         logger.info(String.format("[RewardManager] Modo GUI: Notificando a %s de %d recompensas pendientes.", playerName, rewards.size()));
                     } else if (rewards.isEmpty()) {
                          logger.info(String.format("[RewardManager] Modo GUI: No hay recompensas pendientes para %s.", playerName));
                     } else {
-                        // Modo GUI pero message_on_join_for_gui_mode es false, no hacer nada.
+                        // Modo GUI pero notify_on_join_if_gui_mode es false, no hacer nada.
                         logger.info(String.format("[RewardManager] Modo GUI: %s tiene %d recompensas, pero la notificación al unirse está desactivada.", playerName, rewards.size()));
                     }
                     return; // No procesar automáticamente en modo GUI
@@ -403,9 +403,13 @@ public class RewardManager {
         long periodTicks = 20L * 60 * 60 * 24; // Run once a day
         plugin.getServer().getScheduler().runTaskTimerAsynchronously(plugin, () -> {
             logger.info("Running scheduled cleanup of old delivered rewards...");
-            int daysToKeep = configManager.getDeliveredRewardsKeptDays();
-            if (daysToKeep <= 0) {
-                logger.info("Old reward cleanup disabled (daysToKeep is " + daysToKeep + ").");
+            if (!configManager.isRewardCleanupEnabled()){ // Usar nueva clave para habilitar/deshabilitar
+                logger.info("Old reward cleanup task is disabled via config (rewards.cleanup_delivered_rewards.enabled: false).");
+                return;
+            }
+            int daysToKeep = configManager.getDeliveredRewardsCleanupDays(); // Usar nuevo getter
+            if (daysToKeep <= 0) { // Esta condición ahora es redundante si isRewardCleanupEnabled es la principal
+                logger.info("Old reward cleanup effectively disabled (daysToKeep is " + daysToKeep + ").");
                 return;
             }
             try {

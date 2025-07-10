@@ -4,7 +4,8 @@ import com.aetherauctions.AetherAuctions;
 import com.aetherauctions.model.PendingReward;
 import com.aetherauctions.managers.RewardManager;
 import com.aetherauctions.util.InventoryUtil;
-import com.aetherauctions.util.ItemUtil; // Asumiendo que tienes una clase para crear items de GUI
+import com.aetherauctions.util.ItemUtil;
+import com.aetherauctions.config.ConfigManager; // Importación añadida
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;

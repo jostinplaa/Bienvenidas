@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashMap; // Importación añadida
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.Arrays;
@@ -188,19 +189,19 @@ public class AuctionManager {
                 );
                 try {
                     auctionStorage.saveHistoryEvent(historyEvent);
-                    auctionStorage.purgeOldPlayerHistory(seller.getUniqueId(), plugin.getConfigManager().getHistoryRecordsPerPlayer());
+                    auctionStorage.purgeOldPlayerHistory(seller.getUniqueId(), configManager.getMaxHistoryRecordsPerPlayer()); // Usar configManager
                 } catch (SQLException ex) {
                     plugin.getLogger().log(Level.SEVERE, "Error al guardar evento de historial (AUCTION_CREATED) para subasta ID: " + auction.getAuctionId(), ex);
                 }
             }
             Bukkit.getPluginManager().callEvent(new AuctionUpdateEvent(auction, AuctionUpdateEvent.UpdateType.NEW_AUCTION_LISTED));
-            if (configManager.getAuctionCreationCooldownSeconds() > 0) {
+            if (configManager.getAuctionCreationCooldownSeconds() > 0) { // Correcto, usa el método de ConfigManager
                 playerLastAuctionCreationTime.put(seller.getUniqueId(), System.currentTimeMillis());
             }
             return true;
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Error al guardar la nueva subasta ID: " + auction.getAuctionId(), e);
-            messageManager.sendMessage(seller, "auction_create_error_database"); // Corregido
+            messageManager.sendMessage(seller, "auction_create_error_database");
             if (creationFee > 0) econ.depositPlayer(seller, creationFee);
             seller.getInventory().addItem(item.clone());
             return false;
@@ -209,15 +210,15 @@ public class AuctionManager {
 
     // --- Métodos de Cooldown ---
     public boolean isPlayerOnAuctionCreationCooldown(UUID playerId) {
-        long cooldownSeconds = configManager.getAuctionCreationCooldownSeconds();
-        if (cooldownSeconds <= 0) return false; // Cooldown desactivado
+        long cooldownSeconds = configManager.getAuctionCreationCooldownSeconds(); // Correcto
+        if (cooldownSeconds <= 0) return false;
         long lastCreation = playerLastAuctionCreationTime.getOrDefault(playerId, 0L);
         long timeSinceLast = java.util.concurrent.TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - lastCreation);
         return timeSinceLast < cooldownSeconds;
     }
 
     public long getAuctionCreationCooldownTimeLeft(UUID playerId) {
-        long cooldownSeconds = configManager.getAuctionCreationCooldownSeconds();
+        long cooldownSeconds = configManager.getAuctionCreationCooldownSeconds(); // Correcto
         if (cooldownSeconds <= 0) return 0L;
         long lastCreation = playerLastAuctionCreationTime.getOrDefault(playerId, 0L);
         long timeSinceLast = java.util.concurrent.TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - lastCreation);
@@ -305,7 +306,7 @@ public class AuctionManager {
                         auction.getSellerName(), auction.getSellerUUID(), System.currentTimeMillis()
                 );
                 auctionStorage.saveHistoryEvent(bidPlacedEvent);
-                auctionStorage.purgeOldPlayerHistory(bidder.getUniqueId(), plugin.getConfigManager().getHistoryRecordsPerPlayer());
+                auctionStorage.purgeOldPlayerHistory(bidder.getUniqueId(), configManager.getMaxHistoryRecordsPerPlayer());
 
                 if (previousHighestBidderUUID != null) {
                     AuctionHistoryEvent outbidEvent = new AuctionHistoryEvent(
@@ -315,7 +316,7 @@ public class AuctionManager {
                             bidder.getName(), bidder.getUniqueId(), System.currentTimeMillis()
                     );
                     auctionStorage.saveHistoryEvent(outbidEvent);
-                    auctionStorage.purgeOldPlayerHistory(previousHighestBidderUUID, plugin.getConfigManager().getHistoryRecordsPerPlayer());
+                    auctionStorage.purgeOldPlayerHistory(previousHighestBidderUUID, configManager.getMaxHistoryRecordsPerPlayer());
                 }
             }
             Bukkit.getPluginManager().callEvent(new AuctionUpdateEvent(auction, AuctionUpdateEvent.UpdateType.NEW_BID));
@@ -365,7 +366,7 @@ public class AuctionManager {
                 );
                 try {
                     auctionStorage.saveHistoryEvent(prevBidderRefundEvent);
-                    auctionStorage.purgeOldPlayerHistory(auction.getHighestBidderUUID(), plugin.getConfigManager().getHistoryRecordsPerPlayer());
+                    auctionStorage.purgeOldPlayerHistory(auction.getHighestBidderUUID(), configManager.getMaxHistoryRecordsPerPlayer());
                 } catch (SQLException ex) {
                     plugin.getLogger().log(Level.SEVERE, "Error al guardar evento de historial (BID_REFUNDED_AUCTION_SOLD_BUYNOW): " + auction.getAuctionId(), ex);
                 }
@@ -444,7 +445,7 @@ public class AuctionManager {
                         buyNowPrice, auction.getSellerName(), auction.getSellerUUID(), System.currentTimeMillis()
                 );
                 auctionStorage.saveHistoryEvent(boughtEvent);
-                auctionStorage.purgeOldPlayerHistory(buyer.getUniqueId(), plugin.getConfigManager().getHistoryRecordsPerPlayer());
+                auctionStorage.purgeOldPlayerHistory(buyer.getUniqueId(), configManager.getMaxHistoryRecordsPerPlayer());
 
                 AuctionHistoryEvent soldEvent = new AuctionHistoryEvent(
                         auction.getSellerUUID(), auction.getAuctionId(), InventoryUtil.formatMaterialName(auction.getItemStack().getType()),
@@ -454,7 +455,7 @@ public class AuctionManager {
                         buyer.getName(), buyer.getUniqueId(), System.currentTimeMillis()
                 );
                 auctionStorage.saveHistoryEvent(soldEvent);
-                auctionStorage.purgeOldPlayerHistory(auction.getSellerUUID(), plugin.getConfigManager().getHistoryRecordsPerPlayer());
+                auctionStorage.purgeOldPlayerHistory(auction.getSellerUUID(), configManager.getMaxHistoryRecordsPerPlayer());
             }
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Error de DB al procesar compra directa (SOLD_BUYNOW) para subasta " + auction.getAuctionId() + ". El pago al vendedor podría no haberse procesado.", e);
@@ -629,7 +630,7 @@ public class AuctionManager {
                             auction.getSellerName(), auction.getSellerUUID(), System.currentTimeMillis()
                     );
                     auctionStorage.saveHistoryEvent(wonEvent);
-                    auctionStorage.purgeOldPlayerHistory(winner.getUniqueId(), plugin.getConfigManager().getHistoryRecordsPerPlayer());
+                    auctionStorage.purgeOldPlayerHistory(winner.getUniqueId(), configManager.getMaxHistoryRecordsPerPlayer());
 
                      AuctionHistoryEvent soldForSellerEvent = new AuctionHistoryEvent(
                         auction.getSellerUUID(), auction.getAuctionId(), itemNameForNotification,
@@ -639,7 +640,7 @@ public class AuctionManager {
                         winner.getName(), winner.getUniqueId(), System.currentTimeMillis()
                     );
                     auctionStorage.saveHistoryEvent(soldForSellerEvent);
-                    auctionStorage.purgeOldPlayerHistory(auction.getSellerUUID(), plugin.getConfigManager().getHistoryRecordsPerPlayer());
+                    auctionStorage.purgeOldPlayerHistory(auction.getSellerUUID(), configManager.getMaxHistoryRecordsPerPlayer());
                 }
 
             } catch (SQLException e) {
@@ -721,7 +722,7 @@ public class AuctionManager {
                             null, null, System.currentTimeMillis()
                     );
                     auctionStorage.saveHistoryEvent(expiredEvent);
-                    auctionStorage.purgeOldPlayerHistory(auction.getSellerUUID(), plugin.getConfigManager().getHistoryRecordsPerPlayer());
+                    auctionStorage.purgeOldPlayerHistory(auction.getSellerUUID(), configManager.getMaxHistoryRecordsPerPlayer());
                 }
             } catch (SQLException e) {
                  plugin.getLogger().log(Level.SEVERE, "Error de DB al finalizar (EXPIRED) subasta " + auction.getAuctionId() + ".", e);
@@ -841,11 +842,11 @@ public class AuctionManager {
                             canceller.getName(), canceller.getUniqueId(), System.currentTimeMillis()
                     );
                     auctionStorage.saveHistoryEvent(bidRefundEvent);
-                    auctionStorage.purgeOldPlayerHistory(auction.getHighestBidderUUID(), plugin.getConfigManager().getHistoryRecordsPerPlayer());
+                    auctionStorage.purgeOldPlayerHistory(auction.getHighestBidderUUID(), configManager.getMaxHistoryRecordsPerPlayer());
                 }
             }
 
-            if (plugin.getConfigManager().isHistoryEnabled()) {
+            if (configManager.isHistoryEnabled()) { // Usar configManager
                  AuctionHistoryEvent.HistoryEventType cancelEventType = auction.getSellerUUID().equals(canceller.getUniqueId()) ?
                                                                   AuctionHistoryEvent.HistoryEventType.AUCTION_CANCELLED_BY_SELLER :
                                                                   AuctionHistoryEvent.HistoryEventType.AUCTION_CANCELLED_BY_ADMIN;
@@ -857,7 +858,7 @@ public class AuctionManager {
                         canceller.getName(), canceller.getUniqueId(), System.currentTimeMillis()
                 );
                 auctionStorage.saveHistoryEvent(cancelEvent);
-                auctionStorage.purgeOldPlayerHistory(auction.getSellerUUID(), plugin.getConfigManager().getHistoryRecordsPerPlayer());
+                auctionStorage.purgeOldPlayerHistory(auction.getSellerUUID(), configManager.getMaxHistoryRecordsPerPlayer());
             }
 
             if (isAdmin && !auction.getSellerUUID().equals(canceller.getUniqueId())) {
@@ -969,14 +970,14 @@ public class AuctionManager {
                 );
                 try {
                     auctionStorage.saveHistoryEvent(bidRefundEvent);
-                    auctionStorage.purgeOldPlayerHistory(auction.getHighestBidderUUID(), plugin.getConfigManager().getHistoryRecordsPerPlayer());
+                    auctionStorage.purgeOldPlayerHistory(auction.getHighestBidderUUID(), configManager.getMaxHistoryRecordsPerPlayer());
                 } catch (SQLException ex) {
                      plugin.getLogger().log(Level.SEVERE, "Error guardando historial de reembolso por borrado admin para subasta: " + auction.getAuctionId(), ex);
                 }
             }
         }
 
-        if (plugin.getConfigManager().isHistoryEnabled()) {
+        if (configManager.isHistoryEnabled()) { // Usar configManager
             AuctionHistoryEvent deleteEvent = new AuctionHistoryEvent(
                     auction.getSellerUUID(), auction.getAuctionId(), itemDisplayName,
                     auction.isMystery() ? Material.CHEST.name() : auction.getItemStack().getType().name(),
@@ -986,7 +987,7 @@ public class AuctionManager {
             );
              try {
                 auctionStorage.saveHistoryEvent(deleteEvent);
-                auctionStorage.purgeOldPlayerHistory(auction.getSellerUUID(), plugin.getConfigManager().getHistoryRecordsPerPlayer());
+                auctionStorage.purgeOldPlayerHistory(auction.getSellerUUID(), configManager.getMaxHistoryRecordsPerPlayer());
             } catch (SQLException ex) {
                  plugin.getLogger().log(Level.SEVERE, "Error guardando historial de borrado admin para subasta: " + auction.getAuctionId(), ex);
             }
@@ -1113,7 +1114,7 @@ public class AuctionManager {
                         auction.getStartPrice(), null, null, System.currentTimeMillis()
                 );
                 auctionStorage.saveHistoryEvent(historyEvent);
-                auctionStorage.purgeOldPlayerHistory(seller.getUniqueId(), plugin.getConfigManager().getHistoryRecordsPerPlayer());
+                auctionStorage.purgeOldPlayerHistory(seller.getUniqueId(), configManager.getMaxHistoryRecordsPerPlayer());
             }
             Bukkit.getPluginManager().callEvent(new AuctionUpdateEvent(auction, AuctionUpdateEvent.UpdateType.NEW_AUCTION_LISTED));
             if (configManager.getAuctionCreationCooldownSeconds() > 0) {

@@ -16,9 +16,9 @@ import com.aetherauctions.gui.PrepareMysteryLotGUI; // Importar la nueva GUI
 import com.aetherauctions.config.MessageManager;
 import com.aetherauctions.config.ConfigManager;
 
-import org.bukkit.Bukkit; // Añadido
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.Sound;
+// import org.bukkit.Sound; // No se usa directamente, SoundManager lo maneja
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -437,17 +437,14 @@ public class InventoryClickListener implements Listener {
             String guiKey = "prepare_mystery_lot_gui"; // Clave para config
 
             if (slot < prepareGui.getMaxLotItems()) { // Clic en el área de ítems, usa el getter
-                if (currentItem != null && currentItem.getType() != Material.AIR) {
+                if (currentItem != null && currentItem.getType() != Material.AIR) { // Usa currentItem
                     player.getInventory().addItem(currentItem.clone());
-                    // La siguiente línea es crucial para la lógica de PrepareMysteryLotGUI.removeItemFromLot
-                    // que actualiza la lista interna 'lotItems'.
-                    prepareGui.removeItemFromLot(slot); // 'slot' es el índice para la lista interna
-                    // removeItemFromLot ya llama a renderGUI()
+                    prepareGui.removeItemFromLot(slot);
                 }
             } else if (slot == cfgManager.getButtonSlot(guiKey, "cancel_preparation", 47) &&
-                       clickedItem.getType() == cfgManager.getButtonMaterial(guiKey, "cancel_preparation", "BARRIER")) {
+                       currentItem.getType() == cfgManager.getButtonMaterial(guiKey, "cancel_preparation", "BARRIER")) { // Usa currentItem
                 plugin.getSoundManager().playSound(player, "close_gui");
-                List<ItemStack> itemsToReturn = prepareGui.getLotItems(); // Esto obtiene de los slots de la GUI
+                List<ItemStack> itemsToReturn = prepareGui.getLotItems();
                 for (ItemStack item : itemsToReturn) {
                     if (player.getInventory().firstEmpty() != -1) {
                         player.getInventory().addItem(item);
@@ -460,8 +457,8 @@ public class InventoryClickListener implements Listener {
                 else msgManager.sendMessage(player, "prepare_mystery_gui_cancelled_no_items");
                 player.closeInventory();
             } else if (slot == cfgManager.getButtonSlot(guiKey, "confirm_and_create", 51) &&
-                       clickedItem.getType() == cfgManager.getButtonMaterial(guiKey, "confirm_and_create", "EMERALD_BLOCK")) {
-                List<ItemStack> lotItems = prepareGui.getLotItems(); // Esto obtiene de los slots de la GUI
+                       currentItem.getType() == cfgManager.getButtonMaterial(guiKey, "confirm_and_create", "EMERALD_BLOCK")) { // Usa currentItem
+                List<ItemStack> lotItems = prepareGui.getLotItems();
                 if (lotItems.isEmpty()) {
                     msgManager.sendMessage(player, "prepare_mystery_gui_error_no_items_on_confirm");
                     plugin.getSoundManager().playSound(player, "error");
@@ -501,8 +498,8 @@ public class InventoryClickListener implements Listener {
                 // tratarlo como un clic normal aquí o simplemente confiar en la cancelación.
                 // Por ahora, nos enfocaremos en el orden de operaciones.
 
-                if (prepareGui.getLotItems().size() < PrepareMysteryLotGUI.MAX_LOT_ITEMS) {
-                    ItemStack itemToAdd = currentItem.clone(); // Clonamos el ítem para añadirlo a la GUI
+                if (prepareGui.getLotItems().size() < prepareGui.getMaxLotItems()) { // Usar el getter
+                    ItemStack itemToAdd = currentItem.clone();
 
                     // 1. Eliminar el ítem del inventario del jugador PRIMERO
                     event.setCurrentItem(null); // o clickedInventory.setItem(slot, null);

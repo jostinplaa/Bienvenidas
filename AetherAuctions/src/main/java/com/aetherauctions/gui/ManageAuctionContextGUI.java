@@ -4,9 +4,10 @@ import com.aetherauctions.AetherAuctions;
 import com.aetherauctions.model.Auction;
 import com.aetherauctions.util.ItemUtil;
 import com.aetherauctions.config.MessageManager;
+import com.aetherauctions.config.ConfigManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.Sound;
+// import org.bukkit.Sound; // No se usa directamente
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
