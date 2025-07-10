@@ -370,10 +370,11 @@ public class CommandManager implements CommandExecutor, TabCompleter {
                 break;
             default:
                 String inputAdminSubCommand = adminArgs[0].toLowerCase();
-                String adminSuggestion = findBestMatch(inputAdminSubCommand, validAdminSubCommands);
+                // Pasar el umbral desde la configuración
+                String adminSuggestion = findBestMatch(inputAdminSubCommand, validAdminSubCommands, cfgManager.getCommandSuggestionSimilarityThreshold());
                 if (adminSuggestion != null) {
-                    String formattedSuggestion = msgManager.getRawMessage("command_suggestion_prefix", "&7¿Quizás quisiste decir: ") +
-                                               mainCommandLabel + " admin " + adminSuggestion + // Use main command label
+                    String formattedSuggestion = msgManager.getRawMessage("command_suggestion_prefix") +
+                                               mainCommandLabel + " admin " + adminSuggestion +
                                                msgManager.getRawMessage("command_suggestion_suffix", "&7?");
                     sender.sendMessage(formattedSuggestion);
                 } else {

@@ -294,9 +294,10 @@ manage_auction_gui_button_back_lore:
 
 # --- Mensajes para Subastas Misteriosas (Comandos y GUI de Preparación) ---
 mystery_auctions_disabled: "&cLas subastas misteriosas están actualmente desactivadas."
+auction_creation_cooldown_active: "&cDebes esperar %time% segundos más para crear otra subasta." # Añadido
 # command_usage_crear_misteriosa: "&cUso: /subasta crearmisteriosa <precio_ini> [compra_dir] <duracion_horas> <descripción>" # Ya añadido
-command_error_mystery_description_empty: "&cLa descripción para una subasta misteriosa no puede estar vacía." # Aunque CommandManager ya lo valida
-mystery_auction_create_success: "&a¡Subasta Misteriosa #%id% creada exitosamente!" # Usado por AuctionManager
+command_error_mystery_description_empty: "&cLa descripción para una subasta misteriosa no puede estar vacía."
+mystery_auction_create_success: "&a¡Subasta Misteriosa #%id% creada exitosamente!"
 mystery_auction_creation_cancelled: "&eCreación de subasta misteriosa cancelada."
 # Claves para PrepareMysteryLotGUI
 prepare_mystery_gui_title: "&5Prepara tu Lote Misterioso (%player%)"
@@ -327,6 +328,8 @@ mystery_auction_gui_lore_item_count_error: "&cError al cargar conteo de ítems."
 auction_won_mystery_empty: "&e¡Ganaste la subasta misteriosa (ID: %id%) pero estaba vacía! Contacta a un admin."
 
 # --- Mensajes para Historial de Subastas ---
+internal_error_format.missing_key: "&cError: Clave de mensaje '%key%' no encontrada." # Añadido
+internal_error_format.missing_list_key: "&cError: Lista de mensajes '%key%' no encontrada." # Añadido
 history_event_name_auction_created: "&aSubasta Creada: &f%item_name%"
 history_event_name_auction_sold_to_buyer: "&6Compraste: &f%item_name%"
 history_event_name_auction_sold_for_seller: "&2Vendiste: &f%item_name%"
