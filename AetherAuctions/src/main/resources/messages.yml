@@ -375,6 +375,11 @@ details_buyout_price: "&7Compra Directa: &a%price% %currency%"
 details_time_remaining: "&7Tiempo: &c%time%"
 # new_gui_debug_no_active_auctions_for_test: "&cNo hay subastas activas disponibles para probar la GUI de detalles."
 # new_gui_debug_details_gui_opened: "&aAbriendo GUI de detalles para la subasta de prueba ID: %id%."
+
+# --- Mensajes Internos y de Error de Configuración ---
+internal_error_format.missing_key: "&cError Interno: Clave de mensaje '%key%' no encontrada. Por favor, reporta esto."
+internal_error_format.missing_list_key: "&cError Interno: Lista de mensajes para '%key%' no encontrada. Por favor, reporta esto."
+auction_creation_cooldown_active: "&cDebes esperar %time% segundos más para crear otra subasta."
 error_item_not_available: "&cError: Ítem no disponible" # Para MainAuctionGUI y AuctionDetailsGUI si auction.getItemStack() es null y no es misteriosa
 main_gui_lore_item_material: "&7Material: &f%material%" # Para MainAuctionGUI
 item_default_name_format_details: "&r%item_name%" # Para AuctionDetailsGUI, si se quiere un formato distinto

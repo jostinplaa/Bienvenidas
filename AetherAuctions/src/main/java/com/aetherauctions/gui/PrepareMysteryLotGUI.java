@@ -123,7 +123,7 @@ public class PrepareMysteryLotGUI {
         // para asegurar que se usan los ítems que el jugador ve.
         // Esta lista 'lotItems' es más un caché interno mientras se añaden/quitan.
         List<ItemStack> currentGuiItems = new ArrayList<>();
-        for (int i = 0; i < MAX_LOT_ITEMS; i++) {
+        for (int i = 0; i < this.maxLotItems; i++) { // Usar this.maxLotItems
             ItemStack item = gui.getItem(i);
             if (item != null && item.getType() != Material.AIR) {
                 currentGuiItems.add(item.clone()); // Clonar para evitar problemas de referencia
