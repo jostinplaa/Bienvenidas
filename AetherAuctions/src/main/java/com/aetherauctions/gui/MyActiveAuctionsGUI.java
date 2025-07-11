@@ -165,7 +165,9 @@ public class MyActiveAuctionsGUI {
         Map<Integer, java.util.UUID> visibleAuctionsMap = new HashMap<>();
         int currentSlot = 0;
         for (int i = startIndex; i < endIndex; i++) {
-            if (currentSlot >= itemsPerPage || currentSlot >= MyActiveAuctionsGUI.PREVIOUS_PAGE_SLOT) break;
+            // La condición original usaba MyActiveAuctionsGUI.PREVIOUS_PAGE_SLOT que ya no existe.
+            // itemsPerPage debe ser el límite correcto para los slots de ítems de subasta.
+            if (currentSlot >= itemsPerPage) break;
             Auction auction = playerActiveAuctions.get(i);
             visibleAuctionsMap.put(currentSlot, java.util.UUID.fromString(auction.getId()));
             currentSlot++;

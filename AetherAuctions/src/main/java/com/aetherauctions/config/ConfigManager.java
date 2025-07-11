@@ -7,7 +7,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.ChatColor;
 
-import java.io.File; 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -42,6 +42,8 @@ public class ConfigManager {
         mainConfig = plugin.getConfig();
         plugin.getLogger().info("config.yml cargado/recargado.");
 
+        // Cargar otros archivos de configuración basados en load_modules
+        // Usar getBoolean(mainConfig, ...) ya que mainConfig es el único garantizado al inicio de este método
         if (getBoolean(mainConfig, "load_modules.gui_config", true)) {
             guiConfig = loadConfiguration("gui.yml");
         } else { plugin.getLogger().info("gui.yml no se cargará (deshabilitado en config.yml)."); }
@@ -143,7 +145,7 @@ public class ConfigManager {
         try {
             return Material.valueOf(materialName.toUpperCase());
         } catch (IllegalArgumentException e) {
-            plugin.getLogger().warning("Material inválido para '" + path + "' en " + fc.getName() + ": " + materialName + ". Usando " + defaultMaterialName + ".");
+            plugin.getLogger().warning("Material inválido para '" + path + "' en el archivo de config correspondiente: " + materialName + ". Usando " + defaultMaterialName + ".");
             return Material.valueOf(defaultMaterialName.toUpperCase());
         }
     }
@@ -155,7 +157,7 @@ public class ConfigManager {
     public String getLanguageFile() {
         return getString(mainConfig, "plugin_settings.language_file", "messages.yml");
     }
-    public long getAuctionExpirationCheckIntervalSeconds() { // Nombre de método actualizado
+    public long getAuctionExpirationCheckIntervalSeconds() {
         return getLong(mainConfig, "plugin_settings.auction_expiration_check_interval_seconds", 60);
     }
     public String getDatabaseType() {
@@ -176,19 +178,19 @@ public class ConfigManager {
     public boolean isVerboseLoggingEnabled() {
         return getBoolean(mainConfig, "logging_debug.verbose_console_logging", false);
     }
-
-    // --- Getters para auctions (leídos de limits.yml o config.yml según diseño) ---
-    // Estas rutas pueden necesitar ajuste si algunas se quedan en config.yml y otras van a limits.yml
-    public long getDefaultDurationHours() { // auctions.behavior.default_duration_hours
-        return getLong(mainConfig, "auctions.behavior.default_duration_hours", 24); // Asumiendo que está en mainConfig, pero debería estar en limits.yml o auctions.yml
+    public boolean isMyAuctionsGuiIntegrationEnabled() { // Movido a mainConfig según diseño
+        return getBoolean(mainConfig, "my_auctions_gui_integration.enabled", true);
     }
-    public boolean isBuyNowAllowed() { // auctions.behavior.allow_buy_now
-        return getBoolean(mainConfig, "auctions.behavior.allow_buy_now", true);
-    }
-    public boolean isMysteryAuctionsAllowed() { // auctions.behavior.allow_mystery_auctions
+    public boolean isMysteryAuctionsAllowed() { // Movido a mainConfig según diseño
         return getBoolean(mainConfig, "auctions.behavior.allow_mystery_auctions", true);
     }
-    public double getMinBidIncrement() { // auctions.behavior.min_bid_increment
+     public long getDefaultDurationHours() { // Movido a mainConfig según diseño
+        return getLong(mainConfig, "auctions.behavior.default_duration_hours", 24);
+    }
+    public boolean isBuyNowAllowed() { // Movido a mainConfig según diseño
+        return getBoolean(mainConfig, "auctions.behavior.allow_buy_now", true);
+    }
+    public double getMinBidIncrement() { // Movido a mainConfig según diseño
         return getDouble(mainConfig, "auctions.behavior.min_bid_increment", 10.0);
     }
 
@@ -287,13 +289,13 @@ public class ConfigManager {
     public int getMainAuctionHouseRefreshIntervalSeconds() {
         return getInt(guiConfig, "main_auction_house.auto_refresh_on_count_change_interval_seconds", 10);
     }
-    public Material getButtonMaterial(String guiName, String buttonKey, String defaultMaterial) {
-        return getMaterial(guiConfig, guiName + ".buttons." + buttonKey + ".material", defaultMaterial);
+    public Material getButtonMaterial(String guiName, String buttonKey, String defaultMaterialName) {
+        return getMaterial(guiConfig, guiName + ".buttons." + buttonKey + ".material", defaultMaterialName);
     }
     public int getButtonSlot(String guiName, String buttonKey, int defaultSlot) {
         return getInt(guiConfig, guiName + ".buttons." + buttonKey + ".slot", defaultSlot);
     }
-    public int getMysteryLotMaxItems() {
+    public int getMysteryLotMaxItems() { // Lee de gui.yml
         return getInt(guiConfig, "prepare_mystery_lot_gui.max_items_in_lot", 36);
     }
 
@@ -301,7 +303,7 @@ public class ConfigManager {
     public boolean isGuiSoundsEnabled() {
         return getBoolean(soundsConfig, "enabled", true);
     }
-    public ConfigurationSection getSoundsConfigSection() { // Para SoundManager
+    public ConfigurationSection getSoundsConfigSection() {
         return getConfigurationSection(soundsConfig, null);
     }
 
@@ -328,12 +330,6 @@ public class ConfigManager {
     }
     public int getAdminHistoryDefaultDaysToShow() {
         return getInt(historyConfig, "admin_view_default_days_past", 7);
-    }
-
-    // --- Getters para My Auctions GUI (de config.yml o gui.yml) ---
-    public boolean isMyAuctionsGuiIntegrationEnabled() {
-        // Esta opción está en config.yml en la sección my_auctions_gui_integration
-        return getBoolean(mainConfig, "my_auctions_gui_integration.enabled", true);
     }
 
     // --- Getters para Announcements (announcements.yml) ---
@@ -371,3 +367,4 @@ public class ConfigManager {
         return vipTiersConfig.getMapList("tiers");
     }
 }
+```
