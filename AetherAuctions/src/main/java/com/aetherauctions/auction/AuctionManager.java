@@ -69,7 +69,7 @@ public class AuctionManager {
         if (expirationCheckTask != null) {
             expirationCheckTask.cancel();
         }
-        long interval = configManager.getExpirationCheckIntervalSeconds() * 20L;
+        long interval = configManager.getAuctionExpirationCheckIntervalSeconds() * 20L;
         if (interval <= 0) {
             plugin.getLogger().warning("El intervalo de revisión de expiración de subastas es <= 0. La tarea no se iniciará.");
             return;
