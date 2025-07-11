@@ -7,7 +7,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.ChatColor;
 
-import java.io.File;
+import java.io.File; 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
