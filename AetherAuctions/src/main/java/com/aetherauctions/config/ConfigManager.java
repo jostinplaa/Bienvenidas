@@ -367,4 +367,3 @@ public class ConfigManager {
         return vipTiersConfig.getMapList("tiers");
     }
 }
-```
