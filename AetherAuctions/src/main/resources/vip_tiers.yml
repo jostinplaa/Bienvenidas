@@ -61,4 +61,3 @@ tiers:
     # No commission at all for this tier
     commission_percentage_modifier: 0.0 # Player pays 0% commission (100% discount).
     # auction_creation_cooldown_seconds_modifier: 0.0 # No cooldown
-```
