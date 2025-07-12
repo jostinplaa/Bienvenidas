@@ -50,4 +50,3 @@ inventory_full_error: { sound: "ENTITY_VILLAGER_NO", volume: 1.0, pitch: 0.8 }
 # prepare_mystery_item_removed: { sound: "ENTITY_CHICKEN_EGG", volume: 0.8, pitch: 0.8 }
 # prepare_mystery_confirmed: { sound: "BLOCK_END_PORTAL_FRAME_FILL", volume: 1.0, pitch: 1.0 }
 # prepare_mystery_cancelled: { sound: "UI_BUTTON_CLICK", volume: 1.0, pitch: 0.8 }
-```
