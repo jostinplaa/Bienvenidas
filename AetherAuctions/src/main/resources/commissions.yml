@@ -48,4 +48,3 @@ commission_system:
     - { max_price: 1000.0, percentage: 5.0 }   # For sales > 100 and up to 1000 (inclusive)
     - { max_price: 10000.0, percentage: 3.0 }  # For sales > 1000 and up to 10000 (inclusive)
     - { max_price: -1, percentage: 1.5 }       # For sales greater than 10000
-```
