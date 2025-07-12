@@ -48,4 +48,3 @@ logging_and_debug:
   # log_database_queries: false
   # log_gui_event_processing: false
   # log_commission_calculation: false
-```
