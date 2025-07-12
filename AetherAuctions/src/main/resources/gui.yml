@@ -129,4 +129,3 @@ manage_auction_context_gui: # Configuration for the GUI when a seller manages th
 #       display_name_key: "filter_category_display_name_misc"
 #       display_item: "ELYTRA"
 #       # ...
-```
