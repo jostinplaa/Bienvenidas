@@ -27,4 +27,3 @@ cleanup_delivered_rewards:
   # Set to 0 or a negative value to disable the cleanup task entirely.
   keep_for_days: 30
   # (Future) Interval for the cleanup task, e.g., daily, weekly. Currently runs on plugin enable.
-```
