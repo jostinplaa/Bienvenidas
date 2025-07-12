@@ -26,4 +26,3 @@ admin_view_default_days_past: 7
 #   default_format: "CSV" # Options: "CSV", "JSON", "TXT"
 #   # Command for players to export their own history (if permissioned).
 #   allow_player_export_command: false
-```
