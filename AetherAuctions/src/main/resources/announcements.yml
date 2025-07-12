@@ -47,4 +47,3 @@ buy_now_not_available_text: "N/A" # Text to use for %buy_now_price% if not set.
 
 # (Future Feature) Cooldown between individual announcements to prevent chat spam, even if multiple auctions qualify.
 # announcement_cooldown_seconds: 60
-```
