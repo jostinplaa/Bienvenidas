@@ -44,4 +44,3 @@ bidding:
   # bid_on_same_auction_cooldown_seconds: 5
   # (Future) Maximum bid amount allowed, or a percentage of server's total economy, to prevent hyperinflation.
   # max_bid_amount: 1000000000
-```
