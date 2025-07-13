@@ -304,7 +304,7 @@ public class ConfigManager {
         return getBoolean(soundsConfig, "enabled", true);
     }
     public ConfigurationSection getSoundsConfigSection() {
-        return getConfigurationSection(soundsConfig, null);
+        return soundsConfig;
     }
 
     // --- Getters para rewards.yml (rewardsConfig) ---
