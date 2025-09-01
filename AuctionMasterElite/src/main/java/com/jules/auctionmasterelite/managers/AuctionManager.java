@@ -13,6 +13,8 @@ import java.util.stream.Collectors;
  */
 import com.jules.auctionmasterelite.AuctionMasterElite;
 import com.jules.auctionmasterelite.data.Auction;
+import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -47,18 +49,57 @@ public class AuctionManager {
 
     public void placeBid(Player player, UUID auctionId, double amount) {
         Auction auction = getAuction(auctionId);
-        if (auction == null) {
-            player.sendMessage("§cEsta subasta ya no existe.");
+
+        // --- Validation Checks ---
+        if (auction == null || auction.getStatus() != com.jules.auctionmasterelite.data.AuctionStatus.ACTIVE) {
+            player.sendMessage("§cEsta subasta ya no está activa.");
+            return;
+        }
+        if (auction.getSellerId().equals(player.getUniqueId())) {
+            player.sendMessage("§cNo puedes pujar en tu propia subasta.");
+            return;
+        }
+        if (amount <= auction.getCurrentBid()) {
+            player.sendMessage("§cTu puja debe ser mayor que la puja actual de §6" + String.format("%.2f", auction.getCurrentBid()));
             return;
         }
 
-        // TODO: Add more validation (is player the seller? is auction active?)
-        // TODO: Check economy
-        // TODO: Refund previous bidder
-        // TODO: Update auction object
-        // TODO: Update database
+        EconomyManager economyManager = plugin.getEconomyManager();
+        if (!economyManager.hasEnough(player, amount)) {
+            player.sendMessage("§cNo tienes fondos suficientes para realizar esa puja.");
+            return;
+        }
 
-        player.sendMessage(String.format("§aHas pujado §6%.2f §aen la subasta!", amount));
+        // --- Logic ---
+        OfflinePlayer previousTopBidder = auction.getTopBidderId() != null ? Bukkit.getOfflinePlayer(auction.getTopBidderId()) : null;
+
+        // Withdraw from new bidder
+        economyManager.withdraw(player, amount);
+
+        // Refund previous bidder
+        if (previousTopBidder != null) {
+            economyManager.deposit(previousTopBidder, auction.getCurrentBid());
+            if (previousTopBidder.isOnline()) {
+                previousTopBidder.getPlayer().sendMessage(String.format("§e¡Tu puja de §6%.2f§e ha sido superada en la subasta de %s!", auction.getCurrentBid(), auction.getItem().getType()));
+            }
+        }
+
+        // Update auction object
+        com.jules.auctionmasterelite.data.Bid newBid = new com.jules.auctionmasterelite.data.Bid(player.getUniqueId(), player.getName(), amount, System.currentTimeMillis());
+        auction.addBid(newBid);
+
+        // Update database
+        plugin.getDatabaseManager().saveBid(newBid, auctionId);
+        plugin.getDatabaseManager().updateAuctionBid(auction);
+
+        // --- Notifications ---
+        player.sendMessage(String.format("§a¡Has pujado §6%.2f §ay ahora eres el pujador más alto!", amount));
+
+        // Notify seller
+        OfflinePlayer seller = Bukkit.getOfflinePlayer(auction.getSellerId());
+        if (seller.isOnline()) {
+            seller.getPlayer().sendMessage(String.format("§d¡Alguien ha pujado §6%.2f §den tu subasta de %s!", amount, auction.getItem().getType()));
+        }
     }
 
     /**
@@ -105,7 +146,52 @@ public class AuctionManager {
 
     private void endAuction(Auction auction) {
         auction.setStatus(com.jules.auctionmasterelite.data.AuctionStatus.FINISHED);
-        // TODO: Handle auction end logic (notify winner, transfer item/money)
+        plugin.getDatabaseManager().updateAuctionStatus(auction); // Assumes this method will be created
         System.out.println("Auction " + auction.getAuctionId() + " has ended.");
+
+        OfflinePlayer seller = Bukkit.getOfflinePlayer(auction.getSellerId());
+
+        // Case 1: There was a winner
+        if (auction.getTopBidderId() != null) {
+            OfflinePlayer winner = Bukkit.getOfflinePlayer(auction.getTopBidderId());
+
+            // Pay the seller
+            plugin.getEconomyManager().deposit(seller, auction.getCurrentBid());
+            if (seller.isOnline()) {
+                seller.getPlayer().sendMessage(String.format("§aTu subasta de %s ha finalizado. ¡Has ganado §6%.2f!", auction.getItem().getType(), auction.getCurrentBid()));
+            }
+
+            // Give item to winner
+            if (winner.isOnline()) {
+                Player winnerPlayer = winner.getPlayer();
+                if (winnerPlayer.getInventory().firstEmpty() == -1) {
+                    // Inventory is full, drop at their location
+                    winnerPlayer.getWorld().dropItem(winnerPlayer.getLocation(), auction.getItem());
+                    winnerPlayer.sendMessage("§e¡Ganaste una subasta pero tu inventario estaba lleno! El objeto ha sido dropeado a tus pies.");
+                } else {
+                    winnerPlayer.getInventory().addItem(auction.getItem());
+                    winnerPlayer.sendMessage("§a¡Has ganado la subasta de %s! El objeto ha sido añadido a tu inventario.");
+                }
+            } else {
+                // TODO: Implement a more robust offline item delivery system (e.g., /claim command)
+                // For now, we can't safely give the item. We'll just log it.
+                plugin.getLogger().warning("Player " + winner.getName() + " won auction " + auction.getAuctionId() + " but is offline. Item delivery pending robust system.");
+            }
+
+        } else { // Case 2: No bids
+            if (seller.isOnline()) {
+                Player sellerPlayer = seller.getPlayer();
+                 if (sellerPlayer.getInventory().firstEmpty() == -1) {
+                    sellerPlayer.getWorld().dropItem(sellerPlayer.getLocation(), auction.getItem());
+                    sellerPlayer.sendMessage("§eTu subasta de %s finalizó sin pujas. Tu inventario estaba lleno, así que el objeto fue dropeado a tus pies.");
+                } else {
+                    sellerPlayer.getInventory().addItem(auction.getItem());
+                    sellerPlayer.sendMessage("§eTu subasta de %s finalizó sin pujas. El objeto ha sido devuelto a tu inventario.");
+                }
+            } else {
+                // TODO: Implement robust offline item delivery
+                plugin.getLogger().warning("Auction " + auction.getAuctionId() + " for player " + seller.getName() + " ended with no bids, but player is offline. Item return pending robust system.");
+            }
+        }
     }
 }

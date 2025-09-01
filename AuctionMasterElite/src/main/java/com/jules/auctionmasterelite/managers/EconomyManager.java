@@ -1,7 +1,7 @@
 package com.jules.auctionmasterelite.managers;
 
 import net.milkbowl.vault.economy.Economy;
-import org.bukkit.entity.Player;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
 import static org.bukkit.Bukkit.getServer;
@@ -22,15 +22,15 @@ public class EconomyManager {
         return economy != null;
     }
 
-    public boolean hasEnough(Player player, double amount) {
+    public boolean hasEnough(OfflinePlayer player, double amount) {
         return economy.has(player, amount);
     }
 
-    public void withdraw(Player player, double amount) {
+    public void withdraw(OfflinePlayer player, double amount) {
         economy.withdrawPlayer(player, amount);
     }
 
-    public void deposit(Player player, double amount) {
+    public void deposit(OfflinePlayer player, double amount) {
         economy.depositPlayer(player, amount);
     }
 }

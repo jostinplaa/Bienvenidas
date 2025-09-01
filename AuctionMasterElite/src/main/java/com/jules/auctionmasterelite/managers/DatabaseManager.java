@@ -6,10 +6,12 @@ import com.jules.auctionmasterelite.util.SerializationUtil;
 import org.bukkit.inventory.ItemStack;
 import com.jules.auctionmasterelite.data.AuctionStatus;
 import com.jules.auctionmasterelite.data.AuctionType;
+import com.jules.auctionmasterelite.data.Bid;
 
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -83,6 +85,7 @@ public class DatabaseManager {
                     "starting_bid REAL NOT NULL," +
                     "current_bid REAL NOT NULL," +
                     "top_bidder_id TEXT," +
+                    "top_bidder_name TEXT," +
                     "auction_type TEXT NOT NULL," +
                     "auction_status TEXT NOT NULL" +
                     ");";
@@ -110,7 +113,7 @@ public class DatabaseManager {
 
     public void saveAuction(Auction auction) {
         String sql = "INSERT INTO auctions(auction_id, seller_id, seller_name, item_data, start_time, end_time, " +
-                "starting_bid, current_bid, top_bidder_id, auction_type, auction_status) VALUES(?,?,?,?,?,?,?,?,?,?,?)";
+                "starting_bid, current_bid, top_bidder_id, top_bidder_name, auction_type, auction_status) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)";
 
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setString(1, auction.getAuctionId().toString());
@@ -122,8 +125,9 @@ public class DatabaseManager {
             pstmt.setDouble(7, auction.getStartingBid());
             pstmt.setDouble(8, auction.getCurrentBid());
             pstmt.setString(9, auction.getTopBidderId() != null ? auction.getTopBidderId().toString() : null);
-            pstmt.setString(10, auction.getType().toString());
-            pstmt.setString(11, auction.getStatus().toString());
+            pstmt.setString(10, auction.getTopBidderName());
+            pstmt.setString(11, auction.getType().toString());
+            pstmt.setString(12, auction.getStatus().toString());
             pstmt.executeUpdate();
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Could not save auction " + auction.getAuctionId(), e);
@@ -141,7 +145,7 @@ public class DatabaseManager {
 
             while (rs.next()) {
                 UUID auctionId = UUID.fromString(rs.getString("auction_id"));
-                // TODO: Load bids for this auction
+                List<Bid> bids = loadBidsForAuction(auctionId);
                 Auction auction = new Auction(
                         auctionId,
                         UUID.fromString(rs.getString("seller_id")),
@@ -152,10 +156,10 @@ public class DatabaseManager {
                         rs.getDouble("starting_bid"),
                         rs.getDouble("current_bid"),
                         rs.getString("top_bidder_id") != null ? UUID.fromString(rs.getString("top_bidder_id")) : null,
-                        null, // TODO: store and load top bidder name
+                        rs.getString("top_bidder_name"),
                         AuctionType.valueOf(rs.getString("auction_type")),
                         AuctionStatus.valueOf(rs.getString("auction_status")),
-                        new ArrayList<>() // TODO: Load bids
+                        bids
                 );
                 auctions.put(auctionId, auction);
             }
@@ -164,5 +168,63 @@ public class DatabaseManager {
             plugin.getLogger().log(Level.SEVERE, "Could not load auctions from the database.", e);
         }
         return auctions;
+    }
+
+    private List<Bid> loadBidsForAuction(UUID auctionId) throws SQLException {
+        List<Bid> bids = new ArrayList<>();
+        String sql = "SELECT * FROM bids WHERE auction_id = ?";
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setString(1, auctionId.toString());
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    Bid bid = new Bid(
+                            UUID.fromString(rs.getString("bidder_id")),
+                            rs.getString("bidder_name"),
+                            rs.getDouble("amount"),
+                            rs.getLong("timestamp")
+                    );
+                    bids.add(bid);
+                }
+            }
+        }
+        return bids;
+    }
+
+    public void saveBid(Bid bid, UUID auctionId) {
+        String sql = "INSERT INTO bids(auction_id, bidder_id, bidder_name, amount, timestamp) VALUES(?,?,?,?,?)";
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setString(1, auctionId.toString());
+            pstmt.setString(2, bid.getBidderId().toString());
+            pstmt.setString(3, bid.getBidderName());
+            pstmt.setDouble(4, bid.getAmount());
+            pstmt.setLong(5, bid.getTimestamp());
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Could not save bid for auction " + auctionId, e);
+        }
+    }
+
+    public void updateAuctionBid(Auction auction) {
+        String sql = "UPDATE auctions SET current_bid = ?, top_bidder_id = ?, top_bidder_name = ? WHERE auction_id = ?";
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setDouble(1, auction.getCurrentBid());
+            pstmt.setString(2, auction.getTopBidderId() != null ? auction.getTopBidderId().toString() : null);
+            pstmt.setString(3, auction.getTopBidderName());
+            pstmt.setString(4, auction.getAuctionId().toString());
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Could not update auction bid for " + auction.getAuctionId(), e);
+        }
+    }
+
+    public void updateAuctionStatus(Auction auction) {
+        String sql = "UPDATE auctions SET auction_status = ? WHERE auction_id = ?";
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setString(1, auction.getStatus().toString());
+            pstmt.setString(2, auction.getAuctionId().toString());
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Could not update auction status for " + auction.getAuctionId(), e);
+        }
     }
 }
