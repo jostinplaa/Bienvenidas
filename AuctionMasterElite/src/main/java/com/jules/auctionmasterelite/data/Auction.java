@@ -3,8 +3,10 @@ package com.jules.auctionmasterelite.data;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
  * Represents a single auction instance.
@@ -19,6 +21,7 @@ public class Auction {
     private final long endTime;
     private final double startingBid;
     private final AuctionType type;
+    private final Set<UUID> invitedPlayers;
 
     private AuctionStatus status;
     private double currentBid;
@@ -27,11 +30,11 @@ public class Auction {
     private final List<Bid> bids;
 
     public Auction(UUID sellerId, String sellerName, ItemStack item, long startTime, long endTime, double startingBid, AuctionType type) {
-        this(UUID.randomUUID(), sellerId, sellerName, item, startTime, endTime, startingBid, startingBid, null, null, type, AuctionStatus.ACTIVE, new CopyOnWriteArrayList<>());
+        this(UUID.randomUUID(), sellerId, sellerName, item, startTime, endTime, startingBid, startingBid, null, null, type, AuctionStatus.ACTIVE, new CopyOnWriteArrayList<>(), new CopyOnWriteArraySet<>());
     }
 
     // Constructor for loading from database
-    public Auction(UUID auctionId, UUID sellerId, String sellerName, ItemStack item, long startTime, long endTime, double startingBid, double currentBid, UUID topBidderId, String topBidderName, AuctionType type, AuctionStatus status, List<Bid> bids) {
+    public Auction(UUID auctionId, UUID sellerId, String sellerName, ItemStack item, long startTime, long endTime, double startingBid, double currentBid, UUID topBidderId, String topBidderName, AuctionType type, AuctionStatus status, List<Bid> bids, Set<UUID> invitedPlayers) {
         this.auctionId = auctionId;
         this.sellerId = sellerId;
         this.sellerName = sellerName;
@@ -45,6 +48,7 @@ public class Auction {
         this.type = type;
         this.status = status;
         this.bids = new CopyOnWriteArrayList<>(bids);
+        this.invitedPlayers = new CopyOnWriteArraySet<>(invitedPlayers);
     }
 
     // Getters
@@ -61,9 +65,17 @@ public class Auction {
     public UUID getTopBidderId() { return topBidderId; }
     public String getTopBidderName() { return topBidderName; }
     public List<Bid> getBids() { return bids; }
+    public Set<UUID> getInvitedPlayers() { return invitedPlayers; }
 
-    // Setters for mutable fields
+
+    // Setters / Modifiers
     public void setStatus(AuctionStatus status) { this.status = status; }
+
+    public void invitePlayer(UUID playerId) {
+        if (this.type == AuctionType.PRIVATE) {
+            this.invitedPlayers.add(playerId);
+        }
+    }
 
     /**
      * Adds a new bid to the auction.

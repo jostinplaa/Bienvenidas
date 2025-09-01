@@ -13,8 +13,10 @@ import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
 
@@ -94,6 +96,15 @@ public class DatabaseManager {
                     ");";
             statement.execute(bidsTableSql);
 
+            // Invited Players Table
+            String invitesTableSql = "CREATE TABLE IF NOT EXISTS auction_invites (" +
+                    "auction_id TEXT NOT NULL," +
+                    "player_id TEXT NOT NULL," +
+                    "PRIMARY KEY(auction_id, player_id)," +
+                    "FOREIGN KEY(auction_id) REFERENCES auctions(auction_id)" +
+                    ");";
+            statement.execute(invitesTableSql);
+
             plugin.getLogger().info("Database tables initialized successfully.");
         }
     }
@@ -137,6 +148,7 @@ public class DatabaseManager {
             while (rs.next()) {
                 UUID auctionId = UUID.fromString(rs.getString("auction_id"));
                 List<Bid> bids = loadBidsForAuction(auctionId);
+                Set<UUID> invitedPlayers = loadInvitedPlayers(auctionId);
                 Auction auction = new Auction(
                         auctionId,
                         UUID.fromString(rs.getString("seller_id")),
@@ -150,7 +162,8 @@ public class DatabaseManager {
                         rs.getString("top_bidder_name"),
                         AuctionType.valueOf(rs.getString("auction_type")),
                         AuctionStatus.valueOf(rs.getString("auction_status")),
-                        bids
+                        bids,
+                        invitedPlayers
                 );
                 auctions.put(auctionId, auction);
             }
@@ -231,6 +244,7 @@ public class DatabaseManager {
             while (rs.next()) {
                 UUID auctionId = UUID.fromString(rs.getString("auction_id"));
                 List<Bid> bids = loadBidsForAuction(auctionId);
+                Set<UUID> invitedPlayers = loadInvitedPlayers(auctionId);
                 Auction auction = new Auction(
                         auctionId,
                         UUID.fromString(rs.getString("seller_id")),
@@ -244,7 +258,8 @@ public class DatabaseManager {
                         rs.getString("top_bidder_name"),
                         AuctionType.valueOf(rs.getString("auction_type")),
                         AuctionStatus.valueOf(rs.getString("auction_status")),
-                        bids
+                        bids,
+                        invitedPlayers
                 );
                 history.add(auction);
             }
@@ -252,5 +267,30 @@ public class DatabaseManager {
             plugin.getLogger().log(Level.SEVERE, "Could not load history for player " + playerId, e);
         }
         return history;
+    }
+
+    public void saveInvitedPlayer(UUID auctionId, UUID playerId) {
+        String sql = "INSERT OR IGNORE INTO auction_invites(auction_id, player_id) VALUES(?,?)";
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setString(1, auctionId.toString());
+            pstmt.setString(2, playerId.toString());
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Could not save invitation for auction " + auctionId, e);
+        }
+    }
+
+    private Set<UUID> loadInvitedPlayers(UUID auctionId) throws SQLException {
+        Set<UUID> invited = new HashSet<>();
+        String sql = "SELECT player_id FROM auction_invites WHERE auction_id = ?";
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setString(1, auctionId.toString());
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    invited.add(UUID.fromString(rs.getString("player_id")));
+                }
+            }
+        }
+        return invited;
     }
 }

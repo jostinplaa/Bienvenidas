@@ -2,6 +2,7 @@ package com.jules.auctionmasterelite.gui.menu;
 
 import com.jules.auctionmasterelite.AuctionMasterElite;
 import com.jules.auctionmasterelite.data.Auction;
+import com.jules.auctionmasterelite.data.AuctionType;
 import com.jules.auctionmasterelite.gui.GUI;
 import com.jules.auctionmasterelite.util.TimeUtil;
 import org.bukkit.Material;
@@ -15,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class ActiveAuctionsMenu extends GUI {
 
@@ -28,8 +30,14 @@ public class ActiveAuctionsMenu extends GUI {
     }
 
     private void initializeItems(Player player) {
-        Map<java.util.UUID, Auction> auctionMap = plugin.getAuctionManager().getActiveAuctions();
-        List<Auction> auctions = new ArrayList<>(auctionMap.values());
+        List<Auction> auctions = plugin.getAuctionManager().getActiveAuctions().values().stream()
+                .filter(auction -> {
+                    if (auction.getType() == AuctionType.PRIVATE) {
+                        return auction.getInvitedPlayers().contains(player.getUniqueId()) || auction.getSellerId().equals(player.getUniqueId());
+                    }
+                    return true;
+                })
+                .collect(Collectors.toList());
 
         // 45 is the max items per page (54 slots - 9 for controls)
         int maxItemsPerPage = 45;

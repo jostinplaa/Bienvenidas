@@ -51,6 +51,10 @@ public class AuctionManager {
             player.sendMessage("§cNo puedes pujar en tu propia subasta.");
             return;
         }
+        if (auction.getType() == com.jules.auctionmasterelite.data.AuctionType.PRIVATE && !auction.getInvitedPlayers().contains(player.getUniqueId())) {
+            player.sendMessage("§cEsta es una subasta privada y no has sido invitado.");
+            return;
+        }
         if (amount <= auction.getCurrentBid()) {
             player.sendMessage("§cTu puja debe ser mayor que la puja actual de §6" + String.format("%.2f", auction.getCurrentBid()));
             return;
