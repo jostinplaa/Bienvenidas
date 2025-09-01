@@ -1,28 +1,20 @@
 package com.jules.auctionmasterelite.managers;
 
-import com.jules.auctionmasterelite.data.Auction;
-import org.bukkit.inventory.ItemStack;
-
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-/**
- * Manages all active auctions in memory.
- */
 import com.jules.auctionmasterelite.AuctionMasterElite;
 import com.jules.auctionmasterelite.data.Auction;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Manages all active auctions in memory.
+ */
 public class AuctionManager {
 
     private final AuctionMasterElite plugin;
@@ -132,6 +124,18 @@ public class AuctionManager {
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
+    public List<Auction> getAuctionsBySeller(UUID sellerId) {
+        return activeAuctions.values().stream()
+                .filter(auction -> auction.getSellerId().equals(sellerId))
+                .collect(Collectors.toList());
+    }
+
+    public List<Auction> getAuctionsByBidder(UUID bidderId) {
+        return activeAuctions.values().stream()
+                .filter(auction -> bidderId.equals(auction.getTopBidderId()))
+                .collect(Collectors.toList());
+    }
+
     /**
      * Periodically called to check for and end expired auctions.
      */
@@ -146,7 +150,7 @@ public class AuctionManager {
 
     private void endAuction(Auction auction) {
         auction.setStatus(com.jules.auctionmasterelite.data.AuctionStatus.FINISHED);
-        plugin.getDatabaseManager().updateAuctionStatus(auction); // Assumes this method will be created
+        plugin.getDatabaseManager().updateAuctionStatus(auction);
         System.out.println("Auction " + auction.getAuctionId() + " has ended.");
 
         OfflinePlayer seller = Bukkit.getOfflinePlayer(auction.getSellerId());

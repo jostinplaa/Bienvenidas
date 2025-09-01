@@ -2,27 +2,21 @@ package com.jules.auctionmasterelite.managers;
 
 import com.jules.auctionmasterelite.AuctionMasterElite;
 import com.jules.auctionmasterelite.data.Auction;
-import com.jules.auctionmasterelite.util.SerializationUtil;
-import org.bukkit.inventory.ItemStack;
 import com.jules.auctionmasterelite.data.AuctionStatus;
 import com.jules.auctionmasterelite.data.AuctionType;
 import com.jules.auctionmasterelite.data.Bid;
+import com.jules.auctionmasterelite.util.SerializationUtil;
+import org.bukkit.inventory.ItemStack;
 
-import java.sql.ResultSet;
+import java.io.File;
+import java.io.IOException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
-import java.io.File;
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.logging.Level;
-import java.sql.PreparedStatement;
 
 public class DatabaseManager {
 
@@ -42,7 +36,6 @@ public class DatabaseManager {
 
         if (!dbFile.exists()) {
             try {
-                // Ensure the data folder exists
                 plugin.getDataFolder().mkdirs();
                 dbFile.createNewFile();
             } catch (IOException e) {
@@ -74,7 +67,6 @@ public class DatabaseManager {
 
     private void initializeDatabase() throws SQLException {
         try (Statement statement = connection.createStatement()) {
-            // Auctions Table
             String auctionsTableSql = "CREATE TABLE IF NOT EXISTS auctions (" +
                     "auction_id TEXT PRIMARY KEY," +
                     "seller_id TEXT NOT NULL," +
@@ -91,7 +83,6 @@ public class DatabaseManager {
                     ");";
             statement.execute(auctionsTableSql);
 
-            // Bids Table
             String bidsTableSql = "CREATE TABLE IF NOT EXISTS bids (" +
                     "bid_id INTEGER PRIMARY KEY AUTOINCREMENT," +
                     "auction_id TEXT NOT NULL," +
@@ -226,5 +217,40 @@ public class DatabaseManager {
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Could not update auction status for " + auction.getAuctionId(), e);
         }
+    }
+
+    public List<Auction> loadPlayerHistory(UUID playerId) {
+        List<Auction> history = new ArrayList<>();
+        String sql = "SELECT * FROM auctions WHERE auction_status = 'FINISHED' AND (seller_id = ? OR top_bidder_id = ?)";
+
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setString(1, playerId.toString());
+            pstmt.setString(2, playerId.toString());
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                UUID auctionId = UUID.fromString(rs.getString("auction_id"));
+                List<Bid> bids = loadBidsForAuction(auctionId);
+                Auction auction = new Auction(
+                        auctionId,
+                        UUID.fromString(rs.getString("seller_id")),
+                        rs.getString("seller_name"),
+                        SerializationUtil.deserializeItemStack(rs.getBytes("item_data")),
+                        rs.getLong("start_time"),
+                        rs.getLong("end_time"),
+                        rs.getDouble("starting_bid"),
+                        rs.getDouble("current_bid"),
+                        rs.getString("top_bidder_id") != null ? UUID.fromString(rs.getString("top_bidder_id")) : null,
+                        rs.getString("top_bidder_name"),
+                        AuctionType.valueOf(rs.getString("auction_type")),
+                        AuctionStatus.valueOf(rs.getString("auction_status")),
+                        bids
+                );
+                history.add(auction);
+            }
+        } catch (SQLException | IOException | ClassNotFoundException e) {
+            plugin.getLogger().log(Level.SEVERE, "Could not load history for player " + playerId, e);
+        }
+        return history;
     }
 }

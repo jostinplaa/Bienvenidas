@@ -51,12 +51,10 @@ public class MainMenu extends GUI {
                 player.openInventory(new com.jules.auctionmasterelite.gui.menu.ActiveAuctionsMenu(plugin, player, 0).getInventory());
                 break;
             case GOLD_INGOT:
-                player.sendMessage("Opening My Auctions... (Not Implemented)");
-                player.closeInventory();
+                player.openInventory(new com.jules.auctionmasterelite.gui.menu.MyAuctionsMenu(plugin, player, 0).getInventory());
                 break;
             case BOOK:
-                player.sendMessage("Opening History... (Not Implemented)");
-                player.closeInventory();
+                player.openInventory(new com.jules.auctionmasterelite.gui.menu.HistoryMenu(plugin, player, 0).getInventory());
                 break;
             case ANVIL:
                 if (player.hasPermission("auctionmaster.elite.create.public")) {
