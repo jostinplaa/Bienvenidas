@@ -2,6 +2,7 @@ package com.jules.auctionmasterelite.managers;
 
 import com.jules.auctionmasterelite.AuctionMasterElite;
 import com.jules.auctionmasterelite.data.Auction;
+import com.jules.auctionmasterelite.util.MessageUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -43,9 +44,7 @@ public class AuctionManager {
             String itemName = auction.getItem().hasItemMeta() && auction.getItem().getItemMeta().hasDisplayName()
                     ? auction.getItem().getItemMeta().getDisplayName()
                     : auction.getItem().getType().toString().replace("_", " ").toLowerCase();
-            String message = String.format("§6§l[SUBASTA FLASH] §e¡%s ha iniciado una subasta de %s por solo 60 segundos! ¡Date prisa! §f/ah",
-                    auction.getSellerName(), itemName);
-            Bukkit.broadcastMessage(message);
+            MessageUtil.broadcastMessage("flash-auction-broadcast", "player", auction.getSellerName(), "item", itemName);
         }
     }
 
@@ -54,25 +53,25 @@ public class AuctionManager {
 
         // --- Validation Checks ---
         if (auction == null || auction.getStatus() != com.jules.auctionmasterelite.data.AuctionStatus.ACTIVE) {
-            player.sendMessage("§cEsta subasta ya no está activa.");
+            MessageUtil.sendMessage(player, "auction-not-active");
             return;
         }
         if (auction.getSellerId().equals(player.getUniqueId())) {
-            player.sendMessage("§cNo puedes pujar en tu propia subasta.");
+            MessageUtil.sendMessage(player, "cannot-bid-on-own");
             return;
         }
         if (auction.getType() == com.jules.auctionmasterelite.data.AuctionType.PRIVATE && !auction.getInvitedPlayers().contains(player.getUniqueId())) {
-            player.sendMessage("§cEsta es una subasta privada y no has sido invitado.");
+            MessageUtil.sendMessage(player, "private-auction-no-invite");
             return;
         }
         if (amount <= auction.getCurrentBid()) {
-            player.sendMessage("§cTu puja debe ser mayor que la puja actual de §6" + String.format("%.2f", auction.getCurrentBid()));
+            MessageUtil.sendMessage(player, "bid-too-low", "amount", String.format("%.2f", auction.getCurrentBid()));
             return;
         }
 
         EconomyManager economyManager = plugin.getEconomyManager();
         if (!economyManager.hasEnough(player, amount)) {
-            player.sendMessage("§cNo tienes fondos suficientes para realizar esa puja.");
+            MessageUtil.sendMessage(player, "not-enough-funds");
             return;
         }
 
@@ -86,7 +85,7 @@ public class AuctionManager {
         if (previousTopBidder != null) {
             economyManager.deposit(previousTopBidder, auction.getCurrentBid());
             if (previousTopBidder.isOnline()) {
-                previousTopBidder.getPlayer().sendMessage(String.format("§e¡Tu puja de §6%.2f§e ha sido superada en la subasta de %s!", auction.getCurrentBid(), auction.getItem().getType()));
+                MessageUtil.sendMessage(previousTopBidder.getPlayer(), "outbid-notification", "amount", String.format("%.2f", auction.getCurrentBid()), "item", auction.getItem().getType().toString());
             }
         }
 
@@ -99,12 +98,12 @@ public class AuctionManager {
         plugin.getDatabaseManager().updateAuctionBid(auction);
 
         // --- Notifications ---
-        player.sendMessage(String.format("§a¡Has pujado §6%.2f §ay ahora eres el pujador más alto!", amount));
+        MessageUtil.sendMessage(player, "bid-success", "amount", String.format("%.2f", amount));
 
         // Notify seller
         OfflinePlayer seller = Bukkit.getOfflinePlayer(auction.getSellerId());
         if (seller.isOnline()) {
-            seller.getPlayer().sendMessage(String.format("§d¡Alguien ha pujado §6%.2f §den tu subasta de %s!", amount, auction.getItem().getType()));
+            MessageUtil.sendMessage(seller.getPlayer(), "seller-bid-notification", "amount", String.format("%.2f", amount), "item", auction.getItem().getType().toString());
         }
     }
 
@@ -173,10 +172,15 @@ public class AuctionManager {
         if (auction.getTopBidderId() != null) {
             OfflinePlayer winner = Bukkit.getOfflinePlayer(auction.getTopBidderId());
 
-            // Pay the seller
-            plugin.getEconomyManager().deposit(seller, auction.getCurrentBid());
+            // Pay the seller, taking commission
+            double commissionRate = plugin.getConfigManager().getConfig().getDouble("settings.commission-fee-percent", 0.0) / 100.0;
+            double finalPrice = auction.getCurrentBid();
+            double commission = finalPrice * commissionRate;
+            double amountToSeller = finalPrice - commission;
+
+            plugin.getEconomyManager().deposit(seller, amountToSeller);
             if (seller.isOnline()) {
-                seller.getPlayer().sendMessage(String.format("§aTu subasta de %s ha finalizado. ¡Has ganado §6%.2f!", auction.getItem().getType(), auction.getCurrentBid()));
+                MessageUtil.sendMessage(seller.getPlayer(), "auction-won-seller", "item", auction.getItem().getType().toString(), "amount", String.format("%.2f", amountToSeller), "commission", String.format("%.2f", commission));
             }
 
             // Give item to winner
@@ -185,10 +189,10 @@ public class AuctionManager {
                 if (winnerPlayer.getInventory().firstEmpty() == -1) {
                     // Inventory is full, drop at their location
                     winnerPlayer.getWorld().dropItem(winnerPlayer.getLocation(), auction.getItem());
-                    winnerPlayer.sendMessage("§e¡Ganaste una subasta pero tu inventario estaba lleno! El objeto ha sido dropeado a tus pies.");
+                    MessageUtil.sendMessage(winnerPlayer, "auction-won-inventory-full");
                 } else {
                     winnerPlayer.getInventory().addItem(auction.getItem());
-                    winnerPlayer.sendMessage("§a¡Has ganado la subasta de %s! El objeto ha sido añadido a tu inventario.");
+                    MessageUtil.sendMessage(winnerPlayer, "auction-won-item-received", "item", auction.getItem().getType().toString());
                 }
             } else {
                 // TODO: Implement a more robust offline item delivery system (e.g., /claim command)
@@ -201,10 +205,10 @@ public class AuctionManager {
                 Player sellerPlayer = seller.getPlayer();
                  if (sellerPlayer.getInventory().firstEmpty() == -1) {
                     sellerPlayer.getWorld().dropItem(sellerPlayer.getLocation(), auction.getItem());
-                    sellerPlayer.sendMessage("§eTu subasta de %s finalizó sin pujas. Tu inventario estaba lleno, así que el objeto fue dropeado a tus pies.");
+                    MessageUtil.sendMessage(sellerPlayer, "auction-ended-no-bids-inv-full", "item", auction.getItem().getType().toString());
                 } else {
                     sellerPlayer.getInventory().addItem(auction.getItem());
-                    sellerPlayer.sendMessage("§eTu subasta de %s finalizó sin pujas. El objeto ha sido devuelto a tu inventario.");
+                    MessageUtil.sendMessage(sellerPlayer, "auction-ended-no-bids-item-returned", "item", auction.getItem().getType().toString());
                 }
             } else {
                 // TODO: Implement robust offline item delivery

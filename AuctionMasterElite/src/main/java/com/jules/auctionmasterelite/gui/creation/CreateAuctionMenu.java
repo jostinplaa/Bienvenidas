@@ -3,6 +3,7 @@ package com.jules.auctionmasterelite.gui.creation;
 import com.jules.auctionmasterelite.AuctionMasterElite;
 import com.jules.auctionmasterelite.gui.GUI;
 import com.jules.auctionmasterelite.managers.PlayerInputManager;
+import com.jules.auctionmasterelite.util.MessageUtil;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -87,14 +88,14 @@ public class CreateAuctionMenu extends GUI {
                 switch (clickedItem.getType()) {
                     case GOLD_NUGGET:
                         player.closeInventory();
-                        player.sendMessage("§ePor favor, introduce el precio inicial de la subasta en el chat.");
+                        MessageUtil.sendMessage(player, "prompt-for-price");
                         plugin.getPlayerInputManager().requestInput(player.getUniqueId(), (priceInput) -> {
                             try {
                                 this.price = Double.parseDouble(priceInput);
-                                player.sendMessage("§aPrecio establecido en: §6" + this.price);
+                                MessageUtil.sendMessage(player, "price-set", "price", String.format("%.2f", this.price));
                                 Bukkit.getScheduler().runTask(plugin, this::updatePriceItem);
                             } catch (NumberFormatException e) {
-                                player.sendMessage("§cEntrada inválida. Por favor, introduce un número.");
+                                MessageUtil.sendMessage(player, "invalid-price-input");
                             }
                             // Re-open the GUI for the player
                             Bukkit.getScheduler().runTask(plugin, () -> player.openInventory(getInventory()));
@@ -102,19 +103,19 @@ public class CreateAuctionMenu extends GUI {
                         break;
                     case CLOCK:
                         if (currentType == AuctionType.FLASH) {
-                            player.sendMessage("§cNo puedes establecer una duración para las subastas Flash.");
+                            // Message is already in the lore, no need to send another.
                             return;
                         }
                         player.closeInventory();
-                        player.sendMessage("§ePor favor, introduce la duración de la subasta en el chat (ej. 1d, 12h, 30m, 45s).");
+                        MessageUtil.sendMessage(player, "prompt-for-duration");
                         plugin.getPlayerInputManager().requestInput(player.getUniqueId(), (durationInput) -> {
                             long parsedDuration = TimeUtil.parseTime(durationInput);
                             if (parsedDuration > 0) {
                                 this.duration = parsedDuration;
-                                player.sendMessage("§aDuración establecida en: §6" + durationInput);
+                                MessageUtil.sendMessage(player, "duration-set", "duration", durationInput);
                                 Bukkit.getScheduler().runTask(plugin, this::updateDurationItem);
                             } else {
-                                player.sendMessage("§cFormato de tiempo inválido. Ejemplo: 1d12h30m");
+                                MessageUtil.sendMessage(player, "invalid-duration-input");
                             }
                             // Re-open the GUI for the player
                             Bukkit.getScheduler().runTask(plugin, () -> player.openInventory(getInventory()));
@@ -184,15 +185,22 @@ public class CreateAuctionMenu extends GUI {
         itemToAuction = inventory.getItem(13); // Make sure we have the latest item state
 
         if (itemToAuction == null || itemToAuction.getType() == Material.AIR) {
-            player.sendMessage("§cPor favor, coloca un objeto para subastar.");
+            MessageUtil.sendMessage(player, "creation-no-item");
             return;
         }
         if (price <= 0) {
-            player.sendMessage("§cPor favor, establece un precio inicial válido.");
+            MessageUtil.sendMessage(player, "creation-no-price");
             return;
         }
         if (currentType != AuctionType.FLASH && duration <= 0) {
-            player.sendMessage("§cPor favor, establece una duración válida.");
+            MessageUtil.sendMessage(player, "creation-no-duration");
+            return;
+        }
+
+        // Check auction limit
+        int maxAuctions = plugin.getConfigManager().getConfig().getInt("settings.max-active-auctions", 10);
+        if (maxAuctions > 0 && plugin.getAuctionManager().getAuctionsBySeller(player.getUniqueId()).size() >= maxAuctions) {
+            MessageUtil.sendMessage(player, "creation-limit-reached"); // Assumes new message key
             return;
         }
 
@@ -217,6 +225,6 @@ public class CreateAuctionMenu extends GUI {
         plugin.getAuctionManager().createAuction(newAuction);
         plugin.getDatabaseManager().saveAuction(newAuction);
 
-        player.sendMessage("§a¡Tu subasta ha sido creada con éxito!");
+        MessageUtil.sendMessage(player, "creation-success");
     }
 }

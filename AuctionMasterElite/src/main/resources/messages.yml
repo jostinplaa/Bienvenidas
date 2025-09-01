@@ -1,0 +1,50 @@
+# -------------------------------------------------- #
+#        AuctionMaster Elite Messages File           #
+# -------------------------------------------------- #
+# You can use standard Minecraft color codes (e.g., &a, &l).
+
+prefix: "&d&lAuctionMaster &8» "
+
+# General command messages
+no-permission: "&cNo tienes permiso para usar este comando."
+player-only-command: "&cEste comando solo puede ser usado por jugadores."
+player-not-found: "&cJugador no encontrado."
+invalid-usage: "&cUso: {usage}"
+
+# Auction creation messages
+prompt-for-price: "&ePor favor, introduce el precio inicial de la subasta en el chat."
+prompt-for-duration: "&ePor favor, introduce la duración de la subasta en el chat (ej. 1d, 12h, 30m, 45s)."
+price-set: "&aPrecio establecido en: &6{price}"
+duration-set: "&aDuración establecida en: &6{duration}"
+invalid-price-input: "&cEntrada inválida. Por favor, introduce un número válido para el precio."
+invalid-duration-input: "&cFormato de tiempo inválido. Ejemplo: 1d12h30m"
+creation-no-item: "&cPor favor, coloca un objeto para subastar."
+creation-no-price: "&cPor favor, establece un precio inicial válido."
+creation-no-duration: "&cPor favor, establece una duración válida."
+creation-success: "&a¡Tu subasta ha sido creada con éxito!"
+creation-limit-reached: "&cHas alcanzado tu límite de subastas activas."
+
+# Bidding messages
+bid-too-low: "&cTu puja debe ser mayor que la puja actual de &6{amount}"
+not-enough-funds: "&cNo tienes fondos suficientes para realizar esa puja."
+cannot-bid-on-own: "&cNo puedes pujar en tu propia subasta."
+private-auction-no-invite: "&cEsta es una subasta privada y no has sido invitado."
+auction-not-active: "&cEsta subasta ya no está activa."
+bid-success: "&a¡Has pujado &6{amount} &ay ahora eres el pujador más alto!"
+outbid-notification: "&e¡Tu puja de &6{amount}§e ha sido superada en la subasta de {item}!"
+seller-bid-notification: "&d¡Alguien ha pujado &6{amount} &den tu subasta de {item}!"
+
+# Invite messages
+invite-success: "&aHas invitado a {player} a tu subasta."
+invite-received: "&aHas sido invitado a una subasta por {player}."
+no-active-private-auction: "&cNo tienes ninguna subasta privada activa para invitar."
+
+# Flash auction announcement
+flash-auction-broadcast: "&6&l[SUBASTA FLASH] &e¡{player} ha iniciado una subasta de {item} por solo 60 segundos! ¡Date prisa! &f/ah"
+
+# Auction End Messages
+auction-won-seller: "&aTu subasta de {item} ha finalizado. ¡Has ganado &6{amount}! (Comisión de {commission})"
+auction-won-inventory-full: "&e¡Ganaste una subasta pero tu inventario estaba lleno! El objeto ha sido dropeado a tus pies."
+auction-won-item-received: "&a¡Has ganado la subasta de {item}! El objeto ha sido añadido a tu inventario."
+auction-ended-no-bids-inv-full: "&eTu subasta de {item} finalizó sin pujas. Tu inventario estaba lleno, así que el objeto fue dropeado a tus pies."
+auction-ended-no-bids-item-returned: "&eTu subasta de {item} finalizó sin pujas. El objeto ha sido devuelto a tu inventario."

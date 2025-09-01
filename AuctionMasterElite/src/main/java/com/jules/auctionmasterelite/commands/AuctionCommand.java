@@ -2,6 +2,7 @@ package com.jules.auctionmasterelite.commands;
 
 import com.jules.auctionmasterelite.AuctionMasterElite;
 import org.bukkit.command.Command;
+import com.jules.auctionmasterelite.util.MessageUtil;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -18,14 +19,14 @@ public class AuctionCommand implements CommandExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage("This command can only be used by players.");
+            MessageUtil.sendRawMessage(sender, "player-only-command");
             return true;
         }
 
         Player player = (Player) sender;
 
         if (!player.hasPermission("auctionmaster.elite.use")) {
-            player.sendMessage("§cYou do not have permission to use this command.");
+            MessageUtil.sendMessage(player, "no-permission");
             return true;
         }
 
@@ -45,13 +46,13 @@ public class AuctionCommand implements CommandExecutor {
     private void handleInvite(Player player, String[] args) {
         // auction invite <player>
         if (args.length < 2) {
-            player.sendMessage("§cUso: /auction invite <jugador>");
+            MessageUtil.sendMessage(player, "invalid-usage", "usage", "/auction invite <player>");
             return;
         }
 
         Player target = org.bukkit.Bukkit.getPlayer(args[1]);
         if (target == null) {
-            player.sendMessage("§cJugador no encontrado.");
+            MessageUtil.sendMessage(player, "player-not-found");
             return;
         }
 
@@ -62,13 +63,13 @@ public class AuctionCommand implements CommandExecutor {
                 .orElse(null);
 
         if (auction == null) {
-            player.sendMessage("§cNo tienes ninguna subasta privada activa para invitar.");
+            MessageUtil.sendMessage(player, "no-active-private-auction");
             return;
         }
 
         auction.invitePlayer(target.getUniqueId());
         plugin.getDatabaseManager().saveInvitedPlayer(auction.getAuctionId(), target.getUniqueId());
-        player.sendMessage("§aHas invitado a " + target.getName() + " a tu subasta.");
-        target.sendMessage("§aHas sido invitado a una subasta por " + player.getName() + ".");
+        MessageUtil.sendMessage(player, "invite-success", "player", target.getName());
+        MessageUtil.sendMessage(target, "invite-received", "player", player.getName());
     }
 }

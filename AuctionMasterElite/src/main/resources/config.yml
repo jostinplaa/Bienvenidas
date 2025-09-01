@@ -1,0 +1,20 @@
+# -------------------------------------------------- #
+#      AuctionMaster Elite Configuration File        #
+# -------------------------------------------------- #
+
+# Settings for auction limits and economy.
+settings:
+  # The maximum number of auctions a player can have active at one time.
+  # Set to -1 to disable the limit.
+  max-active-auctions: 10
+
+  # The commission fee taken from the seller upon a successful auction.
+  # This is a percentage value. For example, 5.0 means a 5% commission.
+  # Set to 0.0 to disable commissions.
+  commission-fee-percent: 5.0
+
+# Settings for specific auction types.
+auction-types:
+  flash:
+    # Duration of flash auctions in seconds.
+    duration-seconds: 60

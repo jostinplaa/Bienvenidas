@@ -4,7 +4,9 @@ import com.jules.auctionmasterelite.managers.AuctionManager;
 import com.jules.auctionmasterelite.managers.DatabaseManager;
 import com.jules.auctionmasterelite.managers.DiscordManager;
 import com.jules.auctionmasterelite.managers.EconomyManager;
+import com.jules.auctionmasterelite.managers.ConfigManager;
 import com.jules.auctionmasterelite.managers.PlayerInputManager;
+import com.jules.auctionmasterelite.util.MessageUtil;
 import net.luckperms.api.LuckPerms;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -21,10 +23,12 @@ public final class AuctionMasterElite extends JavaPlugin {
     private PlayerInputManager playerInputManager;
     private LuckPerms luckPerms;
     private DiscordManager discordManager;
+    private ConfigManager configManager;
 
     @Override
     public void onEnable() {
         // Initialize managers
+        this.configManager = new ConfigManager(this);
         this.auctionManager = new AuctionManager(this);
         this.databaseManager = new DatabaseManager(this);
         this.economyManager = new EconomyManager();
@@ -73,6 +77,9 @@ public final class AuctionMasterElite extends JavaPlugin {
             getLogger().info("Successfully hooked into DiscordSRV.");
         }
 
+        // Load messages
+        MessageUtil.load(this);
+
         getLogger().info("AuctionMasterElite has been enabled!");
     }
 
@@ -115,5 +122,9 @@ public final class AuctionMasterElite extends JavaPlugin {
 
     public DatabaseManager getDatabaseManager() {
         return databaseManager;
+    }
+
+    public ConfigManager getConfigManager() {
+        return configManager;
     }
 }
