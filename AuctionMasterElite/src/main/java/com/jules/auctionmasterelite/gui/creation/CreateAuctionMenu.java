@@ -101,6 +101,10 @@ public class CreateAuctionMenu extends GUI {
                         });
                         break;
                     case CLOCK:
+                        if (currentType == AuctionType.FLASH) {
+                            player.sendMessage("§cNo puedes establecer una duración para las subastas Flash.");
+                            return;
+                        }
                         player.closeInventory();
                         player.sendMessage("§ePor favor, introduce la duración de la subasta en el chat (ej. 1d, 12h, 30m, 45s).");
                         plugin.getPlayerInputManager().requestInput(player.getUniqueId(), (durationInput) -> {
@@ -146,6 +150,7 @@ public class CreateAuctionMenu extends GUI {
                 break;
         }
         updateAuctionTypeItem();
+        updateDurationItem(); // Also update the duration item in case it needs to be disabled/enabled
     }
 
     private void updateAuctionTypeItem() {
@@ -163,10 +168,16 @@ public class CreateAuctionMenu extends GUI {
     }
 
     private void updateDurationItem() {
-        String lore1 = "§eHaz clic para establecer";
-        String lore2 = "§ela duración de la subasta.";
-        String current = "§7Actual: §b" + (duration > 0 ? TimeUtil.formatDuration(duration) : "No establecida");
-        inventory.setItem(31, createGuiItem(Material.CLOCK, "§bDuración", lore1, lore2, "", current));
+        if (currentType == AuctionType.FLASH) {
+            String lore1 = "§cLas subastas Flash tienen";
+            String lore2 = "§cuna duración fija de 60 segundos.";
+            inventory.setItem(31, createGuiItem(Material.CLOCK, "§bDuración", lore1, lore2));
+        } else {
+            String lore1 = "§eHaz clic para establecer";
+            String lore2 = "§ela duración de la subasta.";
+            String current = "§7Actual: §b" + (duration > 0 ? TimeUtil.formatDuration(duration) : "No establecida");
+            inventory.setItem(31, createGuiItem(Material.CLOCK, "§bDuración", lore1, lore2, "", current));
+        }
     }
 
     private void handleAuctionCreation(Player player) {
@@ -180,7 +191,7 @@ public class CreateAuctionMenu extends GUI {
             player.sendMessage("§cPor favor, establece un precio inicial válido.");
             return;
         }
-        if (duration <= 0) {
+        if (currentType != AuctionType.FLASH && duration <= 0) {
             player.sendMessage("§cPor favor, establece una duración válida.");
             return;
         }
@@ -189,8 +200,9 @@ public class CreateAuctionMenu extends GUI {
         player.closeInventory();
         inventory.setItem(13, new ItemStack(Material.AIR)); // Remove item from GUI
 
+        long auctionDuration = (currentType == AuctionType.FLASH) ? 60 * 1000 : duration;
         long startTime = System.currentTimeMillis();
-        long endTime = startTime + duration;
+        long endTime = startTime + auctionDuration;
 
         com.jules.auctionmasterelite.data.Auction newAuction = new com.jules.auctionmasterelite.data.Auction(
                 player.getUniqueId(),

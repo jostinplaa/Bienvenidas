@@ -37,6 +37,16 @@ public class AuctionManager {
         if (plugin.getDiscordManager() != null) {
             plugin.getDiscordManager().sendNewAuctionNotification(auction);
         }
+
+        // Announce Flash auctions globally
+        if (auction.getType() == com.jules.auctionmasterelite.data.AuctionType.FLASH) {
+            String itemName = auction.getItem().hasItemMeta() && auction.getItem().getItemMeta().hasDisplayName()
+                    ? auction.getItem().getItemMeta().getDisplayName()
+                    : auction.getItem().getType().toString().replace("_", " ").toLowerCase();
+            String message = String.format("§6§l[SUBASTA FLASH] §e¡%s ha iniciado una subasta de %s por solo 60 segundos! ¡Date prisa! §f/ah",
+                    auction.getSellerName(), itemName);
+            Bukkit.broadcastMessage(message);
+        }
     }
 
     public void placeBid(Player player, UUID auctionId, double amount) {
