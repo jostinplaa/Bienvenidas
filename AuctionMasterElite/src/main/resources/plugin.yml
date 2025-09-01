@@ -1,0 +1,43 @@
+name: AuctionMasterElite
+version: '${project.version}'
+main: com.jules.auctionmasterelite.AuctionMasterElite
+api-version: '1.21'
+author: Jules
+description: '${project.description}'
+softdepend: [Vault, LuckPerms, PlaceholderAPI, DiscordSRV]
+
+commands:
+  auction:
+    description: Main command for AuctionMaster Elite.
+    aliases: [ah, subastas, auctionhouse]
+    usage: /<command>
+    permission: auctionmaster.elite.use
+
+permissions:
+  auctionmaster.elite.use:
+    description: Allows basic use of the auction system.
+    default: true
+  auctionmaster.elite.create.public:
+    description: Allows creating public auctions.
+    default: true
+  auctionmaster.elite.create.private:
+    description: Allows creating private auctions.
+    default: op
+  auctionmaster.elite.create.flash:
+    description: Allows creating flash auctions.
+    default: op
+  auctionmaster.elite.create.scheduled:
+    description: Allows creating scheduled auctions.
+    default: op
+  auctionmaster.elite.vip.gui:
+    description: Access to VIP GUI themes.
+    default: op
+  auctionmaster.elite.admin.bypass:
+    description: Bypass limits and commissions.
+    default: op
+  auctionmaster.elite.chatcolor:
+    description: Allows using color codes in auction chat.
+    default: op
+  auctionmaster.elite.notify.all:
+    description: Receive all auction notifications.
+    default: op
