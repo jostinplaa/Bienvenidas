@@ -12,6 +12,14 @@ import java.util.stream.Collectors;
  * Manages all active auctions in memory.
  */
 import com.jules.auctionmasterelite.AuctionMasterElite;
+import com.jules.auctionmasterelite.data.Auction;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class AuctionManager {
 
@@ -35,6 +43,22 @@ public class AuctionManager {
         if (plugin.getDiscordManager() != null) {
             plugin.getDiscordManager().sendNewAuctionNotification(auction);
         }
+    }
+
+    public void placeBid(Player player, UUID auctionId, double amount) {
+        Auction auction = getAuction(auctionId);
+        if (auction == null) {
+            player.sendMessage("§cEsta subasta ya no existe.");
+            return;
+        }
+
+        // TODO: Add more validation (is player the seller? is auction active?)
+        // TODO: Check economy
+        // TODO: Refund previous bidder
+        // TODO: Update auction object
+        // TODO: Update database
+
+        player.sendMessage(String.format("§aHas pujado §6%.2f §aen la subasta!", amount));
     }
 
     /**

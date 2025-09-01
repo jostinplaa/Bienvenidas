@@ -48,8 +48,7 @@ public class MainMenu extends GUI {
         // Handle clicks
         switch (clickedItem.getType()) {
             case EMERALD:
-                player.sendMessage("Opening Active Auctions... (Not Implemented)");
-                player.closeInventory();
+                player.openInventory(new com.jules.auctionmasterelite.gui.menu.ActiveAuctionsMenu(plugin, player, 0).getInventory());
                 break;
             case GOLD_INGOT:
                 player.sendMessage("Opening My Auctions... (Not Implemented)");
