@@ -2,6 +2,7 @@ package com.jules.auctionmasterelite.gui.menu;
 
 import com.jules.auctionmasterelite.AuctionMasterElite;
 import com.jules.auctionmasterelite.gui.GUI;
+import com.jules.auctionmasterelite.gui.menu.util.SortMode;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -48,7 +49,7 @@ public class MainMenu extends GUI {
         // Handle clicks
         switch (clickedItem.getType()) {
             case EMERALD:
-                player.openInventory(new com.jules.auctionmasterelite.gui.menu.ActiveAuctionsMenu(plugin, player, 0).getInventory());
+                player.openInventory(new com.jules.auctionmasterelite.gui.menu.ActiveAuctionsMenu(plugin, player, 0, SortMode.ENDING_SOONEST).getInventory());
                 break;
             case GOLD_INGOT:
                 player.openInventory(new com.jules.auctionmasterelite.gui.menu.MyAuctionsMenu(plugin, player, 0).getInventory());

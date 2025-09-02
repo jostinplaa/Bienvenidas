@@ -13,6 +13,16 @@ settings:
   # Set to 0.0 to disable commissions.
   commission-fee-percent: 5.0
 
+  # --- Anti-Sniping Settings ---
+  # Prevents players from placing bids at the very last second to "snipe" an auction.
+  anti-sniping:
+    # Set to true to enable this feature.
+    enabled: true
+    # If a bid is placed when the auction has less than this many seconds remaining...
+    threshold-seconds: 30
+    # ...the auction's duration will be extended by this many seconds.
+    extend-duration-seconds: 15
+
 # Settings for specific auction types.
 auction-types:
   flash:

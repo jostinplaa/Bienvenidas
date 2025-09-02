@@ -2,6 +2,7 @@ package com.jules.auctionmasterelite.commands;
 
 import com.jules.auctionmasterelite.AuctionMasterElite;
 import org.bukkit.command.Command;
+import com.jules.auctionmasterelite.gui.claims.ClaimMenu;
 import com.jules.auctionmasterelite.util.MessageUtil;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -34,6 +35,12 @@ public class AuctionCommand implements CommandExecutor {
             String subCommand = args[0].toLowerCase();
             if (subCommand.equals("invite")) {
                 handleInvite(player, args);
+                return true;
+            }
+            if (subCommand.equals("claim")) {
+                ClaimMenu claimMenu = new ClaimMenu(plugin, player);
+                plugin.getClaimMenus().put(player.getUniqueId(), claimMenu);
+                claimMenu.open();
                 return true;
             }
         }
