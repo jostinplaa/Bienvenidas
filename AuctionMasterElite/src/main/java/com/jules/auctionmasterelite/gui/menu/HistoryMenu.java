@@ -24,7 +24,7 @@ public class HistoryMenu extends GUI {
     }
 
     private void initializeItems(Player player) {
-        List<Auction> history = plugin.getDatabaseManager().loadPlayerHistory(player.getUniqueId());
+        List<Auction> history = plugin.getDatabaseManager().getDataSource().loadPlayerHistory(player.getUniqueId());
 
         int maxItemsPerPage = 45;
         int startIndex = page * maxItemsPerPage;

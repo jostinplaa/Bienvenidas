@@ -18,7 +18,7 @@ public class Auction {
     private final String sellerName;
     private final ItemStack item;
     private final long startTime;
-    private final long endTime;
+    private long endTime;
     private final double startingBid;
     private final AuctionType type;
     private final Set<UUID> invitedPlayers;
@@ -70,6 +70,7 @@ public class Auction {
 
     // Setters / Modifiers
     public void setStatus(AuctionStatus status) { this.status = status; }
+    public void setEndTime(long endTime) { this.endTime = endTime; }
 
     public void invitePlayer(UUID playerId) {
         if (this.type == AuctionType.PRIVATE) {

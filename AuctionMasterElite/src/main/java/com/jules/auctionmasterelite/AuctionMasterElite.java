@@ -2,6 +2,7 @@ package com.jules.auctionmasterelite;
 
 import com.jules.auctionmasterelite.managers.AuctionManager;
 import com.jules.auctionmasterelite.managers.DatabaseManager;
+import com.jules.auctionmasterelite.gui.claims.ClaimMenu;
 import com.jules.auctionmasterelite.managers.DiscordManager;
 import com.jules.auctionmasterelite.managers.EconomyManager;
 import com.jules.auctionmasterelite.managers.ConfigManager;
@@ -13,6 +14,9 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 import java.util.logging.Level;
 
 public final class AuctionMasterElite extends JavaPlugin {
@@ -24,6 +28,7 @@ public final class AuctionMasterElite extends JavaPlugin {
     private LuckPerms luckPerms;
     private DiscordManager discordManager;
     private ConfigManager configManager;
+    private final Map<UUID, ClaimMenu> claimMenus = new HashMap<>();
 
     @Override
     public void onEnable() {
@@ -57,6 +62,7 @@ public final class AuctionMasterElite extends JavaPlugin {
         // Register listeners
         getServer().getPluginManager().registerEvents(new com.jules.auctionmasterelite.gui.GUIListener(), this);
         getServer().getPluginManager().registerEvents(new com.jules.auctionmasterelite.listeners.PlayerChatListener(this), this);
+        getServer().getPluginManager().registerEvents(new com.jules.auctionmasterelite.listeners.PlayerJoinListener(this), this);
 
         // Register PlaceholderAPI expansion
         if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
@@ -126,5 +132,9 @@ public final class AuctionMasterElite extends JavaPlugin {
 
     public ConfigManager getConfigManager() {
         return configManager;
+    }
+
+    public Map<UUID, ClaimMenu> getClaimMenus() {
+        return claimMenus;
     }
 }

@@ -4,6 +4,7 @@ import com.jules.auctionmasterelite.AuctionMasterElite;
 import com.jules.auctionmasterelite.data.Auction;
 import com.jules.auctionmasterelite.data.AuctionType;
 import com.jules.auctionmasterelite.gui.GUI;
+import com.jules.auctionmasterelite.gui.menu.util.SortMode;
 import com.jules.auctionmasterelite.util.TimeUtil;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -21,11 +22,13 @@ import java.util.stream.Collectors;
 public class ActiveAuctionsMenu extends GUI {
 
     private final int page;
+    private final SortMode sortMode;
     private final Map<Integer, UUID> slotToAuctionId = new HashMap<>();
 
-    public ActiveAuctionsMenu(AuctionMasterElite plugin, Player player, int page) {
+    public ActiveAuctionsMenu(AuctionMasterElite plugin, Player player, int page, SortMode sortMode) {
         super(plugin, 54, "§8Subastas Activas (Página " + (page + 1) + ")");
         this.page = page;
+        this.sortMode = sortMode;
         initializeItems(player);
     }
 
@@ -38,6 +41,22 @@ public class ActiveAuctionsMenu extends GUI {
                     return true;
                 })
                 .collect(Collectors.toList());
+
+        // Sort auctions based on the current sort mode
+        auctions.sort((a1, a2) -> {
+            switch (sortMode) {
+                case ENDING_SOONEST:
+                    return Long.compare(a1.getEndTime(), a2.getEndTime());
+                case NEWEST_LISTED:
+                    return Long.compare(a2.getStartTime(), a1.getStartTime());
+                case PRICE_ASCENDING:
+                    return Double.compare(a1.getCurrentBid(), a2.getCurrentBid());
+                case PRICE_DESCENDING:
+                    return Double.compare(a2.getCurrentBid(), a1.getCurrentBid());
+                default:
+                    return 0;
+            }
+        });
 
         // 45 is the max items per page (54 slots - 9 for controls)
         int maxItemsPerPage = 45;
@@ -53,13 +72,17 @@ public class ActiveAuctionsMenu extends GUI {
             slotToAuctionId.put(i, auction.getAuctionId());
         }
 
-        // Pagination controls
+        // --- Controls ---
+        // Pagination
         if (page > 0) {
             inventory.setItem(45, createGuiItem(Material.ARROW, "§aPágina Anterior", "§7Ir a la página " + page));
         }
         if (auctions.size() > maxItemsPerPage * (page + 1)) {
             inventory.setItem(53, createGuiItem(Material.ARROW, "§aPágina Siguiente", "§7Ir a la página " + (page + 2)));
         }
+
+        // Sort Button
+        inventory.setItem(49, createGuiItem(Material.CLOCK, "§bOrdenar Por", "§7Actual: §e" + sortMode.getDisplayName(), "§7(Haz clic para cambiar)"));
     }
 
     private ItemStack createAuctionItem(Auction auction) {
@@ -90,10 +113,13 @@ public class ActiveAuctionsMenu extends GUI {
         if (clickedItem.getType() == Material.ARROW) {
             ItemMeta meta = clickedItem.getItemMeta();
             if (meta != null && meta.getDisplayName().contains("Siguiente")) {
-                player.openInventory(new ActiveAuctionsMenu(plugin, player, page + 1).getInventory());
+                player.openInventory(new ActiveAuctionsMenu(plugin, player, page + 1, sortMode).getInventory());
             } else if (meta != null && meta.getDisplayName().contains("Anterior")) {
-                player.openInventory(new ActiveAuctionsMenu(plugin, player, page - 1).getInventory());
+                player.openInventory(new ActiveAuctionsMenu(plugin, player, page - 1, sortMode).getInventory());
             }
+        } else if (clickedItem.getType() == Material.CLOCK) {
+            SortMode nextSortMode = sortMode.next();
+            player.openInventory(new ActiveAuctionsMenu(plugin, player, 0, nextSortMode).getInventory());
         } else {
             // It's an auction item
             UUID auctionId = slotToAuctionId.get(event.getSlot());
