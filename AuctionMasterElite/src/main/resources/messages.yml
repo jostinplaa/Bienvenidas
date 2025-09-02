@@ -26,7 +26,6 @@ creation-limit-reached: "&cHas alcanzado tu límite de subastas activas."
 
 # Bidding messages
 bid-too-low: "&cTu puja debe ser mayor que la puja actual de &6{amount}"
-auction-time-extended: "&a¡La subasta ha sido extendida por {seconds} segundos!"
 not-enough-funds: "&cNo tienes fondos suficientes para realizar esa puja."
 cannot-bid-on-own: "&cNo puedes pujar en tu propia subasta."
 private-auction-no-invite: "&cEsta es una subasta privada y no has sido invitado."
@@ -45,13 +44,7 @@ flash-auction-broadcast: "&6&l[SUBASTA FLASH] &e¡{player} ha iniciado una subas
 
 # Auction End Messages
 auction-won-seller: "&aTu subasta de {item} ha finalizado. ¡Has ganado &6{amount}! (Comisión de {commission})"
-auction-won-inventory-full-claim: "&e¡Ganaste una subasta pero tu inventario estaba lleno! El objeto ha sido enviado a tu inventario de reclamos. Usa /subasta claim."
+auction-won-inventory-full: "&e¡Ganaste una subasta pero tu inventario estaba lleno! El objeto ha sido dropeado a tus pies."
 auction-won-item-received: "&a¡Has ganado la subasta de {item}! El objeto ha sido añadido a tu inventario."
-auction-ended-no-bids-inv-full-claim: "&eTu subasta de {item} finalizó sin pujas. Tu inventario estaba lleno, así que el objeto fue enviado a tu inventario de reclamos. Usa /subasta claim."
+auction-ended-no-bids-inv-full: "&eTu subasta de {item} finalizó sin pujas. Tu inventario estaba lleno, así que el objeto fue dropeado a tus pies."
 auction-ended-no-bids-item-returned: "&eTu subasta de {item} finalizó sin pujas. El objeto ha sido devuelto a tu inventario."
-
-# Claim System Messages
-you-have-items-to-claim: "&a¡Tienes objetos por reclamar! Usa &e/subasta claim &apara verlos."
-no-items-to-claim: "&eNo tienes objetos para reclamar."
-inventory-full-cannot-claim: "&cTu inventario está lleno. No puedes reclamar objetos."
-item-claimed-successfully: "&a¡Objeto reclamado con éxito!"

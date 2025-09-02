@@ -2,23 +2,6 @@
 #      AuctionMaster Elite Configuration File        #
 # -------------------------------------------------- #
 
-# --- Database Settings ---
-# The type of database to use. Can be 'sqlite' or 'mysql'.
-# For server networks, it is highly recommended to use MySQL.
-database:
-  type: sqlite
-  # Settings for SQLite (if type is 'sqlite')
-  sqlite:
-    # The name of the database file.
-    file: auctions.db
-  # Settings for MySQL (if type is 'mysql')
-  mysql:
-    host: localhost
-    port: 3306
-    database: auctionmaster
-    username: user
-    password: password
-
 # Settings for auction limits and economy.
 settings:
   # The maximum number of auctions a player can have active at one time.
@@ -29,16 +12,6 @@ settings:
   # This is a percentage value. For example, 5.0 means a 5% commission.
   # Set to 0.0 to disable commissions.
   commission-fee-percent: 5.0
-
-  # --- Anti-Sniping Settings ---
-  # Prevents players from placing bids at the very last second to "snipe" an auction.
-  anti-sniping:
-    # Set to true to enable this feature.
-    enabled: true
-    # If a bid is placed when the auction has less than this many seconds remaining...
-    threshold-seconds: 30
-    # ...the auction's duration will be extended by this many seconds.
-    extend-duration-seconds: 15
 
 # Settings for specific auction types.
 auction-types:

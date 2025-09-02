@@ -105,20 +105,6 @@ public class AuctionManager {
         if (seller.isOnline()) {
             MessageUtil.sendMessage(seller.getPlayer(), "seller-bid-notification", "amount", String.format("%.2f", amount), "item", auction.getItem().getType().toString());
         }
-
-        // --- Anti-Sniping Logic ---
-        if (plugin.getConfig().getBoolean("settings.anti-sniping.enabled", true)) {
-            long remainingTime = auction.getEndTime() - System.currentTimeMillis();
-            long threshold = plugin.getConfig().getLong("settings.anti-sniping.threshold-seconds", 30) * 1000;
-
-            if (remainingTime <= threshold) {
-                long extendDuration = plugin.getConfig().getLong("settings.anti-sniping.extend-duration-seconds", 15) * 1000;
-                auction.setEndTime(auction.getEndTime() + extendDuration);
-                plugin.getDatabaseManager().updateAuctionEndTime(auction);
-                // Optionally, notify the bidder that the time was extended.
-                MessageUtil.sendMessage(player, "auction-time-extended", "seconds", String.valueOf(extendDuration / 1000));
-            }
-        }
     }
 
     /**
@@ -198,31 +184,35 @@ public class AuctionManager {
             }
 
             // Give item to winner
-            Player winnerPlayer = winner.isOnline() ? winner.getPlayer() : null;
-            if (winnerPlayer != null && winnerPlayer.getInventory().firstEmpty() != -1) {
-                winnerPlayer.getInventory().addItem(auction.getItem());
-                MessageUtil.sendMessage(winnerPlayer, "auction-won-item-received", "item", auction.getItem().getType().toString());
-            } else {
-                // Player is offline or inventory is full, save to claims
-                plugin.getDatabaseManager().saveClaim(winner.getUniqueId(), auction.getItem(), "Auction Won");
-                if (winnerPlayer != null) {
-                    MessageUtil.sendMessage(winnerPlayer, "auction-won-inventory-full-claim");
+            if (winner.isOnline()) {
+                Player winnerPlayer = winner.getPlayer();
+                if (winnerPlayer.getInventory().firstEmpty() == -1) {
+                    // Inventory is full, drop at their location
+                    winnerPlayer.getWorld().dropItem(winnerPlayer.getLocation(), auction.getItem());
+                    MessageUtil.sendMessage(winnerPlayer, "auction-won-inventory-full");
+                } else {
+                    winnerPlayer.getInventory().addItem(auction.getItem());
+                    MessageUtil.sendMessage(winnerPlayer, "auction-won-item-received", "item", auction.getItem().getType().toString());
                 }
-                plugin.getLogger().info("Item for auction " + auction.getAuctionId() + " sent to " + winner.getName() + "'s claims.");
+            } else {
+                // TODO: Implement a more robust offline item delivery system (e.g., /claim command)
+                // For now, we can't safely give the item. We'll just log it.
+                plugin.getLogger().warning("Player " + winner.getName() + " won auction " + auction.getAuctionId() + " but is offline. Item delivery pending robust system.");
             }
 
         } else { // Case 2: No bids
-            Player sellerPlayer = seller.isOnline() ? seller.getPlayer() : null;
-            if (sellerPlayer != null && sellerPlayer.getInventory().firstEmpty() != -1) {
-                sellerPlayer.getInventory().addItem(auction.getItem());
-                MessageUtil.sendMessage(sellerPlayer, "auction-ended-no-bids-item-returned", "item", auction.getItem().getType().toString());
-            } else {
-                // Player is offline or inventory is full, save to claims
-                plugin.getDatabaseManager().saveClaim(seller.getUniqueId(), auction.getItem(), "Auction Expired");
-                 if (sellerPlayer != null) {
-                    MessageUtil.sendMessage(sellerPlayer, "auction-ended-no-bids-inv-full-claim");
+            if (seller.isOnline()) {
+                Player sellerPlayer = seller.getPlayer();
+                 if (sellerPlayer.getInventory().firstEmpty() == -1) {
+                    sellerPlayer.getWorld().dropItem(sellerPlayer.getLocation(), auction.getItem());
+                    MessageUtil.sendMessage(sellerPlayer, "auction-ended-no-bids-inv-full", "item", auction.getItem().getType().toString());
+                } else {
+                    sellerPlayer.getInventory().addItem(auction.getItem());
+                    MessageUtil.sendMessage(sellerPlayer, "auction-ended-no-bids-item-returned", "item", auction.getItem().getType().toString());
                 }
-                plugin.getLogger().info("Expired auction item " + auction.getAuctionId() + " sent to " + seller.getName() + "'s claims.");
+            } else {
+                // TODO: Implement robust offline item delivery
+                plugin.getLogger().warning("Auction " + auction.getAuctionId() + " for player " + seller.getName() + " ended with no bids, but player is offline. Item return pending robust system.");
             }
         }
     }

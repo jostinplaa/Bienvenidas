@@ -6,7 +6,6 @@ import com.jules.auctionmasterelite.data.AuctionStatus;
 import com.jules.auctionmasterelite.data.AuctionType;
 import com.jules.auctionmasterelite.data.Bid;
 import com.jules.auctionmasterelite.util.SerializationUtil;
-import com.zaxxer.hikari.HikariDataSource;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.inventory.ItemStack;
 
@@ -18,154 +17,58 @@ import java.util.logging.Level;
 
 public class DatabaseManager {
 
-    private enum DatabaseType {
-        SQLITE,
-        MYSQL_HIKARI,
-        MYSQL_DRIVER
-    }
+    private enum DatabaseType { SQLITE, MYSQL }
 
     private final AuctionMasterElite plugin;
     private Connection connection;
-    private HikariDataSource hikari;
-    private DatabaseType databaseType;
+    private final DatabaseType databaseType;
 
     public DatabaseManager(AuctionMasterElite plugin) {
         this.plugin = plugin;
-        initialize();
-    }
-
-    private void initialize() {
-        FileConfiguration config = plugin.getConfig();
-        String configuredType = config.getString("database.type", "sqlite").toLowerCase();
-
+        String configuredType = plugin.getConfig().getString("database.type", "sqlite").toLowerCase();
         if (configuredType.equals("mysql")) {
-            if (isMySQLDriverAvailable()) {
-                if (isHikariCPAvailable()) {
-                    this.databaseType = DatabaseType.MYSQL_HIKARI;
-                    plugin.getLogger().info("MySQL & HikariCP libraries found. Using HikariCP for connection pooling.");
-                } else {
-                    this.databaseType = DatabaseType.MYSQL_DRIVER;
-                    plugin.getLogger().info("MySQL library found, but HikariCP not found. Using DriverManager for MySQL connections.");
-                }
-            } else {
-                this.databaseType = DatabaseType.SQLITE;
-                plugin.getLogger().warning("MySQL was configured, but the required MySQL JDBC driver was not found in the server's libraries. Falling back to SQLite.");
-            }
+            this.databaseType = DatabaseType.MYSQL;
         } else {
             this.databaseType = DatabaseType.SQLITE;
-            plugin.getLogger().info("Using SQLite for data storage.");
-        }
-
-        try {
-            connect();
-            initializeTables();
-        } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, "Failed to connect to the database! The plugin will be disabled.", e);
-            plugin.getServer().getPluginManager().disablePlugin(plugin);
         }
     }
 
     public void connect() throws SQLException {
-        switch (databaseType) {
-            case MYSQL_HIKARI:
-                setupHikari();
-                break;
-            case MYSQL_DRIVER:
-                // With DriverManager, connection is fetched on-demand in getConnection()
-                break;
-            case SQLITE:
-                setupSQLite();
-                break;
-        }
-    }
-
-    private void setupSQLite() throws SQLException {
-        File dbFile = new File(plugin.getDataFolder(), plugin.getConfig().getString("database.sqlite.file", "auctions.db"));
-        if (!dbFile.exists()) {
-            try {
-                dbFile.getParentFile().mkdirs();
-                dbFile.createNewFile();
-            } catch (IOException e) {
-                throw new SQLException("Could not create SQLite database file.", e);
+        if (databaseType == DatabaseType.MYSQL) {
+            plugin.getLogger().info("Connecting to MySQL database...");
+            FileConfiguration config = plugin.getConfig();
+            String url = "jdbc:mysql://" + config.getString("database.mysql.host") + ":" + config.getInt("database.mysql.port") + "/" + config.getString("database.mysql.database");
+            this.connection = DriverManager.getConnection(url, config.getString("database.mysql.username"), config.getString("database.mysql.password"));
+            plugin.getLogger().info("Successfully connected to MySQL database.");
+        } else {
+            plugin.getLogger().info("Connecting to SQLite database...");
+            File dbFile = new File(plugin.getDataFolder(), plugin.getConfig().getString("database.sqlite.file", "auctions.db"));
+            if (!dbFile.exists()) {
+                try {
+                    dbFile.getParentFile().mkdirs();
+                    dbFile.createNewFile();
+                } catch (IOException e) {
+                    throw new SQLException("Could not create SQLite database file.", e);
+                }
             }
-        }
-        try {
-            Class.forName("org.sqlite.JDBC");
             this.connection = DriverManager.getConnection("jdbc:sqlite:" + dbFile.getAbsolutePath());
-        } catch (ClassNotFoundException e) {
-            throw new SQLException("SQLite JDBC driver not found.", e);
+            plugin.getLogger().info("Successfully connected to SQLite database.");
         }
-    }
-
-    private void setupHikari() {
-        FileConfiguration config = plugin.getConfig();
-        hikari = new HikariDataSource();
-        hikari.setPoolName("AuctionMaster-Pool");
-        hikari.setDriverClassName("com.mysql.cj.jdbc.Driver");
-        hikari.setJdbcUrl("jdbc:mysql://" + config.getString("database.mysql.host") + ":" + config.getInt("database.mysql.port") + "/" + config.getString("database.mysql.database"));
-        hikari.setUsername(config.getString("database.mysql.username"));
-        hikari.setPassword(config.getString("database.mysql.password"));
-        // Further configuration can be added here
-    }
-
-    public Connection getConnection() throws SQLException {
-        switch (databaseType) {
-            case MYSQL_HIKARI:
-                return hikari.getConnection();
-            case MYSQL_DRIVER:
-                 try {
-                    Class.forName("com.mysql.cj.jdbc.Driver");
-                    FileConfiguration config = plugin.getConfig();
-                    String url = "jdbc:mysql://" + config.getString("database.mysql.host") + ":" + config.getInt("database.mysql.port") + "/" + config.getString("database.mysql.database");
-                    return DriverManager.getConnection(url, config.getString("database.mysql.username"), config.getString("database.mysql.password"));
-                } catch (ClassNotFoundException e) {
-                    throw new SQLException("MySQL JDBC driver not found, though it was detected at startup.", e);
-                }
-            case SQLITE:
-                // Re-establish connection if it's closed
-                if (this.connection == null || this.connection.isClosed()) {
-                    setupSQLite();
-                }
-                return this.connection;
-            default:
-                throw new SQLException("Database type not supported.");
-        }
+        initializeTables();
     }
 
     public void disconnect() {
-        try {
-            if (databaseType == DatabaseType.MYSQL_HIKARI && hikari != null && !hikari.isClosed()) {
-                hikari.close();
-                plugin.getLogger().info("HikariCP connection pool closed.");
-            }
-            if (this.connection != null && !this.connection.isClosed()) {
-                this.connection.close();
+        if (connection != null) {
+            try {
+                connection.close();
                 plugin.getLogger().info("Database connection closed.");
+            } catch (SQLException e) {
+                plugin.getLogger().log(Level.SEVERE, "Error while disconnecting from the database.", e);
             }
-        } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, "An error occurred while closing the database connection.", e);
         }
     }
 
-    private boolean isHikariCPAvailable() {
-        try {
-            Class.forName("com.zaxxer.hikari.HikariDataSource");
-            return true;
-        } catch (ClassNotFoundException e) {
-            return false;
-        }
-    }
-
-    private boolean isMySQLDriverAvailable() {
-        try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            return true;
-        } catch (ClassNotFoundException e) {
-            return false;
-        }
-    }
-
-    public void initializeTables() throws SQLException {
+    private void initializeTables() throws SQLException {
         String auctionsTableSql;
         String bidsTableSql;
         String claimsTableSql;
@@ -176,14 +79,14 @@ public class DatabaseManager {
             bidsTableSql = "CREATE TABLE IF NOT EXISTS bids (bid_id INTEGER PRIMARY KEY AUTOINCREMENT, auction_id TEXT NOT NULL, bidder_id TEXT NOT NULL, bidder_name TEXT NOT NULL, amount REAL NOT NULL, timestamp INTEGER NOT NULL, FOREIGN KEY(auction_id) REFERENCES auctions(auction_id));";
             claimsTableSql = "CREATE TABLE IF NOT EXISTS item_claims (claim_id INTEGER PRIMARY KEY AUTOINCREMENT, player_id TEXT NOT NULL, item_data BLOB NOT NULL, reason TEXT NOT NULL, timestamp INTEGER NOT NULL);";
             invitesTableSql = "CREATE TABLE IF NOT EXISTS auction_invites (auction_id TEXT NOT NULL, player_id TEXT NOT NULL, PRIMARY KEY(auction_id, player_id), FOREIGN KEY(auction_id) REFERENCES auctions(auction_id));";
-        } else {
+        } else { // MYSQL
             auctionsTableSql = "CREATE TABLE IF NOT EXISTS auctions (auction_id VARCHAR(36) PRIMARY KEY, seller_id VARCHAR(36) NOT NULL, seller_name VARCHAR(16) NOT NULL, item_data LONGBLOB NOT NULL, start_time BIGINT NOT NULL, end_time BIGINT NOT NULL, starting_bid DOUBLE NOT NULL, current_bid DOUBLE NOT NULL, top_bidder_id VARCHAR(36), top_bidder_name VARCHAR(16), auction_type VARCHAR(32) NOT NULL, auction_status VARCHAR(32) NOT NULL);";
             bidsTableSql = "CREATE TABLE IF NOT EXISTS bids (bid_id INT AUTO_INCREMENT PRIMARY KEY, auction_id VARCHAR(36) NOT NULL, bidder_id VARCHAR(36) NOT NULL, bidder_name VARCHAR(16) NOT NULL, amount DOUBLE NOT NULL, timestamp BIGINT NOT NULL, FOREIGN KEY(auction_id) REFERENCES auctions(auction_id));";
             claimsTableSql = "CREATE TABLE IF NOT EXISTS item_claims (claim_id INT AUTO_INCREMENT PRIMARY KEY, player_id VARCHAR(36) NOT NULL, item_data LONGBLOB NOT NULL, reason VARCHAR(255) NOT NULL, timestamp BIGINT NOT NULL);";
             invitesTableSql = "CREATE TABLE IF NOT EXISTS auction_invites (auction_id VARCHAR(36) NOT NULL, player_id VARCHAR(36) NOT NULL, PRIMARY KEY(auction_id, player_id), FOREIGN KEY(auction_id) REFERENCES auctions(auction_id));";
         }
 
-        try (Connection conn = getConnection(); Statement stmt = conn.createStatement()) {
+        try (Statement stmt = connection.createStatement()) {
             stmt.execute(auctionsTableSql);
             stmt.execute(bidsTableSql);
             stmt.execute(invitesTableSql);
@@ -195,8 +98,7 @@ public class DatabaseManager {
     public void saveAuction(Auction auction) {
         String sql = "INSERT INTO auctions(auction_id, seller_id, seller_name, item_data, start_time, end_time, " +
                 "starting_bid, current_bid, top_bidder_id, top_bidder_name, auction_type, auction_status) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)";
-
-        try (Connection conn = getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setString(1, auction.getAuctionId().toString());
             pstmt.setString(2, auction.getSellerId().toString());
             pstmt.setString(3, auction.getSellerName());
@@ -218,8 +120,7 @@ public class DatabaseManager {
     public Map<UUID, Auction> loadAuctions() {
         Map<UUID, Auction> auctions = new HashMap<>();
         String sql = "SELECT * FROM auctions WHERE auction_status = 'ACTIVE' OR auction_status = 'SCHEDULED'";
-
-        try (Connection conn = getConnection(); Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
+        try (Statement stmt = connection.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
                 UUID auctionId = UUID.fromString(rs.getString("auction_id"));
                 Auction auction = new Auction(
@@ -246,10 +147,10 @@ public class DatabaseManager {
         return auctions;
     }
 
-    public List<Bid> loadBidsForAuction(UUID auctionId) throws SQLException {
+    private List<Bid> loadBidsForAuction(UUID auctionId) throws SQLException {
         List<Bid> bids = new ArrayList<>();
         String sql = "SELECT * FROM bids WHERE auction_id = ?";
-        try (Connection conn = getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setString(1, auctionId.toString());
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
@@ -260,10 +161,10 @@ public class DatabaseManager {
         return bids;
     }
 
-    public Set<UUID> loadInvitedPlayers(UUID auctionId) throws SQLException {
+    private Set<UUID> loadInvitedPlayers(UUID auctionId) throws SQLException {
         Set<UUID> invited = new HashSet<>();
         String sql = "SELECT player_id FROM auction_invites WHERE auction_id = ?";
-        try (Connection conn = getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setString(1, auctionId.toString());
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
@@ -276,7 +177,7 @@ public class DatabaseManager {
 
     public void saveBid(Bid bid, UUID auctionId) {
         String sql = "INSERT INTO bids(auction_id, bidder_id, bidder_name, amount, timestamp) VALUES(?,?,?,?,?)";
-        try (Connection conn = getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setString(1, auctionId.toString());
             pstmt.setString(2, bid.getBidderId().toString());
             pstmt.setString(3, bid.getBidderName());
@@ -290,7 +191,7 @@ public class DatabaseManager {
 
     public void updateAuctionBid(Auction auction) {
         String sql = "UPDATE auctions SET current_bid = ?, top_bidder_id = ?, top_bidder_name = ? WHERE auction_id = ?";
-        try (Connection conn = getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setDouble(1, auction.getCurrentBid());
             pstmt.setString(2, auction.getTopBidderId() != null ? auction.getTopBidderId().toString() : null);
             pstmt.setString(3, auction.getTopBidderName());
@@ -303,7 +204,7 @@ public class DatabaseManager {
 
     public void updateAuctionStatus(Auction auction) {
         String sql = "UPDATE auctions SET auction_status = ? WHERE auction_id = ?";
-        try (Connection conn = getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setString(1, auction.getStatus().toString());
             pstmt.setString(2, auction.getAuctionId().toString());
             pstmt.executeUpdate();
@@ -314,7 +215,7 @@ public class DatabaseManager {
 
     public void updateAuctionEndTime(Auction auction) {
         String sql = "UPDATE auctions SET end_time = ? WHERE auction_id = ?";
-        try (Connection conn = getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setLong(1, auction.getEndTime());
             pstmt.setString(2, auction.getAuctionId().toString());
             pstmt.executeUpdate();
@@ -326,7 +227,7 @@ public class DatabaseManager {
     public List<Auction> loadPlayerHistory(UUID playerId) {
         List<Auction> history = new ArrayList<>();
         String sql = "SELECT * FROM auctions WHERE auction_status = 'FINISHED' AND (seller_id = ? OR top_bidder_id = ?)";
-        try (Connection conn = getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setString(1, playerId.toString());
             pstmt.setString(2, playerId.toString());
             ResultSet rs = pstmt.executeQuery();
@@ -358,7 +259,7 @@ public class DatabaseManager {
         String sql = (databaseType == DatabaseType.SQLITE)
                 ? "INSERT OR IGNORE INTO auction_invites(auction_id, player_id) VALUES(?,?)"
                 : "INSERT IGNORE INTO auction_invites(auction_id, player_id) VALUES(?,?)";
-        try (Connection conn = getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setString(1, auctionId.toString());
             pstmt.setString(2, playerId.toString());
             pstmt.executeUpdate();
@@ -369,7 +270,7 @@ public class DatabaseManager {
 
     public void saveClaim(UUID playerId, ItemStack item, String reason) {
         String sql = "INSERT INTO item_claims(player_id, item_data, reason, timestamp) VALUES(?,?,?,?)";
-        try (Connection conn = getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setString(1, playerId.toString());
             pstmt.setBytes(2, SerializationUtil.serializeItemStack(item));
             pstmt.setString(3, reason);
@@ -383,7 +284,7 @@ public class DatabaseManager {
     public Map<Integer, ItemStack> getPlayerClaims(UUID playerId) {
         Map<Integer, ItemStack> claims = new HashMap<>();
         String sql = "SELECT claim_id, item_data FROM item_claims WHERE player_id = ?";
-        try (Connection conn = getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setString(1, playerId.toString());
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
@@ -398,7 +299,7 @@ public class DatabaseManager {
 
     public void deleteClaim(int claimId) {
         String sql = "DELETE FROM item_claims WHERE claim_id = ?";
-        try (Connection conn = getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setInt(1, claimId);
             pstmt.executeUpdate();
         } catch (SQLException e) {
