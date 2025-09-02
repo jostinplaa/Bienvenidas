@@ -26,7 +26,7 @@ public class ClaimMenu {
     }
 
     public void open() {
-        Map<Integer, ItemStack> claims = plugin.getDatabaseManager().getDataSource().getPlayerClaims(player.getUniqueId());
+        Map<Integer, ItemStack> claims = plugin.getDatabaseManager().getPlayerClaims(player.getUniqueId());
 
         if (claims.isEmpty()) {
             MessageUtil.sendMessage(player, "no-items-to-claim");
@@ -89,7 +89,7 @@ public class ClaimMenu {
 
         // Give item and update database
         player.getInventory().addItem(clickedItem);
-        plugin.getDatabaseManager().getDataSource().deleteClaim(claimId);
+        plugin.getDatabaseManager().deleteClaim(claimId);
 
         MessageUtil.sendMessage(player, "item-claimed-successfully");
 

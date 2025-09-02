@@ -75,7 +75,7 @@ public class AuctionCommand implements CommandExecutor {
         }
 
         auction.invitePlayer(target.getUniqueId());
-        plugin.getDatabaseManager().getDataSource().saveInvitedPlayer(auction.getAuctionId(), target.getUniqueId());
+        plugin.getDatabaseManager().saveInvitedPlayer(auction.getAuctionId(), target.getUniqueId());
         MessageUtil.sendMessage(player, "invite-success", "player", target.getName());
         MessageUtil.sendMessage(target, "invite-received", "player", player.getName());
     }

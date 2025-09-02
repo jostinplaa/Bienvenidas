@@ -21,7 +21,7 @@ public class PlayerJoinListener implements Listener {
 
         // Use a slight delay to ensure everything is loaded and message is not lost
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
-            if (!plugin.getDatabaseManager().getDataSource().getPlayerClaims(player.getUniqueId()).isEmpty()) {
+            if (!plugin.getDatabaseManager().getPlayerClaims(player.getUniqueId()).isEmpty()) {
                 MessageUtil.sendMessage(player, "you-have-items-to-claim");
             }
         }, 20L); // 1 second delay

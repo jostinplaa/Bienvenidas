@@ -36,10 +36,6 @@
                             <pattern>org.sqlite</pattern>
                             <shadedPattern>com.jules.auctionmasterelite.lib.sqlite</shadedPattern>
                         </relocation>
-                        <relocation>
-                            <pattern>com.zaxxer.hikari</pattern>
-                            <shadedPattern>com.jules.auctionmasterelite.lib.hikaricp</shadedPattern>
-                        </relocation>
                     </relocations>
                 </configuration>
                 <executions>
@@ -127,14 +123,14 @@
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
             <version>8.4.0</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
         <!-- HikariCP Connection Pooling -->
         <dependency>
             <groupId>com.zaxxer</groupId>
             <artifactId>HikariCP</artifactId>
             <version>5.1.0</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>

@@ -223,7 +223,7 @@ public class CreateAuctionMenu extends GUI {
         );
 
         plugin.getAuctionManager().createAuction(newAuction);
-        plugin.getDatabaseManager().getDataSource().saveAuction(newAuction);
+        plugin.getDatabaseManager().saveAuction(newAuction);
 
         MessageUtil.sendMessage(player, "creation-success");
     }
