@@ -26,6 +26,7 @@ public class DatabaseManager {
     public DatabaseManager(AuctionMasterElite plugin) {
         this.plugin = plugin;
         String configuredType = plugin.getConfig().getString("database.type", "sqlite").toLowerCase();
+
         if (configuredType.equals("mysql")) {
             this.databaseType = DatabaseType.MYSQL;
         } else {
@@ -34,26 +35,43 @@ public class DatabaseManager {
     }
 
     public void connect() throws SQLException {
+        if (connection != null && !connection.isClosed()) {
+            return;
+        }
+
         if (databaseType == DatabaseType.MYSQL) {
             plugin.getLogger().info("Connecting to MySQL database...");
             FileConfiguration config = plugin.getConfig();
-            String url = "jdbc:mysql://" + config.getString("database.mysql.host") + ":" + config.getInt("database.mysql.port") + "/" + config.getString("database.mysql.database");
-            this.connection = DriverManager.getConnection(url, config.getString("database.mysql.username"), config.getString("database.mysql.password"));
-            plugin.getLogger().info("Successfully connected to MySQL database.");
-        } else {
+            // Check for config values
+            if (config.getString("database.mysql.host") == null) {
+                throw new SQLException("MySQL database configuration is missing from config.yml");
+            }
+            try {
+                Class.forName("com.mysql.cj.jdbc.Driver");
+                String url = "jdbc:mysql://" + config.getString("database.mysql.host") + ":" + config.getInt("database.mysql.port") + "/" + config.getString("database.mysql.database");
+                this.connection = DriverManager.getConnection(url, config.getString("database.mysql.username"), config.getString("database.mysql.password"));
+                plugin.getLogger().info("Successfully connected to MySQL database.");
+            } catch (ClassNotFoundException e) {
+                throw new SQLException("MySQL JDBC driver not found. Please install it on your server.");
+            }
+        } else { // SQLITE
             plugin.getLogger().info("Connecting to SQLite database...");
-            File dbFile = new File(plugin.getDataFolder(), plugin.getConfig().getString("database.sqlite.file", "auctions.db"));
-            if (!dbFile.exists()) {
-                try {
+            try {
+                Class.forName("org.sqlite.JDBC");
+                File dbFile = new File(plugin.getDataFolder(), plugin.getConfig().getString("database.sqlite.file", "auctions.db"));
+                if (!dbFile.exists()) {
                     dbFile.getParentFile().mkdirs();
                     dbFile.createNewFile();
-                } catch (IOException e) {
-                    throw new SQLException("Could not create SQLite database file.", e);
                 }
+                this.connection = DriverManager.getConnection("jdbc:sqlite:" + dbFile.getAbsolutePath());
+                plugin.getLogger().info("Successfully connected to SQLite database.");
+            } catch (ClassNotFoundException e) {
+                 throw new SQLException("SQLite JDBC driver not found. Please install it on your server.");
+            } catch (IOException e) {
+                throw new SQLException("Could not create SQLite database file.", e);
             }
-            this.connection = DriverManager.getConnection("jdbc:sqlite:" + dbFile.getAbsolutePath());
-            plugin.getLogger().info("Successfully connected to SQLite database.");
         }
+
         initializeTables();
     }
 
@@ -71,6 +89,9 @@ public class DatabaseManager {
     }
 
     private void initializeTables() throws SQLException {
+        if (connection == null) {
+            throw new SQLException("Cannot initialize tables, connection is null.");
+        }
         String auctionsTableSql;
         String bidsTableSql;
         String claimsTableSql;
@@ -120,6 +141,7 @@ public class DatabaseManager {
     }
 
     public Map<UUID, Auction> loadAuctions() {
+        if (connection == null) return new HashMap<>();
         Map<UUID, Auction> auctions = new HashMap<>();
         String sql = "SELECT * FROM auctions WHERE auction_status = 'ACTIVE' OR auction_status = 'SCHEDULED'";
         try (Statement stmt = connection.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
@@ -150,6 +172,7 @@ public class DatabaseManager {
     }
 
     private List<Bid> loadBidsForAuction(UUID auctionId) throws SQLException {
+        if (connection == null) return new ArrayList<>();
         List<Bid> bids = new ArrayList<>();
         String sql = "SELECT * FROM bids WHERE auction_id = ?";
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
@@ -164,6 +187,7 @@ public class DatabaseManager {
     }
 
     private Set<UUID> loadInvitedPlayers(UUID auctionId) throws SQLException {
+        if (connection == null) return new HashSet<>();
         Set<UUID> invited = new HashSet<>();
         String sql = "SELECT player_id FROM auction_invites WHERE auction_id = ?";
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
@@ -178,6 +202,7 @@ public class DatabaseManager {
     }
 
     public void saveBid(Bid bid, UUID auctionId) {
+        if (connection == null) return;
         String sql = "INSERT INTO bids(auction_id, bidder_id, bidder_name, amount, timestamp) VALUES(?,?,?,?,?)";
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setString(1, auctionId.toString());
@@ -192,6 +217,7 @@ public class DatabaseManager {
     }
 
     public void updateAuctionBid(Auction auction) {
+        if (connection == null) return;
         String sql = "UPDATE auctions SET current_bid = ?, top_bidder_id = ?, top_bidder_name = ? WHERE auction_id = ?";
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setDouble(1, auction.getCurrentBid());
@@ -205,6 +231,7 @@ public class DatabaseManager {
     }
 
     public void updateAuctionStatus(Auction auction) {
+        if (connection == null) return;
         String sql = "UPDATE auctions SET auction_status = ? WHERE auction_id = ?";
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setString(1, auction.getStatus().toString());
@@ -216,6 +243,7 @@ public class DatabaseManager {
     }
 
     public void updateAuctionEndTime(Auction auction) {
+        if (connection == null) return;
         String sql = "UPDATE auctions SET end_time = ? WHERE auction_id = ?";
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setLong(1, auction.getEndTime());
@@ -227,6 +255,7 @@ public class DatabaseManager {
     }
 
     public List<Auction> loadPlayerHistory(UUID playerId) {
+        if (connection == null) return new ArrayList<>();
         List<Auction> history = new ArrayList<>();
         String sql = "SELECT * FROM auctions WHERE auction_status = 'FINISHED' AND (seller_id = ? OR top_bidder_id = ?)";
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
@@ -258,6 +287,7 @@ public class DatabaseManager {
     }
 
     public void saveInvitedPlayer(UUID auctionId, UUID playerId) {
+        if (connection == null) return;
         String sql = (databaseType == DatabaseType.SQLITE)
                 ? "INSERT OR IGNORE INTO auction_invites(auction_id, player_id) VALUES(?,?)"
                 : "INSERT IGNORE INTO auction_invites(auction_id, player_id) VALUES(?,?)";
@@ -271,6 +301,7 @@ public class DatabaseManager {
     }
 
     public void saveClaim(UUID playerId, ItemStack item, String reason) {
+        if (connection == null) return;
         String sql = "INSERT INTO item_claims(player_id, item_data, reason, timestamp) VALUES(?,?,?,?)";
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setString(1, playerId.toString());
@@ -284,6 +315,7 @@ public class DatabaseManager {
     }
 
     public Map<Integer, ItemStack> getPlayerClaims(UUID playerId) {
+        if (connection == null) return new HashMap<>();
         Map<Integer, ItemStack> claims = new HashMap<>();
         String sql = "SELECT claim_id, item_data FROM item_claims WHERE player_id = ?";
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
@@ -300,6 +332,7 @@ public class DatabaseManager {
     }
 
     public void deleteClaim(int claimId) {
+        if (connection == null) return;
         String sql = "DELETE FROM item_claims WHERE claim_id = ?";
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setInt(1, claimId);

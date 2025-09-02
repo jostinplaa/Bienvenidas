@@ -35,6 +35,13 @@ public final class AuctionMasterElite extends JavaPlugin {
         // Initialize managers
         this.configManager = new ConfigManager(this);
         this.databaseManager = new DatabaseManager(this);
+        try {
+            databaseManager.connect();
+        } catch (SQLException e) {
+            getLogger().log(Level.SEVERE, "Failed to connect to the database! Disabling plugin.", e);
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
         this.auctionManager = new AuctionManager(this);
         this.economyManager = new EconomyManager();
         this.playerInputManager = new com.jules.auctionmasterelite.managers.PlayerInputManager();
@@ -42,15 +49,6 @@ public final class AuctionMasterElite extends JavaPlugin {
             getLogger().log(Level.SEVERE, "Vault not found! Disabling economy features.");
             // We can choose to disable the plugin or just run without economy features.
             // For now, we'll just log the error.
-        }
-
-        // Connect to the database
-        try {
-            databaseManager.connect();
-        } catch (SQLException e) {
-            getLogger().log(Level.SEVERE, "Failed to connect to the database! Disabling plugin.", e);
-            getServer().getPluginManager().disablePlugin(this);
-            return;
         }
 
         // Start the auction ticker
