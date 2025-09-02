@@ -34,8 +34,8 @@ public final class AuctionMasterElite extends JavaPlugin {
     public void onEnable() {
         // Initialize managers
         this.configManager = new ConfigManager(this);
-        this.auctionManager = new AuctionManager(this);
         this.databaseManager = new DatabaseManager(this);
+        this.auctionManager = new AuctionManager(this);
         this.economyManager = new EconomyManager();
         this.playerInputManager = new com.jules.auctionmasterelite.managers.PlayerInputManager();
         if (!economyManager.setupEconomy()) {
