@@ -28,3 +28,14 @@ auction-types:
   flash:
     # Duration of flash auctions in seconds.
     duration-seconds: 60
+
+database:
+  type: sqlite # o mysql
+  sqlite:
+    file: auctions.db
+  mysql:
+    host: localhost
+    port: 3306
+    database: auction_db
+    username: root
+    password: your_password
