@@ -41,6 +41,7 @@ public class MainMenu extends GUI {
 
     @Override
     public void onClick(InventoryClickEvent event) {
+        event.setCancelled(true);
         Player player = (Player) event.getWhoClicked();
         ItemStack clickedItem = event.getCurrentItem();
 
@@ -49,17 +50,17 @@ public class MainMenu extends GUI {
         // Handle clicks
         switch (clickedItem.getType()) {
             case EMERALD:
-                player.openInventory(new com.jules.auctionmasterelite.gui.menu.ActiveAuctionsMenu(plugin, player, 0, SortMode.ENDING_SOONEST).getInventory());
+                new com.jules.auctionmasterelite.gui.menu.ActiveAuctionsMenu(plugin, player, 0, SortMode.ENDING_SOONEST).open(player);
                 break;
             case GOLD_INGOT:
-                player.openInventory(new com.jules.auctionmasterelite.gui.menu.MyAuctionsMenu(plugin, player, 0).getInventory());
+                new com.jules.auctionmasterelite.gui.menu.MyAuctionsMenu(plugin, player, 0).open(player);
                 break;
             case BOOK:
-                player.openInventory(new com.jules.auctionmasterelite.gui.menu.HistoryMenu(plugin, player, 0).getInventory());
+                new com.jules.auctionmasterelite.gui.menu.HistoryMenu(plugin, player).open(player);
                 break;
             case ANVIL:
                 if (player.hasPermission("auctionmaster.elite.create.public")) {
-                    player.openInventory(new com.jules.auctionmasterelite.gui.creation.CreateAuctionMenu(plugin, player).getInventory());
+                    new com.jules.auctionmasterelite.gui.creation.CreateAuctionMenu(plugin, player).open(player);
                 } else {
                     player.sendMessage("§cNo tienes permiso para crear subastas.");
                     player.closeInventory();

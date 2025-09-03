@@ -90,12 +90,12 @@ public class MyAuctionsMenu extends GUI {
         if (clickedItem.getType() == Material.ARROW) {
             ItemMeta meta = clickedItem.getItemMeta();
             if (meta != null && meta.getDisplayName().contains("Siguiente")) {
-                player.openInventory(new MyAuctionsMenu(plugin, player, page + 1).getInventory());
+                new MyAuctionsMenu(plugin, player, page + 1).open(player);
             } else if (meta != null && meta.getDisplayName().contains("Anterior")) {
-                player.openInventory(new MyAuctionsMenu(plugin, player, page - 1).getInventory());
+                new MyAuctionsMenu(plugin, player, page - 1).open(player);
             }
         } else if (clickedItem.getType() == Material.RED_WOOL) {
-            player.openInventory(new MainMenu(plugin).getInventory());
+            new MainMenu(plugin).open(player);
         } else {
             player.sendMessage("§eAuction management coming soon!");
         }

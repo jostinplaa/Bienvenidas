@@ -67,6 +67,13 @@ public class Auction {
     public List<Bid> getBids() { return bids; }
     public Set<UUID> getInvitedPlayers() { return invitedPlayers; }
 
+    public String getItemName() {
+        if (item.hasItemMeta() && item.getItemMeta().hasDisplayName()) {
+            return item.getItemMeta().getDisplayName();
+        }
+        return item.getType().toString().replace("_", " ").toLowerCase();
+    }
+
 
     // Setters / Modifiers
     public void setStatus(AuctionStatus status) { this.status = status; }

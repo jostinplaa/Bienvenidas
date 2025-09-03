@@ -9,7 +9,7 @@ softdepend: [Vault, LuckPerms, PlaceholderAPI, DiscordSRV]
 commands:
   auction:
     description: Main command for AuctionMaster Elite.
-    aliases: [ah, subastas, auctionhouse]
+    aliases: [ah, ac]
     usage: /<command>
     permission: auctionmaster.elite.use
 
@@ -40,4 +40,13 @@ permissions:
     default: op
   auctionmaster.elite.notify.all:
     description: Receive all auction notifications.
+    default: op
+  auctionmaster.admin.reload:
+    description: Allows reloading the plugin's configuration.
+    default: op
+  auctionmaster.admin.end:
+    description: Allows force-ending another player's auction.
+    default: op
+  auctionmaster.admin.history:
+    description: Allows viewing another player's auction history.
     default: op

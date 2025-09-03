@@ -6,6 +6,7 @@ import com.jules.auctionmasterelite.gui.GUI;
 import com.jules.auctionmasterelite.util.LoreUtil;
 import com.jules.auctionmasterelite.gui.menu.MainMenu;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
@@ -18,15 +19,30 @@ import java.util.UUID;
 public class HistoryMenu extends GUI {
 
     private final int page;
+    private final Player viewer;
+    private final OfflinePlayer target;
 
-    public HistoryMenu(AuctionMasterElite plugin, Player player, int page) {
-        super(plugin, 54, "§8Historial (Página " + (page + 1) + ")");
-        this.page = page;
-        initializeItems(player);
+    // Constructor for players viewing their own history
+    public HistoryMenu(AuctionMasterElite plugin, Player player) {
+        this(plugin, player, player, 0);
     }
 
-    private void initializeItems(Player player) {
-        List<Auction> history = plugin.getDatabaseManager().loadPlayerHistory(player.getUniqueId());
+    // Constructor for admins viewing another player's history
+    public HistoryMenu(AuctionMasterElite plugin, Player viewer, OfflinePlayer target) {
+        this(plugin, viewer, target, 0);
+    }
+
+    // Main constructor
+    public HistoryMenu(AuctionMasterElite plugin, Player viewer, OfflinePlayer target, int page) {
+        super(plugin, 54, "§8History: " + target.getName() + " (Page " + (page + 1) + ")");
+        this.page = page;
+        this.viewer = viewer;
+        this.target = target;
+        initializeItems();
+    }
+
+    private void initializeItems() {
+        List<Auction> history = plugin.getDatabaseManager().loadPlayerHistory(target.getUniqueId());
 
         int maxItemsPerPage = 45;
         int startIndex = page * maxItemsPerPage;
@@ -37,7 +53,7 @@ public class HistoryMenu extends GUI {
                 break;
             }
             Auction auction = history.get(auctionIndex);
-            inventory.setItem(i, createHistoryItem(auction, player.getUniqueId()));
+            inventory.setItem(i, createHistoryItem(auction, target.getUniqueId()));
         }
 
         if (page > 0) {
@@ -49,14 +65,14 @@ public class HistoryMenu extends GUI {
         inventory.setItem(49, createGuiItem(Material.RED_WOOL, "§cVolver al Menú", LoreUtil.getLore("active-auctions-menu.back-button")));
     }
 
-    private ItemStack createHistoryItem(Auction auction, UUID viewerId) {
+    private ItemStack createHistoryItem(Auction auction, UUID targetId) {
         ItemStack item = auction.getItem().clone();
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             List<String> lore = new ArrayList<>();
-            if (auction.getSellerId().equals(viewerId)) {
+            if (auction.getSellerId().equals(targetId)) {
                 lore.addAll(LoreUtil.getLore("history-menu.sold-item"));
-            } else if (auction.getTopBidderId() != null && auction.getTopBidderId().equals(viewerId)) {
+            } else if (auction.getTopBidderId() != null && auction.getTopBidderId().equals(targetId)) {
                 lore.addAll(LoreUtil.getLore("history-menu.won-item"));
             }
             lore.addAll(LoreUtil.getLore("history-menu.item-details",
@@ -84,7 +100,7 @@ public class HistoryMenu extends GUI {
     @Override
     public void onClick(InventoryClickEvent event) {
         event.setCancelled(true);
-        Player player = (Player) event.getWhoClicked();
+        Player player = (Player) event.getWhoClicked(); // The viewer is always the one clicking
         ItemStack clickedItem = event.getCurrentItem();
 
         if (clickedItem == null || clickedItem.getType() == Material.AIR) return;
@@ -92,12 +108,12 @@ public class HistoryMenu extends GUI {
         if (clickedItem.getType() == Material.ARROW) {
             ItemMeta meta = clickedItem.getItemMeta();
             if (meta != null && meta.getDisplayName().contains("Siguiente")) {
-                player.openInventory(new HistoryMenu(plugin, player, page + 1).getInventory());
+                new HistoryMenu(plugin, viewer, target, page + 1).open(viewer);
             } else if (meta != null && meta.getDisplayName().contains("Anterior")) {
-                player.openInventory(new HistoryMenu(plugin, player, page - 1).getInventory());
+                new HistoryMenu(plugin, viewer, target, page - 1).open(viewer);
             }
         } else if (clickedItem.getType() == Material.RED_WOOL) {
-            player.openInventory(new MainMenu(plugin).getInventory());
+            new MainMenu(plugin).open(viewer);
         }
     }
 }

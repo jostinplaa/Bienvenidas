@@ -2,10 +2,13 @@ package com.jules.auctionmasterelite.managers;
 
 import com.jules.auctionmasterelite.AuctionMasterElite;
 import com.jules.auctionmasterelite.data.Auction;
+import com.jules.auctionmasterelite.data.AuctionStatus;
 import com.jules.auctionmasterelite.util.MessageUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
 import java.util.Map;
@@ -176,58 +179,103 @@ public class AuctionManager {
     }
 
     private void endAuction(Auction auction) {
-        auction.setStatus(com.jules.auctionmasterelite.data.AuctionStatus.FINISHED);
+        auction.setStatus(AuctionStatus.FINISHED);
         plugin.getDatabaseManager().updateAuctionStatus(auction);
-        System.out.println("Auction " + auction.getAuctionId() + " has ended.");
+        removeAuction(auction.getAuctionId()); // Remove from active map
 
         OfflinePlayer seller = Bukkit.getOfflinePlayer(auction.getSellerId());
 
-        // Case 1: There was a winner
-        if (auction.getTopBidderId() != null) {
-            OfflinePlayer winner = Bukkit.getOfflinePlayer(auction.getTopBidderId());
-
-            // Pay the seller, taking commission
-            double commissionRate = plugin.getConfigManager().getConfig().getDouble("settings.commission-fee-percent", 0.0) / 100.0;
-            double finalPrice = auction.getCurrentBid();
-            double commission = finalPrice * commissionRate;
-            double amountToSeller = finalPrice - commission;
-
-            plugin.getEconomyManager().deposit(seller, amountToSeller);
-            if (seller.isOnline()) {
-                MessageUtil.sendMessage(seller.getPlayer(), "auction-won-seller", "item", auction.getItem().getType().toString(), "amount", String.format("%.2f", amountToSeller), "commission", String.format("%.2f", commission));
-            }
-
-            // Give item to winner
-            if (winner.isOnline()) {
-                Player winnerPlayer = winner.getPlayer();
-                if (winnerPlayer.getInventory().firstEmpty() == -1) {
-                    // Inventory is full, drop at their location
-                    winnerPlayer.getWorld().dropItem(winnerPlayer.getLocation(), auction.getItem());
-                    MessageUtil.sendMessage(winnerPlayer, "auction-won-inventory-full");
-                } else {
-                    winnerPlayer.getInventory().addItem(auction.getItem());
-                    MessageUtil.sendMessage(winnerPlayer, "auction-won-item-received", "item", auction.getItem().getType().toString());
-                }
-            } else {
-                // TODO: Implement a more robust offline item delivery system (e.g., /claim command)
-                // For now, we can't safely give the item. We'll just log it.
-                plugin.getLogger().warning("Player " + winner.getName() + " won auction " + auction.getAuctionId() + " but is offline. Item delivery pending robust system.");
-            }
-
+        if (auction.getTopBidderId() != null) { // Case 1: There was a winner
+            handleSuccessfulAuction(auction, seller);
         } else { // Case 2: No bids
-            if (seller.isOnline()) {
-                Player sellerPlayer = seller.getPlayer();
-                 if (sellerPlayer.getInventory().firstEmpty() == -1) {
-                    sellerPlayer.getWorld().dropItem(sellerPlayer.getLocation(), auction.getItem());
-                    MessageUtil.sendMessage(sellerPlayer, "auction-ended-no-bids-inv-full", "item", auction.getItem().getType().toString());
-                } else {
-                    sellerPlayer.getInventory().addItem(auction.getItem());
-                    MessageUtil.sendMessage(sellerPlayer, "auction-ended-no-bids-item-returned", "item", auction.getItem().getType().toString());
-                }
-            } else {
-                // TODO: Implement robust offline item delivery
-                plugin.getLogger().warning("Auction " + auction.getAuctionId() + " for player " + seller.getName() + " ended with no bids, but player is offline. Item return pending robust system.");
+            handleUnsuccessfulAuction(auction, seller);
+        }
+    }
+
+    private void handleSuccessfulAuction(Auction auction, OfflinePlayer seller) {
+        OfflinePlayer winner = Bukkit.getOfflinePlayer(auction.getTopBidderId());
+
+        // Pay the seller, taking commission
+        double commissionRate = plugin.getConfigManager().getConfig().getDouble("settings.commission-fee-percent", 0.0) / 100.0;
+        double finalPrice = auction.getCurrentBid();
+        double commission = finalPrice * commissionRate;
+        double amountToSeller = finalPrice - commission;
+
+        plugin.getEconomyManager().deposit(seller, amountToSeller);
+        if (seller.isOnline()) {
+            MessageUtil.sendMessage(seller.getPlayer(), "auction-won-seller", "item", auction.getItemName(), "amount", String.format("%.2f", amountToSeller), "commission", String.format("%.2f", commission));
+        }
+
+        // Give item to winner
+        giveItemToPlayer(winner, auction.getItem(), "You won the auction for " + auction.getItemName());
+        if (winner.isOnline()) {
+            MessageUtil.sendMessage(winner.getPlayer(), "auction-won-item-received", "item", auction.getItemName());
+        }
+    }
+
+    private void handleUnsuccessfulAuction(Auction auction, OfflinePlayer seller) {
+        // Return item to seller
+        giveItemToPlayer(seller, auction.getItem(), "Your auction for " + auction.getItemName() + " ended without any bids.");
+        if (seller.isOnline()) {
+            MessageUtil.sendMessage(seller.getPlayer(), "auction-ended-no-bids-item-returned", "item", auction.getItemName());
+        }
+    }
+
+    public void forceEndAuctionBySeller(String sellerName, CommandSender admin) {
+        OfflinePlayer seller = Bukkit.getOfflinePlayer(sellerName);
+        if (seller == null || !seller.hasPlayedBefore()) {
+            MessageUtil.sendRawMessage(admin, "&cPlayer not found.");
+            return;
+        }
+
+        Auction auctionToEnd = getAuctionsBySeller(seller.getUniqueId()).stream()
+                .filter(a -> a.getStatus() == AuctionStatus.ACTIVE)
+                .min((a1, a2) -> Long.compare(a1.getStartTime(), a2.getStartTime()))
+                .orElse(null);
+
+        if (auctionToEnd == null) {
+            MessageUtil.sendRawMessage(admin, "&cThis player has no active auctions.");
+            return;
+        }
+
+        forceEndAuction(auctionToEnd, admin);
+    }
+
+    private void forceEndAuction(Auction auction, CommandSender admin) {
+        auction.setStatus(AuctionStatus.CANCELLED);
+        plugin.getDatabaseManager().updateAuctionStatus(auction);
+        removeAuction(auction.getAuctionId()); // Remove from active map
+
+        // Refund item to seller
+        OfflinePlayer seller = Bukkit.getOfflinePlayer(auction.getSellerId());
+        giveItemToPlayer(seller, auction.getItem(), "Your auction for " + auction.getItemName() + " was cancelled by an admin.");
+        MessageUtil.sendRawMessage(admin, "&aSuccessfully cancelled auction " + auction.getAuctionId().toString().substring(0, 8) + " from " + seller.getName() + ".");
+        if (seller.isOnline()) {
+            MessageUtil.sendMessage(seller.getPlayer(), "auction-cancelled-by-admin", "item", auction.getItemName());
+        }
+
+        // Refund bid to top bidder if one exists
+        if (auction.getTopBidderId() != null) {
+            OfflinePlayer topBidder = Bukkit.getOfflinePlayer(auction.getTopBidderId());
+            plugin.getEconomyManager().deposit(topBidder, auction.getCurrentBid());
+            if (topBidder.isOnline()) {
+                MessageUtil.sendMessage(topBidder.getPlayer(), "auction-cancelled-bid-refunded", "item", auction.getItemName());
             }
+        }
+    }
+
+    private void giveItemToPlayer(OfflinePlayer player, ItemStack item, String reason) {
+        if (player.isOnline()) {
+            Player onlinePlayer = player.getPlayer();
+            if (onlinePlayer.getInventory().firstEmpty() != -1) {
+                onlinePlayer.getInventory().addItem(item);
+                return; // Item given directly
+            }
+        }
+        // If player is offline or inventory is full, save to claims
+        plugin.getDatabaseManager().saveClaim(player.getUniqueId(), item, reason);
+        if (player.isOnline()) {
+            MessageUtil.sendMessage(player.getPlayer(), "item-sent-to-claims");
         }
     }
 }

@@ -136,4 +136,10 @@ public final class AuctionMasterElite extends JavaPlugin {
     public Map<UUID, ClaimMenu> getClaimMenus() {
         return claimMenus;
     }
+
+    public void reloadPlugin() {
+        configManager.reloadConfig();
+        MessageUtil.load(this);
+        com.jules.auctionmasterelite.util.LoreUtil.load(this);
+    }
 }
