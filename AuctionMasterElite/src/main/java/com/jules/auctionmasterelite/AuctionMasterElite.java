@@ -81,8 +81,9 @@ public final class AuctionMasterElite extends JavaPlugin {
             getLogger().info("Successfully hooked into DiscordSRV.");
         }
 
-        // Load messages
+        // Load messages & lores
         MessageUtil.load(this);
+        com.jules.auctionmasterelite.util.LoreUtil.load(this);
 
         getLogger().info("AuctionMasterElite has been enabled!");
     }

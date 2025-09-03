@@ -3,6 +3,8 @@ package com.jules.auctionmasterelite.gui.menu;
 import com.jules.auctionmasterelite.AuctionMasterElite;
 import com.jules.auctionmasterelite.data.Auction;
 import com.jules.auctionmasterelite.gui.GUI;
+import com.jules.auctionmasterelite.util.LoreUtil;
+import com.jules.auctionmasterelite.gui.menu.MainMenu;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -38,41 +40,42 @@ public class HistoryMenu extends GUI {
             inventory.setItem(i, createHistoryItem(auction, player.getUniqueId()));
         }
 
-        // Pagination controls
         if (page > 0) {
-            inventory.setItem(45, createGuiItem(Material.ARROW, "§aPágina Anterior", "§7Ir a la página " + page));
+            inventory.setItem(45, createGuiItem(Material.ARROW, "§aPágina Anterior", LoreUtil.getLore("active-auctions-menu.previous-page", "page", String.valueOf(page))));
         }
         if (history.size() > maxItemsPerPage * (page + 1)) {
-            inventory.setItem(53, createGuiItem(Material.ARROW, "§aPágina Siguiente", "§7Ir a la página " + (page + 2)));
+            inventory.setItem(53, createGuiItem(Material.ARROW, "§aPágina Siguiente", LoreUtil.getLore("active-auctions-menu.next-page", "page", String.valueOf(page + 2))));
         }
+        inventory.setItem(49, createGuiItem(Material.RED_WOOL, "§cVolver al Menú", LoreUtil.getLore("active-auctions-menu.back-button")));
     }
 
     private ItemStack createHistoryItem(Auction auction, UUID viewerId) {
         ItemStack item = auction.getItem().clone();
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
-            List<String> lore = meta.hasLore() ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
-            lore.add("§8§m--------------------");
+            List<String> lore = new ArrayList<>();
             if (auction.getSellerId().equals(viewerId)) {
-                lore.add("§dVendiste este objeto.");
+                lore.addAll(LoreUtil.getLore("history-menu.sold-item"));
             } else if (auction.getTopBidderId() != null && auction.getTopBidderId().equals(viewerId)) {
-                lore.add("§aGanaste esta subasta.");
+                lore.addAll(LoreUtil.getLore("history-menu.won-item"));
             }
-            lore.add("§7Vendedor: §e" + auction.getSellerName());
-            lore.add("§7Puja Ganadora: §6" + String.format("%.2f", auction.getCurrentBid()));
-            lore.add("§7Ganador: §b" + (auction.getTopBidderName() != null ? auction.getTopBidderName() : "Nadie"));
-            lore.add("§8§m--------------------");
+            lore.addAll(LoreUtil.getLore("history-menu.item-details",
+                    "seller", auction.getSellerName(),
+                    "price", String.format("%.2f", auction.getCurrentBid()),
+                    "winner", auction.getTopBidderName() != null ? auction.getTopBidderName() : "Nadie"
+            ));
+            meta.setLore(lore);
             item.setItemMeta(meta);
         }
         return item;
     }
 
-    private ItemStack createGuiItem(final Material material, final String name, final String... lore) {
+    private ItemStack createGuiItem(final Material material, final String name, final List<String> lore) {
         final ItemStack item = new ItemStack(material, 1);
         final ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             meta.setDisplayName(name);
-            meta.setLore(java.util.Arrays.asList(lore));
+            meta.setLore(lore);
             item.setItemMeta(meta);
         }
         return item;
@@ -93,6 +96,8 @@ public class HistoryMenu extends GUI {
             } else if (meta != null && meta.getDisplayName().contains("Anterior")) {
                 player.openInventory(new HistoryMenu(plugin, player, page - 1).getInventory());
             }
+        } else if (clickedItem.getType() == Material.RED_WOOL) {
+            player.openInventory(new MainMenu(plugin).getInventory());
         }
     }
 }

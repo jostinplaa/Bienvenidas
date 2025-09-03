@@ -3,6 +3,7 @@ package com.jules.auctionmasterelite.gui.creation;
 import com.jules.auctionmasterelite.AuctionMasterElite;
 import com.jules.auctionmasterelite.gui.GUI;
 import com.jules.auctionmasterelite.managers.PlayerInputManager;
+import com.jules.auctionmasterelite.util.LoreUtil;
 import com.jules.auctionmasterelite.util.MessageUtil;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -10,6 +11,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import java.util.List;
 import java.util.Arrays;
 
 import com.jules.auctionmasterelite.data.AuctionType;
@@ -31,7 +33,7 @@ public class CreateAuctionMenu extends GUI {
 
     private void initializeItems(Player player) {
         // Fill the background with glass panes
-        ItemStack background = createGuiItem(Material.GRAY_STAINED_GLASS_PANE, " ");
+        ItemStack background = createGuiItem(Material.GRAY_STAINED_GLASS_PANE, " ", null);
         for (int i = 0; i < 54; i++) {
             inventory.setItem(i, background);
         }
@@ -40,25 +42,27 @@ public class CreateAuctionMenu extends GUI {
         inventory.setItem(13, new ItemStack(Material.AIR)); // The slot for the item
 
         // Configuration buttons
-        inventory.setItem(29, createGuiItem(Material.GOLD_NUGGET, "§6Precio Inicial", "§eHaz clic para establecer", "§eel precio de inicio."));
-        inventory.setItem(31, createGuiItem(Material.CLOCK, "§bDuración", "§eHaz clic para establecer", "§ela duración de la subasta."));
-        inventory.setItem(33, createGuiItem(Material.PAPER, "§dTipo de Subasta", "§eHaz clic para cambiar", "§eel tipo de subasta."));
+        inventory.setItem(29, createGuiItem(Material.GOLD_NUGGET, "§6Precio Inicial", LoreUtil.getLore("create-auction-menu.set-price")));
+        inventory.setItem(31, createGuiItem(Material.CLOCK, "§bDuración", LoreUtil.getLore("create-auction-menu.set-duration")));
+        inventory.setItem(33, createGuiItem(Material.PAPER, "§dTipo de Subasta", LoreUtil.getLore("create-auction-menu.set-type")));
 
         // Control buttons
-        inventory.setItem(48, createGuiItem(Material.RED_WOOL, "§cCancelar", "§7Vuelve al menú principal."));
-        inventory.setItem(50, createGuiItem(Material.GREEN_WOOL, "§aConfirmar y Crear", "§7Crea la subasta con", "§7la configuración actual."));
+        inventory.setItem(48, createGuiItem(Material.RED_WOOL, "§cCancelar", LoreUtil.getLore("create-auction-menu.cancel")));
+        inventory.setItem(50, createGuiItem(Material.GREEN_WOOL, "§aConfirmar y Crear", LoreUtil.getLore("create-auction-menu.confirm")));
 
         updateAuctionTypeItem();
         updatePriceItem();
         updateDurationItem();
     }
 
-    protected ItemStack createGuiItem(final Material material, final String name, final String... lore) {
+    protected ItemStack createGuiItem(final Material material, final String name, final List<String> lore) {
         final ItemStack item = new ItemStack(material, 1);
         final ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             meta.setDisplayName(name);
-            meta.setLore(Arrays.asList(lore));
+            if (lore != null) {
+                meta.setLore(lore);
+            }
             item.setItemMeta(meta);
         }
         return item;
@@ -155,29 +159,24 @@ public class CreateAuctionMenu extends GUI {
     }
 
     private void updateAuctionTypeItem() {
-        String lore1 = "§eHaz clic para cambiar";
-        String lore2 = "§eel tipo de subasta.";
-        String current = "§7Actual: §a" + currentType.toString();
-        inventory.setItem(33, createGuiItem(Material.PAPER, "§dTipo de Subasta", lore1, lore2, "", current));
+        List<String> lore = LoreUtil.getLore("create-auction-menu.set-type");
+        lore.add("§7Actual: §a" + currentType.toString());
+        inventory.setItem(33, createGuiItem(Material.PAPER, "§dTipo de Subasta", lore));
     }
 
     private void updatePriceItem() {
-        String lore1 = "§eHaz clic para establecer";
-        String lore2 = "§eel precio de inicio.";
-        String current = "§7Actual: §6" + (price > 0 ? String.format("%.2f", price) : "No establecido");
-        inventory.setItem(29, createGuiItem(Material.GOLD_NUGGET, "§6Precio Inicial", lore1, lore2, "", current));
+        List<String> lore = LoreUtil.getLore("create-auction-menu.set-price");
+        lore.add("§7Actual: §6" + (price > 0 ? String.format("%.2f", price) : "No establecido"));
+        inventory.setItem(29, createGuiItem(Material.GOLD_NUGGET, "§6Precio Inicial", lore));
     }
 
     private void updateDurationItem() {
         if (currentType == AuctionType.FLASH) {
-            String lore1 = "§cLas subastas Flash tienen";
-            String lore2 = "§cuna duración fija de 60 segundos.";
-            inventory.setItem(31, createGuiItem(Material.CLOCK, "§bDuración", lore1, lore2));
+            inventory.setItem(31, createGuiItem(Material.CLOCK, "§bDuración", LoreUtil.getLore("create-auction-menu.flash-duration")));
         } else {
-            String lore1 = "§eHaz clic para establecer";
-            String lore2 = "§ela duración de la subasta.";
-            String current = "§7Actual: §b" + (duration > 0 ? TimeUtil.formatDuration(duration) : "No establecida");
-            inventory.setItem(31, createGuiItem(Material.CLOCK, "§bDuración", lore1, lore2, "", current));
+            List<String> lore = LoreUtil.getLore("create-auction-menu.set-duration");
+            lore.add("§7Actual: §b" + (duration > 0 ? TimeUtil.formatDuration(duration) : "No establecida"));
+            inventory.setItem(31, createGuiItem(Material.CLOCK, "§bDuración", lore));
         }
     }
 

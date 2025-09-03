@@ -1,0 +1,45 @@
+# -------------------------------------------------- #
+#           AuctionMaster Elite Lores File           #
+# -------------------------------------------------- #
+# Configure the lore (descriptions) for items in the GUIs.
+# You can use standard Minecraft color codes (e.g., &a, &l).
+# Use {variable} for placeholders. Use '%nl%' to create a new line.
+
+# Main Menu Lores
+main-menu:
+  active-auctions: "&7Ve las subastas que están%nl%&7actualmente en curso."
+  my-auctions: "&7Gestiona tus propias subastas%nl%&7y pujas."
+  history: "&7Revisa el historial de%nl%&7subastas finalizadas."
+  create-auction: "&7Crea una nueva subasta%nl%&7para vender un objeto."
+  settings: "&7Ajusta tus preferencias%nl%&7personales."
+
+# Active Auctions Menu Lores
+active-auctions-menu:
+  auction-item: "&8§m--------------------%nl%&7Vendedor: &e{seller}%nl%&7Precio Actual: &6{price}%nl%&7Finaliza en: &c{time}%nl%&8§m--------------------%nl%&a¡Haz clic para pujar!"
+  previous-page: "&7Ir a la página {page}"
+  next-page: "&7Ir a la página {page}"
+  sort-button: "&7Actual: &e{sort_mode}%nl%&7(Haz clic para cambiar)"
+  back-button: "&7Regresa al menú principal."
+
+# My Auctions Menu Lores
+my-auctions-menu:
+  your-auction: "&d¡Esta es tu subasta!"
+  top-bidder: "&a¡Eres el pujador más alto!"
+
+# History Menu Lores
+history-menu:
+  sold-item: "&dVendiste este objeto."
+  won-item: "&aGanaste esta subasta."
+  item-details: "&7Vendedor: &e{seller}%nl%&7Puja Ganadora: &6{price}%nl%&7Ganador: &b{winner}"
+
+# Create Auction Menu Lores
+create-auction-menu:
+  set-price: "&eHaz clic para establecer%nl%&eel precio de inicio."
+  set-duration: "&eHaz clic para establecer%nl%&ela duración de la subasta."
+  set-type: "&eHaz clic para cambiar%nl%&eel tipo de subasta."
+  cancel: "&7Vuelve al menú principal."
+  confirm: "&7Crea la subasta con%nl%&7la configuración actual."
+
+# Claim Menu Lores
+claim-menu:
+  claim-item: "Click to claim this item!"

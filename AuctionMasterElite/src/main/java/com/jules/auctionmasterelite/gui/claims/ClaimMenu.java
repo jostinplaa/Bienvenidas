@@ -1,6 +1,7 @@
 package com.jules.auctionmasterelite.gui.claims;
 
 import com.jules.auctionmasterelite.AuctionMasterElite;
+import com.jules.auctionmasterelite.util.LoreUtil;
 import com.jules.auctionmasterelite.util.MessageUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -42,10 +43,9 @@ public class ClaimMenu {
             int claimId = entry.getKey();
             ItemStack item = entry.getValue();
 
-            // Add a lore to the item to distinguish it in the GUI, if you want
             ItemMeta meta = item.getItemMeta();
             if (meta != null) {
-                meta.setLore(Collections.singletonList("Click to claim this item!"));
+                meta.setLore(LoreUtil.getLore("claim-menu.claim-item"));
                 item.setItemMeta(meta);
             }
 
@@ -83,7 +83,7 @@ public class ClaimMenu {
         // Remove lore before giving item
         ItemMeta meta = clickedItem.getItemMeta();
         if (meta != null && meta.hasLore()) {
-            meta.setLore(null); // Or restore original lore if you stored it
+            meta.setLore(null);
             clickedItem.setItemMeta(meta);
         }
 
