@@ -6,9 +6,13 @@ import com.jules.auctionmasterelite.managers.DiscordManager;
 import com.jules.auctionmasterelite.managers.EconomyManager;
 import com.jules.auctionmasterelite.managers.ConfigManager;
 import com.jules.auctionmasterelite.managers.PlayerInputManager;
+import com.jules.auctionmasterelite.managers.PlayerSettingsManager;
 import com.jules.auctionmasterelite.util.MessageUtil;
 import net.luckperms.api.LuckPerms;
 import org.bukkit.plugin.RegisteredServiceProvider;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -24,28 +28,28 @@ public final class AuctionMasterElite extends JavaPlugin {
     private LuckPerms luckPerms;
     private DiscordManager discordManager;
     private ConfigManager configManager;
+    private PlayerSettingsManager playerSettingsManager;
 
     @Override
     public void onEnable() {
         // Initialize managers
         this.configManager = new ConfigManager(this);
-        this.auctionManager = new AuctionManager(this);
+        this.playerSettingsManager = new PlayerSettingsManager(this);
         this.databaseManager = new DatabaseManager(this);
-        this.economyManager = new EconomyManager();
-        this.playerInputManager = new com.jules.auctionmasterelite.managers.PlayerInputManager();
-        if (!economyManager.setupEconomy()) {
-            getLogger().log(Level.SEVERE, "Vault not found! Disabling economy features.");
-            // We can choose to disable the plugin or just run without economy features.
-            // For now, we'll just log the error.
-        }
-
-        // Connect to the database
         try {
             databaseManager.connect();
         } catch (SQLException e) {
             getLogger().log(Level.SEVERE, "Failed to connect to the database! Disabling plugin.", e);
             getServer().getPluginManager().disablePlugin(this);
             return;
+        }
+        this.auctionManager = new AuctionManager(this);
+        this.economyManager = new EconomyManager();
+        this.playerInputManager = new com.jules.auctionmasterelite.managers.PlayerInputManager();
+        if (!economyManager.setupEconomy()) {
+            getLogger().log(Level.SEVERE, "Vault not found! Disabling economy features.");
+            // We can choose to disable the plugin or just run without economy features.
+            // For now, we'll just log the error.
         }
 
         // Start the auction ticker
@@ -57,6 +61,8 @@ public final class AuctionMasterElite extends JavaPlugin {
         // Register listeners
         getServer().getPluginManager().registerEvents(new com.jules.auctionmasterelite.gui.GUIListener(), this);
         getServer().getPluginManager().registerEvents(new com.jules.auctionmasterelite.listeners.PlayerChatListener(this), this);
+        getServer().getPluginManager().registerEvents(new com.jules.auctionmasterelite.listeners.PlayerJoinListener(this), this);
+        getServer().getPluginManager().registerEvents(new com.jules.auctionmasterelite.listeners.PlayerQuitListener(this), this);
 
         // Register PlaceholderAPI expansion
         if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
@@ -77,8 +83,9 @@ public final class AuctionMasterElite extends JavaPlugin {
             getLogger().info("Successfully hooked into DiscordSRV.");
         }
 
-        // Load messages
+        // Load messages & lores
         MessageUtil.load(this);
+        com.jules.auctionmasterelite.util.LoreUtil.load(this);
 
         getLogger().info("AuctionMasterElite has been enabled!");
     }
@@ -126,5 +133,15 @@ public final class AuctionMasterElite extends JavaPlugin {
 
     public ConfigManager getConfigManager() {
         return configManager;
+    }
+
+    public PlayerSettingsManager getPlayerSettingsManager() {
+        return playerSettingsManager;
+    }
+
+    public void reloadPlugin() {
+        configManager.reloadConfig();
+        MessageUtil.load(this);
+        com.jules.auctionmasterelite.util.LoreUtil.load(this);
     }
 }

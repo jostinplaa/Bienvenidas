@@ -4,7 +4,10 @@ import com.jules.auctionmasterelite.AuctionMasterElite;
 import com.jules.auctionmasterelite.data.Auction;
 import com.jules.auctionmasterelite.data.AuctionType;
 import com.jules.auctionmasterelite.gui.GUI;
+import com.jules.auctionmasterelite.gui.menu.util.SortMode;
+import com.jules.auctionmasterelite.util.LoreUtil;
 import com.jules.auctionmasterelite.util.TimeUtil;
+import com.jules.auctionmasterelite.gui.menu.MainMenu;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -21,11 +24,13 @@ import java.util.stream.Collectors;
 public class ActiveAuctionsMenu extends GUI {
 
     private final int page;
+    private final SortMode sortMode;
     private final Map<Integer, UUID> slotToAuctionId = new HashMap<>();
 
-    public ActiveAuctionsMenu(AuctionMasterElite plugin, Player player, int page) {
+    public ActiveAuctionsMenu(AuctionMasterElite plugin, Player player, int page, SortMode sortMode) {
         super(plugin, 54, "§8Subastas Activas (Página " + (page + 1) + ")");
         this.page = page;
+        this.sortMode = sortMode;
         initializeItems(player);
     }
 
@@ -39,41 +44,56 @@ public class ActiveAuctionsMenu extends GUI {
                 })
                 .collect(Collectors.toList());
 
-        // 45 is the max items per page (54 slots - 9 for controls)
+        auctions.sort((a1, a2) -> {
+            switch (sortMode) {
+                case ENDING_SOONEST:
+                    return Long.compare(a1.getEndTime(), a2.getEndTime());
+                case NEWEST_LISTED:
+                    return Long.compare(a2.getStartTime(), a1.getStartTime());
+                case PRICE_ASCENDING:
+                    return Double.compare(a1.getCurrentBid(), a2.getCurrentBid());
+                case PRICE_DESCENDING:
+                    return Double.compare(a2.getCurrentBid(), a1.getCurrentBid());
+                default:
+                    return 0;
+            }
+        });
+
         int maxItemsPerPage = 45;
         int startIndex = page * maxItemsPerPage;
 
         for (int i = 0; i < maxItemsPerPage; i++) {
             int auctionIndex = startIndex + i;
             if (auctionIndex >= auctions.size()) {
-                break; // No more auctions to display
+                break;
             }
             Auction auction = auctions.get(auctionIndex);
             inventory.setItem(i, createAuctionItem(auction));
             slotToAuctionId.put(i, auction.getAuctionId());
         }
 
-        // Pagination controls
         if (page > 0) {
-            inventory.setItem(45, createGuiItem(Material.ARROW, "§aPágina Anterior", "§7Ir a la página " + page));
+            inventory.setItem(45, createGuiItem(Material.ARROW, "§aPágina Anterior", LoreUtil.getLore("active-auctions-menu.previous-page", "page", String.valueOf(page))));
         }
         if (auctions.size() > maxItemsPerPage * (page + 1)) {
-            inventory.setItem(53, createGuiItem(Material.ARROW, "§aPágina Siguiente", "§7Ir a la página " + (page + 2)));
+            inventory.setItem(53, createGuiItem(Material.ARROW, "§aPágina Siguiente", LoreUtil.getLore("active-auctions-menu.next-page", "page", String.valueOf(page + 2))));
         }
+        inventory.setItem(49, createGuiItem(Material.CLOCK, "§bOrdenar Por", LoreUtil.getLore("active-auctions-menu.sort-button", "sort_mode", sortMode.getDisplayName())));
+        inventory.setItem(48, createGuiItem(Material.RED_WOOL, "§cVolver al Menú", LoreUtil.getLore("active-auctions-menu.back-button")));
     }
 
     private ItemStack createAuctionItem(Auction auction) {
         ItemStack item = auction.getItem().clone();
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
-            List<String> lore = meta.hasLore() ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
-            lore.add("§8§m--------------------");
-            lore.add("§7Vendedor: §e" + auction.getSellerName());
-            lore.add("§7Precio Actual: §6" + String.format("%.2f", auction.getCurrentBid()));
-            lore.add("§7Finaliza en: §c" + TimeUtil.formatDuration(auction.getEndTime() - System.currentTimeMillis()));
-            lore.add("§8§m--------------------");
-            lore.add("§a¡Haz clic para pujar!");
-            meta.setLore(lore);
+            List<String> baseLore = meta.hasLore() ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
+            List<String> auctionLore = LoreUtil.getLore("active-auctions-menu.auction-item",
+                    "seller", auction.getSellerName(),
+                    "price", String.format("%.2f", auction.getCurrentBid()),
+                    "time", TimeUtil.formatDuration(auction.getEndTime() - System.currentTimeMillis())
+            );
+            baseLore.addAll(auctionLore);
+            meta.setLore(baseLore);
             item.setItemMeta(meta);
         }
         return item;
@@ -90,12 +110,16 @@ public class ActiveAuctionsMenu extends GUI {
         if (clickedItem.getType() == Material.ARROW) {
             ItemMeta meta = clickedItem.getItemMeta();
             if (meta != null && meta.getDisplayName().contains("Siguiente")) {
-                player.openInventory(new ActiveAuctionsMenu(plugin, player, page + 1).getInventory());
+                new ActiveAuctionsMenu(plugin, player, page + 1, sortMode).open(player);
             } else if (meta != null && meta.getDisplayName().contains("Anterior")) {
-                player.openInventory(new ActiveAuctionsMenu(plugin, player, page - 1).getInventory());
+                new ActiveAuctionsMenu(plugin, player, page - 1, sortMode).open(player);
             }
+        } else if (clickedItem.getType() == Material.CLOCK) {
+            SortMode nextSortMode = sortMode.next();
+            new ActiveAuctionsMenu(plugin, player, 0, nextSortMode).open(player);
+        } else if (clickedItem.getType() == Material.RED_WOOL) {
+            new MainMenu(plugin).open(player);
         } else {
-            // It's an auction item
             UUID auctionId = slotToAuctionId.get(event.getSlot());
             if (auctionId != null) {
                 player.closeInventory();
@@ -112,12 +136,12 @@ public class ActiveAuctionsMenu extends GUI {
         }
     }
 
-    private ItemStack createGuiItem(final Material material, final String name, final String... lore) {
+    private ItemStack createGuiItem(final Material material, final String name, final List<String> lore) {
         final ItemStack item = new ItemStack(material, 1);
         final ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             meta.setDisplayName(name);
-            meta.setLore(java.util.Arrays.asList(lore));
+            meta.setLore(lore);
             item.setItemMeta(meta);
         }
         return item;

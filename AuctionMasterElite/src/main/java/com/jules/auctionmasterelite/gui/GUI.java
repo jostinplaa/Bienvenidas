@@ -28,6 +28,10 @@ public abstract class GUI implements InventoryHolder {
      */
     public abstract void onClick(InventoryClickEvent event);
 
+    public void open(org.bukkit.entity.Player player) {
+        player.openInventory(inventory);
+    }
+
     @NotNull
     @Override
     public Inventory getInventory() {

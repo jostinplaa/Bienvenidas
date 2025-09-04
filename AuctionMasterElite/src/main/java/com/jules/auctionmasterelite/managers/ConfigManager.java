@@ -15,11 +15,14 @@ public class ConfigManager {
     private File configFile;
     private FileConfiguration messages;
     private File messagesFile;
+    private FileConfiguration lores;
+    private File loresFile;
 
     public ConfigManager(AuctionMasterElite plugin) {
         this.plugin = plugin;
         saveDefaultConfig();
         saveDefaultMessages();
+        saveDefaultLores();
     }
 
     public void reloadConfig() {
@@ -77,6 +80,35 @@ public class ConfigManager {
         }
         if (!messagesFile.exists()) {
             plugin.saveResource("messages.yml", false);
+        }
+    }
+
+    public void reloadLores() {
+        if (loresFile == null) {
+            loresFile = new File(plugin.getDataFolder(), "lores.yml");
+        }
+        lores = YamlConfiguration.loadConfiguration(loresFile);
+
+        InputStream defaultLoresStream = plugin.getResource("lores.yml");
+        if (defaultLoresStream != null) {
+            YamlConfiguration defaultLores = YamlConfiguration.loadConfiguration(new InputStreamReader(defaultLoresStream));
+            lores.setDefaults(defaultLores);
+        }
+    }
+
+    public FileConfiguration getLores() {
+        if (lores == null) {
+            reloadLores();
+        }
+        return lores;
+    }
+
+    public void saveDefaultLores() {
+        if (loresFile == null) {
+            loresFile = new File(plugin.getDataFolder(), "lores.yml");
+        }
+        if (!loresFile.exists()) {
+            plugin.saveResource("lores.yml", false);
         }
     }
 }

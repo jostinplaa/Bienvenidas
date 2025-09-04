@@ -2,19 +2,53 @@
 #      AuctionMaster Elite Configuration File        #
 # -------------------------------------------------- #
 
-# Settings for auction limits and economy.
+# General settings for the auction house economy and behavior.
 settings:
-  # The maximum number of auctions a player can have active at one time.
-  # Set to -1 to disable the limit.
-  max-active-auctions: 10
-
   # The commission fee taken from the seller upon a successful auction.
   # This is a percentage value. For example, 5.0 means a 5% commission.
   # Set to 0.0 to disable commissions.
   commission-fee-percent: 5.0
+
+  # --- Anti-Sniping Settings ---
+  # Prevents players from placing bids at the very last second to "snipe" an auction.
+  anti-sniping:
+    # Set to true to enable this feature.
+    enabled: true
+    # If a bid is placed when the auction has less than this many seconds remaining...
+    threshold-seconds: 30
+    # ...the auction's duration will be extended by this many seconds.
+    extend-duration-seconds: 15
 
 # Settings for specific auction types.
 auction-types:
   flash:
     # Duration of flash auctions in seconds.
     duration-seconds: 60
+    # Announce flash auctions globally in chat?
+    broadcast-globally: true
+
+# --- World-Class Admin Controls ---
+
+# Limits to control auction creation and prevent spam.
+auction-limits:
+  # The maximum number of auctions a player can have active at one time.
+  # Set to -1 to disable the limit. A permission 'auctionmaster.limits.bypass' can override this.
+  max-per-player: 10
+  # The cooldown a player must wait between creating auctions.
+  # Use 's' for seconds, 'm' for minutes, 'h' for hours. Example: "30m" for 30 minutes.
+  # Set to "0s" to disable.
+  creation-cooldown: "60s"
+
+# Price controls to manage the server economy.
+price-controls:
+  # The minimum starting bid allowed for an auction.
+  minimum-starting-bid: 1.0
+  # The maximum starting bid allowed for an auction. Set to -1 to disable.
+  maximum-starting-bid: 1000000.0
+
+# Restrict which items can be auctioned.
+item-restrictions:
+  # A list of materials that CANNOT be put up for auction.
+  # Use the official Material names from Spigot API.
+  # Example: ["BEDROCK", "COMMAND_BLOCK", "BARRIER"]
+  blacklist: []
