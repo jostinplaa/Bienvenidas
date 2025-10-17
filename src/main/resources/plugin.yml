@@ -1,0 +1,97 @@
+name: AuctionHouse
+version: '${project.version}'
+main: com.jules.auctionhouse.AuctionHouse
+api-version: '1.18'
+author: Jules
+description: '${project.description}'
+depend: [Vault]
+
+commands:
+  auction:
+    description: Abre el menú principal de la casa de subastas.
+    usage: /<command>
+    aliases: [ah]
+    permission: auction.use
+
+  auctionadmin:
+    description: Comandos de administración para la casa de subastas.
+    usage: /<command> <subcommand>
+    permission: auction.admin
+
+permissions:
+  auction.use:
+    description: Permite usar los comandos básicos y ver las subastas.
+    default: true
+  auction.create:
+    description: Permite crear subastas.
+    default: true
+  auction.bid:
+    description: Permite pujar en subastas.
+    default: true
+  auction.cancel:
+    description: Permite cancelar tus propias subastas.
+    default: true
+  auction.claim:
+    description: Permite reclamar items ganados y dinero de ventas.
+    default: true
+
+  auction.vip:
+    description: Otorga beneficios VIP.
+    default: op
+  auction.create.multiple:
+    description: Permite tener más subastas simultáneas de lo normal.
+    default: op
+  auction.bypass.cooldown:
+    description: Permite saltarse los tiempos de espera.
+    default: op
+  auction.featured:
+    description: Permite crear subastas destacadas.
+    default: op
+  auction.extended.time:
+    description: Permite crear subastas con duración extendida.
+    default: op
+
+  auction.premium:
+    description: Otorga todos los beneficios de Premium.
+    default: op
+  auction.no.commission:
+    description: No paga comisión por ventas.
+    default: op
+  auction.unlimited:
+    description: Permite crear subastas ilimitadas.
+    default: op
+  auction.priority:
+    description: Otorga procesamiento prioritario.
+    default: op
+
+  auction.admin:
+    description: Da acceso a todos los comandos de administración.
+    default: op
+  auction.admin.reload:
+    description: Permite recargar la configuración del plugin.
+    default: op
+  auction.admin.cancel:
+    description: Permite cancelar cualquier subasta.
+    default: op
+  auction.admin.ban:
+    description: Permite banear jugadores del sistema de subastas.
+    default: op
+  auction.admin.stats:
+    description: Permite ver estadísticas completas.
+    default: op
+  auction.admin.debug:
+    description: Permite usar herramientas de depuración.
+    default: op
+  auction.admin.bypass.blacklist:
+    description: Permite subastar items de la lista negra.
+    default: op
+
+  auction.notify.all:
+    description: Recibe notificaciones de todas las subastas.
+    default: op
+  auction.notify.featured:
+    description: Recibe notificaciones solo de subastas destacadas.
+    default: op
+  auction.staff.alert:
+    description: Recibe alertas de administración (reportes, fraude).
+    default: op
