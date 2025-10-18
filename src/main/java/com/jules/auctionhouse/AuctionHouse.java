@@ -3,8 +3,11 @@ package com.jules.auctionhouse;
 import com.jules.auctionhouse.commands.AuctionCommand;
 import com.jules.auctionhouse.db.DatabaseManager;
 import com.jules.auctionhouse.listeners.ActiveAuctionsListener;
+import com.jules.auctionhouse.listeners.AuctionDetailsListener;
+import com.jules.auctionhouse.listeners.HistoryGUIListener;
 import com.jules.auctionhouse.listeners.MainMenuListener;
 import com.jules.auctionhouse.managers.AuctionManager;
+import com.jules.auctionhouse.managers.ConfigManager;
 import com.jules.auctionhouse.tasks.AuctionEndTask;
 import com.jules.auctionhouse.managers.EconomyManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -15,12 +18,17 @@ public final class AuctionHouse extends JavaPlugin {
     private AuctionManager auctionManager;
     private EconomyManager economyManager;
     private DatabaseManager databaseManager;
+    private ConfigManager configManager;
 
     @Override
     public void onEnable() {
         instance = this;
 
+        // Setup Config
+        saveDefaultConfig();
+
         // Setup Managers
+        configManager = new ConfigManager(this);
         databaseManager = new DatabaseManager(this);
         databaseManager.connect();
 
@@ -67,5 +75,9 @@ public final class AuctionHouse extends JavaPlugin {
 
     public DatabaseManager getDatabaseManager() {
         return databaseManager;
+    }
+
+    public ConfigManager getConfigManager() {
+        return configManager;
     }
 }

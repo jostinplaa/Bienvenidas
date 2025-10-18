@@ -39,8 +39,8 @@ public class AuctionCommand implements CommandExecutor {
             }
 
             ItemStack itemInHand = player.getInventory().getItemInMainHand();
-            if (itemInHand.getType().isAir()) {
-                player.sendMessage("§cDebes tener un item en la mano para subastarlo.");
+            if (itemInHand.getType().isAir() || plugin.getConfigManager().getBlacklistedItems().contains(itemInHand.getType().name())) {
+                player.sendMessage(plugin.getConfigManager().getPrefix() + " §cNo puedes subastar este item.");
                 return true;
             }
 
@@ -57,8 +57,7 @@ public class AuctionCommand implements CommandExecutor {
                 return true;
             }
 
-            // Duración por defecto 5 minutos (300s)
-            long duration = 300;
+            long duration = plugin.getConfigManager().getDefaultDuration();
             if (args.length > 2) {
                 try {
                     // Simple parser s, m, h, d

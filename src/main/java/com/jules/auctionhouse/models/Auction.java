@@ -87,6 +87,14 @@ public class Auction {
         return buyNowPrice;
     }
 
+    public double getStartingPrice() {
+        return startingPrice;
+    }
+
+    public AuctionType getType() {
+        return type;
+    }
+
     public boolean hasExpired() {
         return System.currentTimeMillis() >= endTime;
     }

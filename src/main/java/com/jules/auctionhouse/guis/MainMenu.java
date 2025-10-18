@@ -16,7 +16,7 @@ public class MainMenu {
     private final Inventory inventory;
 
     public MainMenu() {
-        inventory = Bukkit.createInventory(null, 54, ChatColor.DARK_GREEN + "Casa de Subastas");
+        inventory = Bukkit.createInventory(null, 54, com.jules.auctionhouse.AuctionHouse.getInstance().getConfigManager().getPrefix());
         initializeItems();
     }
 

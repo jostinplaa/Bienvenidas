@@ -12,7 +12,7 @@ public class MainMenuListener implements Listener {
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
-        if (!event.getView().getTitle().equals(ChatColor.DARK_GREEN + "Casa de Subastas")) {
+        if (!event.getView().getTitle().equals(com.jules.auctionhouse.AuctionHouse.getInstance().getConfigManager().getPrefix())) {
             return;
         }
 

@@ -72,23 +72,25 @@ public class AuctionManager {
             return false;
         }
 
+        String prefix = plugin.getConfigManager().getPrefix();
         if (auction.getSellerUuid().equals(bidder.getUniqueId())) {
-            bidder.sendMessage("§cNo puedes pujar en tu propia subasta.");
+            bidder.sendMessage(prefix + " §cNo puedes pujar en tu propia subasta.");
             return false;
         }
 
-        double minIncrement = auction.getCurrentPrice() * 0.05;
+        double minIncrementPercentage = plugin.getConfigManager().getMinimumBidIncrement();
+        double minIncrement = auction.getCurrentPrice() * minIncrementPercentage;
         double minBid = auction.getCurrentPrice() + minIncrement;
 
         EconomyManager econ = plugin.getEconomyManager();
 
         if (amount < minBid) {
-            bidder.sendMessage("§cTu puja debe ser de al menos " + econ.format(minBid));
+            bidder.sendMessage(prefix + " §cTu puja debe ser de al menos " + econ.format(minBid));
             return false;
         }
 
         if (!econ.hasEnough(bidder, amount)) {
-            bidder.sendMessage("§cNo tienes fondos suficientes para realizar esa puja.");
+            bidder.sendMessage(prefix + " §cNo tienes fondos suficientes para realizar esa puja.");
             return false;
         }
 
@@ -96,7 +98,7 @@ public class AuctionManager {
             OfflinePlayer previousWinner = Bukkit.getOfflinePlayer(auction.getCurrentWinner());
             econ.deposit(previousWinner, auction.getCurrentPrice());
             if (previousWinner.isOnline()) {
-                previousWinner.getPlayer().sendMessage("§e¡Te han superado en la subasta por " + auction.getItem().getType() + "!");
+                previousWinner.getPlayer().sendMessage(prefix + " §e¡Te han superado en la subasta por " + auction.getItem().getType() + "!");
             }
         }
 
@@ -106,11 +108,11 @@ public class AuctionManager {
         auction.setCurrentWinner(bidder.getUniqueId());
         plugin.getDatabaseManager().updateAuction(auction);
 
-        bidder.sendMessage("§a¡Has pujado " + econ.format(amount) + " con éxito!");
+        bidder.sendMessage(prefix + " §a¡Has pujado " + econ.format(amount) + " con éxito!");
 
         OfflinePlayer seller = Bukkit.getOfflinePlayer(auction.getSellerUuid());
         if (seller.isOnline()) {
-            seller.getPlayer().sendMessage("§b" + bidder.getName() + " ha pujado " + econ.format(amount) + " en tu " + auction.getItem().getType() + "!");
+            seller.getPlayer().sendMessage(prefix + " §b" + bidder.getName() + " ha pujado " + econ.format(amount) + " en tu " + auction.getItem().getType() + "!");
         }
 
         return true;
@@ -118,19 +120,20 @@ public class AuctionManager {
 
     public boolean buyNow(Player buyer, UUID auctionId) {
         Auction auction = getAuction(auctionId);
+        String prefix = plugin.getConfigManager().getPrefix();
         if (auction == null || auction.getStatus() != Auction.AuctionStatus.ACTIVE) {
-            buyer.sendMessage("§cEsta subasta ya no está activa.");
+            buyer.sendMessage(prefix + " §cEsta subasta ya no está activa.");
             return false;
         }
 
         if (auction.getBuyNowPrice() <= 0) {
-            buyer.sendMessage("§cEste item no se puede comprar directamente.");
+            buyer.sendMessage(prefix + " §cEste item no se puede comprar directamente.");
             return false;
         }
 
         EconomyManager econ = plugin.getEconomyManager();
         if (!econ.hasEnough(buyer, auction.getBuyNowPrice())) {
-            buyer.sendMessage("§cNo tienes fondos suficientes para comprar este item.");
+            buyer.sendMessage(prefix + " §cNo tienes fondos suficientes para comprar este item.");
             return false;
         }
 
@@ -138,20 +141,23 @@ public class AuctionManager {
             OfflinePlayer previousWinner = Bukkit.getOfflinePlayer(auction.getCurrentWinner());
             econ.deposit(previousWinner, auction.getCurrentPrice());
             if (previousWinner.isOnline()) {
-                previousWinner.getPlayer().sendMessage("§eLa subasta por " + auction.getItem().getType() + " fue comprada directamente.");
+                previousWinner.getPlayer().sendMessage(prefix + " §eLa subasta por " + auction.getItem().getType() + " fue comprada directamente.");
             }
         }
 
         OfflinePlayer seller = Bukkit.getOfflinePlayer(auction.getSellerUuid());
 
+        double commission = auction.getBuyNowPrice() * plugin.getConfigManager().getSellerCommission();
+        double finalPrice = auction.getBuyNowPrice() - commission;
+
         econ.withdraw(buyer, auction.getBuyNowPrice());
-        econ.deposit(seller, auction.getBuyNowPrice());
+        econ.deposit(seller, finalPrice);
 
         buyer.getInventory().addItem(auction.getItem());
 
-        buyer.sendMessage("§a¡Has comprado " + auction.getItem().getType().toString() + " por " + econ.format(auction.getBuyNowPrice()) + "!");
+        buyer.sendMessage(prefix + " §a¡Has comprado " + auction.getItem().getType().toString() + " por " + econ.format(auction.getBuyNowPrice()) + "!");
         if (seller.isOnline()) {
-            seller.getPlayer().sendMessage("§a¡Tu " + auction.getItem().getType().toString() + " fue comprado por " + buyer.getName() + "!");
+            seller.getPlayer().sendMessage(prefix + " §a¡Tu " + auction.getItem().getType().toString() + " fue comprado por " + buyer.getName() + "! Recibiste " + econ.format(finalPrice));
         }
 
         auction.setStatus(Auction.AuctionStatus.SOLD);
