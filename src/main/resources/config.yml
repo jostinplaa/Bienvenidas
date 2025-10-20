@@ -1,0 +1,164 @@
+# ============================================
+# AUCTION HOUSE - CONFIGURACIÓN
+# Versión: 3.0
+# ============================================
+
+# ================== GENERAL ==================
+general:
+  # Idioma del plugin (en, es, pt, fr, de)
+  language: "es"
+
+  # Prefijo en el chat
+  prefix: "&6[&e⚡ Subasta&6]&r"
+
+  # Economía
+  economy:
+    provider: "Vault"  # Vault, PlayerPoints, Custom
+    currency-symbol: "$"
+    decimal-places: 2
+
+  # Base de datos
+  database:
+    type: "SQLite"  # SQLite, MySQL
+    # Solo para MySQL:
+    mysql:
+      host: "localhost"
+      port: 3306
+      database: "minecraft"
+      username: "root"
+      password: "password"
+      pool-size: 10
+
+# ================= SUBASTAS ==================
+auctions:
+  # Duración default en segundos
+  default-duration: 300  # 5 minutos
+
+  # Duración mínima y máxima
+  min-duration: 30      # 30 segundos
+  max-duration: 86400   # 24 horas
+
+  # VIP puede usar hasta:
+  max-duration-vip: 172800  # 48 horas
+
+  # Incremento mínimo de puja (porcentaje)
+  minimum-bid-increment: 0.05  # 5%
+
+  # Precio mínimo para crear subasta
+  minimum-price: 1
+
+  # Precio máximo
+  maximum-price: 999999999
+
+  # Sistema de extensión de tiempo
+  time-extension:
+    enabled: true
+    # Si pujan en los últimos X segundos
+    trigger-seconds: 10
+    # Añadir X segundos extra
+    extend-seconds: 15
+    # Máximo de extensiones por subasta
+    max-extensions: 5
+
+  # Límites por jugador
+  limits:
+    # Subastas simultáneas
+    max-simultaneous: 3
+    max-simultaneous-vip: 5
+    max-simultaneous-premium: 10
+
+    # Cooldown entre crear subastas (segundos)
+    create-cooldown: 60
+    create-cooldown-vip: 30
+    create-cooldown-premium: 0
+
+    # Cooldown entre pujas en la MISMA subasta
+    bid-cooldown: 3
+
+  # Confirmación para pujas altas
+  bid-confirmation:
+    enabled: true
+    # Pedir confirmación si la puja es más del X% de tu dinero
+    threshold-percentage: 50
+
+  # Auto-renovar subastas no vendidas
+  auto-relist:
+    enabled: false
+    max-relists: 2
+    reduce-price: 0.1  # Reducir precio 10% cada vez
+
+# ================ ECONOMÍA ===================
+economy:
+  # Comisión del vendedor (porcentaje del precio final)
+  seller-commission: 0.05      # 5%
+  seller-commission-vip: 0.04  # 4%
+  seller-commission-premium: 0.03  # 3%
+
+  # Comisión mínima y máxima en moneda
+  commission-minimum: 10
+  commission-maximum: 10000
+
+  # Comisión del comprador
+  buyer-commission: 0.00  # 0% (desactivado por default)
+
+  # Tarifa por crear subasta
+  creation-fee:
+    enabled: false
+    amount: 100
+    exempt-vip: true
+
+  # Impuestos (se añaden al precio final)
+  taxes:
+    enabled: false
+    percentage: 0.02  # 2%
+
+# ============== NOTIFICACIONES ===============
+notifications:
+  # Notificaciones en chat
+  chat:
+    enabled: true
+    # Notificar cuando alguien crea subasta
+    new-auction: false
+    # Solo notificar subastas de items raros/caros
+    new-auction-featured: true
+    featured-min-price: 10000
+
+  # Action Bar (sobre hotbar)
+  actionbar:
+    enabled: true
+    # Actualizar cada X ticks (20 ticks = 1 segundo)
+    update-interval: 20
+
+  # Títulos y subtítulos
+  titles:
+    enabled: true
+    fade-in: 10
+    stay: 40
+    fade-out: 10
+
+  # Boss Bar
+  bossbar:
+    enabled: true
+    color: "YELLOW"  # BLUE, GREEN, PINK, PURPLE, RED, WHITE, YELLOW
+    style: "PROGRESS"  # PROGRESS, NOTCHED_6, NOTCHED_10, NOTCHED_12, NOTCHED_20
+
+  # Efectos de sonido
+  sounds:
+    enabled: true
+    # Volumen (0.0 - 1.0)
+    volume: 0.7
+    pitch: 1.0
+
+# ============== SEGURIDAD ===================
+security:
+  # Items prohibidos
+  blacklist:
+    - "BEDROCK"
+    - "COMMAND_BLOCK"
+    - "COMMAND_BLOCK_MINECART"
+    - "STRUCTURE_BLOCK"
+    - "STRUCTURE_VOID"
+    - "JIGSAW"
+    - "BARRIER"
+    - "DEBUG_STICK"
+    - "KNOWLEDGE_BOOK"
