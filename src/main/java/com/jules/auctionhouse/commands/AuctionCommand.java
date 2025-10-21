@@ -97,9 +97,22 @@ public class AuctionCommand implements CommandExecutor {
             return true;
         }
 
-        // Mostrar ayuda o menú principal si el subcomando no es válido
-        MainMenu mainMenu = new MainMenu();
-        mainMenu.open(player);
+        if (args[0].equalsIgnoreCase("help")) {
+            sendHelpMessage(player);
+            return true;
+        }
+
+        // Comando no reconocido
+        player.sendMessage(plugin.getConfigManager().getPrefix() + " §cComando no reconocido. Usa §e/auction help §cpara ver la lista de comandos.");
         return true;
+    }
+
+    private void sendHelpMessage(Player player) {
+        String prefix = plugin.getConfigManager().getPrefix();
+        player.sendMessage(prefix + " §e--- Ayuda de AuctionHouse ---");
+        player.sendMessage("§6/auction §f- Abre el menú principal de subastas.");
+        player.sendMessage("§6/auction help §f- Muestra este mensaje de ayuda.");
+        player.sendMessage("§6/auction history §f- Muestra tu historial de subastas.");
+        player.sendMessage("§ePara crear o pujar en subastas, usa la interfaz gráfica.");
     }
 }

@@ -85,7 +85,11 @@ public class AuctionManager {
     }
 
     public void setWaitingForChatInput(Player player, ChatInputType type) {
-        waitingForChatInput.put(player.getUniqueId(), type);
+        if (type == null) {
+            waitingForChatInput.remove(player.getUniqueId());
+        } else {
+            waitingForChatInput.put(player.getUniqueId(), type);
+        }
     }
 
     public ChatInputType getWaitingChatInputType(Player player) {
