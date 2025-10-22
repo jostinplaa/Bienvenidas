@@ -58,16 +58,16 @@ public class ChatListener implements Listener {
                     }
                     break;
             }
-            player.sendMessage("§aValor actualizado.");
+            player.sendMessage(plugin.getConfigManager().getPrefix() + " §aValor actualizado.");
+            // Quitar el flag de espera inmediatamente para no procesar dos veces
+            auctionManager.setWaitingForChatInput(player, null);
+
+            // Volver a abrir la GUI en el hilo principal con un retraso
+            plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+                new AuctionCreationGUI(wizard).open(player);
+            }, 10L);
         } catch (Exception e) {
-            player.sendMessage("§cEntrada inválida.");
+            player.sendMessage(plugin.getConfigManager().getPrefix() + " §cEntrada inválida. Por favor, inténtalo de nuevo.");
         }
-
-        auctionManager.setWaitingForChatInput(player, null); // Dejar de esperar entrada
-
-        // Volver a abrir la GUI en el hilo principal
-        plugin.getServer().getScheduler().runTask(plugin, () -> {
-            new AuctionCreationGUI(wizard).open(player);
-        });
     }
 }

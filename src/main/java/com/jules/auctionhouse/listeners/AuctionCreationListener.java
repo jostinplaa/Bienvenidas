@@ -42,17 +42,17 @@ public class AuctionCreationListener implements Listener {
         switch (clickedItem.getType()) {
             case GOLD_INGOT:
                 player.closeInventory();
-                player.sendMessage("§ePor favor, escribe el precio inicial en el chat.");
+                player.sendMessage(plugin.getConfigManager().getPrefix() + " §ePor favor, escribe el precio inicial en el chat.");
                 auctionManager.setWaitingForChatInput(player, AuctionManager.ChatInputType.PRICE);
                 break;
             case CLOCK:
                 player.closeInventory();
-                player.sendMessage("§ePor favor, escribe la duración en el chat (ej. 10s, 5m, 1h).");
+                player.sendMessage(plugin.getConfigManager().getPrefix() + " §ePor favor, escribe la duración en el chat (ej. 10s, 5m, 1h).");
                 auctionManager.setWaitingForChatInput(player, AuctionManager.ChatInputType.DURATION);
                 break;
             case EMERALD:
                 player.closeInventory();
-                player.sendMessage("§ePor favor, escribe el precio de 'Comprar Ya' en el chat (o 0 para desactivar).");
+                player.sendMessage(plugin.getConfigManager().getPrefix() + " §ePor favor, escribe el precio de 'Comprar Ya' en el chat (o 0 para desactivar).");
                 auctionManager.setWaitingForChatInput(player, AuctionManager.ChatInputType.BUY_NOW);
                 break;
             case LIME_STAINED_GLASS_PANE:
